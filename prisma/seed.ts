@@ -130,10 +130,56 @@ async function main() {
     console.log("Administrador creado:", admin2Email)
   }
 
+  // Planes de membresía oficiales — economía local ZMG
   const membershipPlans = [
-    { name: "Básico", slug: "basico", description: "Plan básico para negocios locales", monthlyPrice: 149, priorityLevel: 0, maxListings: 3, maxGalleryImages: 5, hasFeaturedBadge: false, hasSocialLinks: false, hasWebsiteLink: false },
-    { name: "Profesional", slug: "profesional", description: "Plan profesional con mayor visibilidad", monthlyPrice: 299, priorityLevel: 1, maxListings: 10, maxGalleryImages: 15, hasFeaturedBadge: true, hasSocialLinks: true, hasWebsiteLink: true },
-    { name: "Premium", slug: "premium", description: "Plan premium con máxima exposición", monthlyPrice: 499, priorityLevel: 2, maxListings: 25, maxGalleryImages: 30, hasFeaturedBadge: true, hasSocialLinks: true, hasWebsiteLink: true },
+    {
+      name: "Gratuito",
+      slug: "gratuito",
+      description: "Empieza a aparecer. Para emprendedores que apenas empiezan.",
+      monthlyPrice: 0,
+      priorityLevel: 0,
+      maxListings: 10,      // hasta 10 productos
+      maxGalleryImages: 3,
+      hasFeaturedBadge: false,
+      hasSocialLinks: false,
+      hasWebsiteLink: false,
+    },
+    {
+      name: "Emprendedor",
+      slug: "emprendedor",
+      description: "Empieza a vender mejor. Para catálogos, ventas desde casa y servicios personales.",
+      monthlyPrice: 49,
+      priorityLevel: 1,
+      maxListings: 100,     // hasta 100 productos / 20 servicios
+      maxGalleryImages: 15,
+      hasFeaturedBadge: false,
+      hasSocialLinks: true,
+      hasWebsiteLink: false,
+    },
+    {
+      name: "Negocio",
+      slug: "negocio",
+      description: "Consigue más clientes. Para negocios y prestadores de servicios locales.",
+      monthlyPrice: 149,
+      priorityLevel: 2,
+      maxListings: 100,     // hasta 100 productos y 100 servicios
+      maxGalleryImages: 30,
+      hasFeaturedBadge: true,
+      hasSocialLinks: true,
+      hasWebsiteLink: true,
+    },
+    {
+      name: "Premium",
+      slug: "premium",
+      description: "Máxima exposición. Para negocios que buscan dominar búsquedas en su zona.",
+      monthlyPrice: 299,
+      priorityLevel: 3,
+      maxListings: 200,
+      maxGalleryImages: 50,
+      hasFeaturedBadge: true,
+      hasSocialLinks: true,
+      hasWebsiteLink: true,
+    },
   ]
   for (const plan of membershipPlans) {
     const existing = await prisma.membershipPlan.findUnique({ where: { slug: plan.slug } })
@@ -143,11 +189,11 @@ async function main() {
     }
   }
 
+  // Precios oficiales de boost — pago independiente a la membresía
   const boostDefinitions = [
-    { name: "3 Días", durationDays: 3, price: 20, priorityBonus: 1 },
-    { name: "7 Días", durationDays: 7, price: 30, priorityBonus: 2 },
-    { name: "15 Días", durationDays: 15, price: 50, priorityBonus: 3 },
-    { name: "30 Días", durationDays: 30, price: 80, priorityBonus: 4 },
+    { name: "7 Días", durationDays: 7, price: 49, priorityBonus: 2 },
+    { name: "15 Días", durationDays: 15, price: 99, priorityBonus: 3 },
+    { name: "30 Días", durationDays: 30, price: 149, priorityBonus: 5 },
   ]
   for (const boost of boostDefinitions) {
     const existing = await prisma.boostDefinition.findFirst({ where: { name: boost.name } })

@@ -6,21 +6,23 @@ import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   Store,
-  Settings,
-  BarChart3,
-  Star,
-  LogOut,
-  Menu,
-  X,
-  ChevronRightIcon,
+  ShoppingBag,
+  Wrench,
   Tag,
-   TrendingUp,
+  Package,
   MessageCircle,
   Users,
-  HelpCircle,
-  Megaphone,
-  Bell,
+  BarChart3,
+  TrendingUp,
+  Star,
   CreditCard,
+  Bell,
+  Settings,
+  HelpCircle,
+  ChevronRight,
+  Menu,
+  X,
+  LogOut,
 } from "@/lib/icons"
 import { useState } from "react"
 
@@ -28,11 +30,22 @@ const navGroups = [
   {
     label: "General",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
       { href: "/dashboard/negocio", label: "Mi Perfil", icon: Store },
-      { href: "/dashboard/anuncios", label: "Productos", icon: Megaphone },
+    ],
+  },
+  {
+    label: "Catálogo",
+    items: [
+      { href: "/dashboard/productos", label: "Productos", icon: ShoppingBag },
+      { href: "/dashboard/servicios", label: "Servicios", icon: Wrench },
       { href: "/dashboard/promociones", label: "Promociones", icon: Tag },
-      { href: "/dashboard/notificaciones", label: "Notificaciones", icon: Bell },
+    ],
+  },
+  {
+    label: "Marketplace",
+    items: [
+      { href: "/dashboard/marketplace", label: "Mis publicaciones", icon: Package },
     ],
   },
   {
@@ -44,16 +57,17 @@ const navGroups = [
     ],
   },
   {
-    label: "Recursos",
+    label: "Monetización",
     items: [
-      { href: "/dashboard/boosts", label: "Boosts", icon: TrendingUp },
       { href: "/dashboard/membresia", label: "Membresía", icon: Star },
+      { href: "/dashboard/boosts", label: "Boosts", icon: TrendingUp },
       { href: "/dashboard/pagos", label: "Pagos", icon: CreditCard },
     ],
   },
   {
-    label: "Soporte",
+    label: "Cuenta",
     items: [
+      { href: "/dashboard/notificaciones", label: "Notificaciones", icon: Bell },
       { href: "/dashboard/configuracion", label: "Configuración de cuenta", icon: Settings },
       { href: "/dashboard/ayuda", label: "Ayuda", icon: HelpCircle },
     ],
@@ -66,7 +80,6 @@ export function DashboardSidebar() {
 
   return (
     <>
-      {/* Mobile toggle */}
       <button
         onClick={() => setOpen(true)}
         className="lg:hidden fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg"
@@ -74,7 +87,6 @@ export function DashboardSidebar() {
         <Menu className="h-6 w-6" />
       </button>
 
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -82,7 +94,6 @@ export function DashboardSidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-white transition-transform lg:translate-x-0 lg:static lg:z-auto",
@@ -106,10 +117,9 @@ export function DashboardSidebar() {
               </p>
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard"
-                      : pathname.startsWith(item.href)
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname === item.href || pathname.startsWith(item.href + "/")
                   return (
                     <Link
                       key={item.href}
@@ -126,7 +136,7 @@ export function DashboardSidebar() {
                         <item.icon className="h-4 w-4" />
                         {item.label}
                       </div>
-                      {isActive && <ChevronRightIcon className="h-4 w-4" />}
+                      {isActive && <ChevronRight className="h-4 w-4" />}
                     </Link>
                   )
                 })}

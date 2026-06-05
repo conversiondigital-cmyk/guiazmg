@@ -6,13 +6,37 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  LayoutDashboard, Store, UserPlus, Menu, X, LogOut,
+  LayoutDashboard, UserPlus, GitBranch, Clock, CheckCircle2,
+  RefreshCw, Activity, DollarSign, Target, User, Bell,
+  Menu, X, LogOut,
 } from "lucide-react"
 
-const navItems = [
-  { label: "Dashboard", href: "/agente", icon: LayoutDashboard },
-  { label: "Negocios", href: "/agente/negocios", icon: Store },
-  { label: "Prospectos", href: "/agente/prospectos", icon: UserPlus },
+const navGroups = [
+  {
+    label: "CRM",
+    items: [
+      { label: "Prospectos", href: "/agente", icon: UserPlus, exact: true },
+      { label: "Pipeline", href: "/agente/pipeline", icon: GitBranch },
+      { label: "Seguimiento", href: "/agente/seguimiento", icon: Clock },
+      { label: "Clientes captados", href: "/agente/clientes", icon: CheckCircle2 },
+      { label: "Renovaciones", href: "/agente/renovaciones", icon: RefreshCw },
+    ],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { label: "Actividad", href: "/agente/actividad", icon: Activity },
+      { label: "Comisiones", href: "/agente/comisiones", icon: DollarSign },
+      { label: "Objetivos", href: "/agente/objetivos", icon: Target },
+    ],
+  },
+  {
+    label: "Cuenta",
+    items: [
+      { label: "Mi cuenta", href: "/agente/cuenta", icon: User },
+      { label: "Notificaciones", href: "/agente/notificaciones", icon: Bell },
+    ],
+  },
 ]
 
 interface AgentSidebarProps {
@@ -55,7 +79,6 @@ export function AgentSidebar({ user }: AgentSidebarProps) {
       </header>
 
       <aside
-        data-open={mobileOpen}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 border-r bg-background transition-transform duration-200 lg:static lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -68,30 +91,38 @@ export function AgentSidebar({ user }: AgentSidebarProps) {
           </Button>
         </div>
 
-        <nav className="h-[calc(100vh-3.5rem)] overflow-y-auto p-3">
-          <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Agente de Ventas
-          </p>
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors",
-                  isActive
-                    ? "bg-primary/10 font-medium text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                {item.label}
-              </Link>
-            )
-          })}
+        <nav className="h-[calc(100vh-3.5rem)] overflow-y-auto p-3 space-y-5">
+          {navGroups.map((group) => (
+            <div key={group.label}>
+              <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname === item.href || pathname.startsWith(item.href + "/")
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                        isActive
+                          ? "bg-primary/10 font-medium text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="size-4 shrink-0" />
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
       </aside>
 

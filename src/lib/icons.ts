@@ -19,6 +19,7 @@ import {
   ClipboardList, CheckCircle, XCircle, DollarSign, ArrowUpDown, RotateCcw,
   Link, Upload, AlertCircle, BadgeCheck, MessageSquare, ChevronsUpDown,
   RefreshCw, ChevronDown, ChevronUp, FileSpreadsheet, FileJson,
+  Wrench, Package,
 } from "lucide-react"
 
 export {
@@ -37,4 +38,5 @@ export {
   RotateCcw, Link, Upload, AlertCircle, BadgeCheck, MessageSquare,
   ChevronsUpDown, RefreshCw, ChevronDown, ChevronUp,
   FileSpreadsheet, FileJson,
+  Wrench, Package,
 }
