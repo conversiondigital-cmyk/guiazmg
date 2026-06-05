@@ -11,7 +11,7 @@ export default async function EditorLayout({
     redirect("/auth/login")
   }
 
-  if (session.user.role !== "EDITOR") {
+  if (!["EDITOR", "ADMIN"].includes(session.user.role ?? "")) {
     redirect("/")
   }
 

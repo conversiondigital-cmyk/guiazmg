@@ -11,7 +11,7 @@ export default async function AgentLayout({
     redirect("/auth/login")
   }
 
-  if (session.user.role !== "SALES_AGENT") {
+  if (!["SALES_AGENT", "ADMIN"].includes(session.user.role ?? "")) {
     redirect("/")
   }
 

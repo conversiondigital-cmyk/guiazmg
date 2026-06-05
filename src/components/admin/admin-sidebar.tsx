@@ -71,10 +71,10 @@ const sections: SidebarSection[] = [
     items: [
       { label: "Perfiles", href: "/admin/negocios", icon: Store, roles: ["ADMIN", "EDITOR", "SALES_AGENT"] },
       { label: "Productos", href: "/admin/anuncios", icon: ShoppingBag, roles: ["ADMIN", "EDITOR"] },
-      { label: "Servicios", href: "/admin/solicitudes", icon: MessageSquare, roles: ["ADMIN", "EDITOR"] },
-      { label: "Promociones", href: "/admin/cupones", icon: Megaphone, roles: ["ADMIN"] },
+      { label: "Servicios", href: "/admin/servicios", icon: MessageSquare, roles: ["ADMIN", "EDITOR"] },
+      { label: "Promociones", href: "/admin/cupones", icon: Megaphone, roles: ["ADMIN", "EDITOR"] },
       { label: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag, roles: ["ADMIN", "EDITOR"] },
-      { label: "Solicitudes", href: "/admin/solicitudes", icon: MessageSquare, roles: ["ADMIN", "EDITOR"] },
+      { label: "Solicitudes de servicio", href: "/admin/solicitudes", icon: ListChecks, roles: ["ADMIN", "EDITOR"] },
       { label: "Reseñas", href: "/admin/reviews", icon: MessageSquare, roles: ["ADMIN", "EDITOR"] },
       { label: "Reportes", href: "/admin/reportes", icon: ListChecks, roles: ["ADMIN", "EDITOR"] },
     ],
@@ -86,7 +86,7 @@ const sections: SidebarSection[] = [
       { label: "Subcategorías", href: "/admin/categorias", icon: Layers3, roles: ["ADMIN"] },
       { label: "Municipios", href: "/admin/municipios", icon: MapPinned, roles: ["ADMIN"] },
       { label: "Colonias", href: "/admin/colonias", icon: Globe, roles: ["ADMIN"] },
-      { label: "Etiquetas", href: "/admin/seo", icon: Tags, roles: ["ADMIN"] },
+      { label: "Etiquetas", href: "/admin/etiquetas", icon: Tags, roles: ["ADMIN"] },
     ],
   },
   {
