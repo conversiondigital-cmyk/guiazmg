@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: guiazmg_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://root:root@localhost:5432/guiazmg_test
+      AUTH_SECRET: test-secret-at-least-32-chars-long-ci
+      AUTH_URL: http://localhost:3100
+      NEXT_PUBLIC_URL: http://localhost:3100
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma validate
+
+      - run: npx prisma generate
+
+      - run: npx prisma migrate deploy
+
+      - run: npx prisma db seed
+
+      - run: npm run lint -- --max-warnings 0
+
+      - run: npm run typecheck
+
+      - run: npm run test -- --run
+
+      - run: npm run build

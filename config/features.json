@@ -1,0 +1,11 @@
+{
+  "marketplace": { "enabled": true },
+  "chat": { "enabled": false, "config": { "provider": "sendbird" } },
+  "leadsPremium": { "enabled": true },
+  "reviews": { "enabled": true },
+  "promotions": { "enabled": true },
+  "agentCRM": { "enabled": true },
+  "mobileApp": { "enabled": false },
+  "multiCity": { "enabled": false },
+  "csvImport": { "enabled": true }
+}

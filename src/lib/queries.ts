@@ -1,0 +1,198 @@
+import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+
+export async function getCurrentUser() {
+  const session = await auth()
+  return session?.user
+}
+
+export async function getProfileByUser(userId: string) {
+  return prisma.profile.findFirst({
+    where: { ownerId: userId },
+    include: {
+      municipality: true,
+      neighborhood: true,
+      category: true,
+      subcategory: true,
+      memberships: { include: { plan: true } },
+    },
+  })
+}
+
+export async function getProfileById(id: string) {
+  return prisma.profile.findUnique({
+    where: { id },
+    include: {
+      municipality: true,
+      neighborhood: true,
+      category: true,
+      subcategory: true,
+      memberships: { include: { plan: true } },
+      coupons: { where: { isActive: true, endDate: { gte: new Date() } } },
+      reviews: {
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { name: true, image: true } } },
+      },
+      tags: { include: { tag: true } },
+    },
+  })
+}
+
+export async function getProfileBySlug(slug: string) {
+  return prisma.profile.findUnique({
+    where: { slug },
+    include: {
+      municipality: true,
+      neighborhood: true,
+      category: true,
+      subcategory: true,
+      memberships: { include: { plan: true } },
+      coupons: {
+        where: { isActive: true, endDate: { gte: new Date() } },
+        orderBy: { createdAt: "desc" },
+      },
+      reviews: {
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { name: true, image: true } } },
+      },
+      tags: { include: { tag: true } },
+      hours: { orderBy: { dayOfWeek: "asc" } },
+    },
+  })
+}
+
+export async function getCategories() {
+  return prisma.category.findMany({
+    where: { isActive: true },
+    include: {
+      subcategories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+    },
+    orderBy: { sortOrder: "asc" },
+  })
+}
+
+export async function getMunicipalities() {
+  return prisma.municipality.findMany({
+    where: { isActive: true },
+    include: {
+      neighborhoods: { where: { isActive: true }, orderBy: { name: "asc" } },
+    },
+    orderBy: { name: "asc" },
+  })
+}
+
+export async function getFeaturedProfiles(limit = 12) {
+  return prisma.profile.findMany({
+    where: { status: "ACTIVE" },
+    include: {
+      municipality: true,
+      category: true,
+      memberships: { include: { plan: true } },
+    },
+    orderBy: [{ isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+    take: limit,
+  })
+}
+
+export async function searchProfiles(params: {
+  q?: string
+  category?: string
+  municipality?: string
+  neighborhood?: string
+  lat?: number
+  lng?: number
+  page?: number
+  limit?: number
+}) {
+  const { q, category, municipality, neighborhood, lat, lng, page = 1, limit = 20 } = params
+  const skip = (page - 1) * limit
+
+  const where: any = { status: "ACTIVE" }
+
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+    ]
+  }
+
+  if (category) where.categoryId = category
+  if (municipality) where.municipalityId = municipality
+  if (neighborhood) where.neighborhoodId = neighborhood
+
+  const [profiles, total] = await Promise.all([
+    prisma.profile.findMany({
+      where,
+      include: {
+        municipality: true,
+        neighborhood: true,
+        category: true,
+        memberships: { include: { plan: true } },
+        _count: { select: { reviews: true } },
+      },
+      orderBy: [
+        { isVerified: "desc" },
+        { isFeatured: "desc" },
+        { createdAt: "desc" },
+      ],
+      skip,
+      take: limit,
+    }),
+    prisma.profile.count({ where }),
+  ])
+
+  let scored = profiles.map((b) => {
+    let score = 0
+    const activeMembership = b.memberships?.find((m) => m.status === "ACTIVE")
+    if (activeMembership) {
+      const planPriority = activeMembership.plan.priorityLevel || 0
+      score += planPriority * 10
+    }
+    if (b.isVerified) score += 30
+    if (b._count.reviews) score += Math.min(b._count.reviews * 2, 20)
+    return { ...b, score }
+  })
+
+  if (lat && lng) {
+    scored = scored.map((b) => {
+      if (b.latitude && b.longitude) {
+        const dist = calculateDistance(lat, lng, b.latitude, b.longitude)
+        const proximityScore = Math.max(0, 50 - dist * 2)
+        return { ...b, score: b.score + proximityScore, distance: dist }
+      }
+      return b
+    })
+  }
+
+  scored.sort((a, b) => b.score - a.score)
+
+  return {
+    profiles: scored.slice(0, limit),
+    businesses: scored.slice(0, limit),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  }
+}
+
+export const getBusinessByUser = getProfileByUser
+export const getBusinessById = getProfileById
+export const getBusinessBySlug = getProfileBySlug
+export const getFeaturedBusinesses = getFeaturedProfiles
+export const searchBusinesses = searchProfiles
+
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
