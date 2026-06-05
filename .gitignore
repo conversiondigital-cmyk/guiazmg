@@ -1,5 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# temp files
+temp_dir_info.txt
+
+# npm lockfile (project uses pnpm)
+package-lock.json
+
 # dependencies
 /node_modules
 /.pnp
