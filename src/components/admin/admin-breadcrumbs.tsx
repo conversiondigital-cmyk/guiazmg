@@ -7,30 +7,53 @@ const labels: Record<string, string> = {
   admin: "Admin",
   analytics: "Analytics",
   auditoria: "Auditoría",
+  estado: "Estado del sistema",
+  logs: "Logs",
   usuarios: "Usuarios",
+  admins: "Administradores",
+  editores: "Editores",
   agentes: "Agentes",
+  roles: "Roles y permisos",
+  suspendidos: "Cuentas suspendidas",
+  "actividad-usuarios": "Actividad de usuarios",
   negocios: "Perfiles",
-  marketplace: "Marketplace",
+  perfiles: "Perfiles",
   anuncios: "Productos",
+  productos: "Productos",
+  servicios: "Servicios",
+  promociones: "Promociones",
+  marketplace: "Marketplace",
   solicitudes: "Solicitudes",
   reviews: "Reseñas",
+  resenas: "Reseñas",
   reportes: "Reportes",
   categorias: "Categorías",
-  colonias: "Colonias",
+  subcategorias: "Subcategorías",
   municipios: "Municipios",
+  colonias: "Colonias",
+  etiquetas: "Etiquetas",
   planes: "Membresías",
+  membresias: "Membresías",
   boosts: "Boosts",
+  "boosts-definiciones": "Definiciones de boost",
   pagos: "Pagos",
-  cupones: "Cupones",
+  financiero: "Financiero",
+  cupones: "Cupones descuento",
+  "promociones-admin": "Regalos y beneficios",
   seo: "SEO",
+  "landing-pages": "Landing pages",
+  busquedas: "Búsquedas populares",
+  reclamos: "Reclamos",
+  claims: "Reclamos",
   importar: "Importaciones",
+  importaciones: "Importaciones",
+  webhooks: "Webhooks",
   configuracion: "Configuración",
-  financiero: "Webhooks",
+  general: "General",
   branding: "Branding",
   auth: "Autenticación",
   correo: "Correo SMTP",
   sms: "SMS",
-  membresias: "Membresías",
   seguridad: "Seguridad",
   storage: "Storage",
   moderacion: "Moderación",
@@ -50,11 +73,17 @@ export function AdminBreadcrumbs() {
   })
 
   return (
-    <nav className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
       {crumbs.map((crumb, index) => (
-        <span key={crumb.href} className="flex items-center gap-2">
-          {index === 0 ? <Link href={crumb.href} className="text-slate-300 hover:text-white">{crumb.label}</Link> : <Link href={crumb.href} className="hover:text-white">{crumb.label}</Link>}
-          {index < crumbs.length - 1 && <span>/</span>}
+        <span key={crumb.href} className="flex items-center gap-1.5">
+          {index < crumbs.length - 1 ? (
+            <Link href={crumb.href} className="text-slate-300 hover:text-white transition-colors">
+              {crumb.label}
+            </Link>
+          ) : (
+            <span className="text-white font-medium">{crumb.label}</span>
+          )}
+          {index < crumbs.length - 1 && <span className="text-slate-600">/</span>}
         </span>
       ))}
     </nav>

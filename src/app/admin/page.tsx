@@ -11,7 +11,7 @@ import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
-const allowedRoles = ["ADMIN", "EDITOR", "SALES_AGENT"]
+const allowedRoles = ["ADMIN"]
 
 const now = new Date()
 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
