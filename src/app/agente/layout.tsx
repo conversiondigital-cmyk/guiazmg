@@ -25,7 +25,7 @@ export default async function AgentLayout({
           role: session.user.role,
         }}
       />
-      <main className="flex-1 overflow-x-auto">
+      <main className="flex-1 overflow-x-auto p-4 sm:p-6">
         {children}
       </main>
     </div>

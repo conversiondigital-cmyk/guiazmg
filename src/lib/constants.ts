@@ -10,23 +10,65 @@ export const MUNICIPALITIES = [
 ] as const
 
 export const MEMBERSHIP_PLANS = {
-  BASIC: {
-    name: "Básico",
-    price: 149,
-    ads: 3,
-    features: ["Perfil", "WhatsApp", "3 anuncios", "Visibilidad básica"],
+  GRATUITO: {
+    name: "Gratuito",
+    price: 0,
+    slug: "gratuito",
+    tagline: "Empieza a aparecer",
+    features: [
+      "1 perfil comercial",
+      "Hasta 10 productos",
+      "1 promoción activa",
+      "Botón de WhatsApp",
+      "Botón de llamada",
+      "Acceso básico al marketplace",
+    ],
   },
-  PROFESSIONAL: {
-    name: "Profesional",
-    price: 299,
-    ads: 10,
-    features: ["10 anuncios", "Redes sociales", "Sitio web", "Badge recomendado", "Mayor visibilidad"],
+  EMPRENDEDOR: {
+    name: "Emprendedor",
+    price: 49,
+    slug: "emprendedor",
+    tagline: "Empieza a vender mejor",
+    features: [
+      "1 perfil comercial",
+      "Hasta 100 productos",
+      "Hasta 20 servicios",
+      "Hasta 3 promociones activas",
+      "Galería ampliada",
+      "Métricas básicas (vistas, clics)",
+      "Mejor posicionamiento que Gratuito",
+    ],
+  },
+  NEGOCIO: {
+    name: "Negocio",
+    price: 149,
+    slug: "negocio",
+    tagline: "Consigue más clientes",
+    features: [
+      "1 perfil comercial robusto",
+      "Hasta 100 productos",
+      "Hasta 100 servicios",
+      "Hasta 10 promociones activas",
+      "Estadísticas completas",
+      "Reseñas habilitadas",
+      "Posibilidad de verificación",
+      "Horarios, cobertura, redes sociales",
+      "Mejor posicionamiento que Emprendedor",
+    ],
   },
   PREMIUM: {
     name: "Premium",
-    price: 499,
-    ads: 100,
-    features: ["Anuncios ampliados", "Prioridad alta", "Badge premium", "Máxima visibilidad"],
+    price: 299,
+    slug: "premium",
+    tagline: "Aparece primero",
+    features: [
+      "Todo lo de Negocio",
+      "Hasta 200 productos y servicios",
+      "Insignia premium visible",
+      "Máxima prioridad en búsquedas",
+      "Métricas avanzadas",
+      "Soporte prioritario",
+    ],
   },
 } as const
 
