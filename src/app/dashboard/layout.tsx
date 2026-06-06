@@ -11,6 +11,11 @@ export default async function DashboardLayout({
   const session = await auth()
   if (!session?.user) redirect("/auth/login")
 
+  // Cada rol tiene su panel propio — el /dashboard es solo para USER y BUSINESS_OWNER
+  if (session.user.role === "ADMIN") redirect("/admin")
+  if (session.user.role === "EDITOR") redirect("/editor")
+  if (session.user.role === "SALES_AGENT") redirect("/agente")
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <DashboardSidebar />
