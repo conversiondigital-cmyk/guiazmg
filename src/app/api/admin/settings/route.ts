@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { ADMIN_CONFIG_SECTIONS } from "@/lib/admin-config-fields"
 
-const SETTING_KEY_MAP: Record<string, { key: string; label: string; section: string }> = {
-  site_name: { key: "site_name", label: "Nombre del sitio", section: "general" },
-  site_logo_url: { key: "site_logo_url", label: "URL del logo", section: "general" },
-  site_favicon_url: { key: "site_favicon_url", label: "URL del favicon", section: "general" },
-  support_email: { key: "support_email", label: "Email de soporte", section: "general" },
-  support_phone: { key: "support_phone", label: "Teléfono de soporte", section: "general" },
-}
+// Build SETTING_KEY_MAP from config sections
+const SETTING_KEY_MAP: Record<string, { key: string; label: string; section: string }> = {}
+Object.entries(ADMIN_CONFIG_SECTIONS).forEach(([section, config]) => {
+  config.fields.forEach((field) => {
+    SETTING_KEY_MAP[field.key] = {
+      key: field.key,
+      label: field.label,
+      section,
+    }
+  })
+})
 
 export async function GET() {
   try {
