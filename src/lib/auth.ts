@@ -84,11 +84,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user, account }) {
       const authToken = token as AuthToken
+      let dbUser: any = null
 
+      // OPTIMIZACIÓN: Cargar usuario una sola vez
       if (account || user) {
         const lookupEmail = (user?.email ?? authToken.email) as string | undefined
         const lookupId = (user && "id" in user ? user.id : authToken.id) as string | undefined
-        const dbUser = lookupId
+        dbUser = lookupId
           ? await prisma.user.findUnique({
               where: { id: lookupId },
               select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true },
@@ -112,19 +114,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         authToken.sessionVersion = dbUser.sessionVersion
       }
 
-      if (authToken.id) {
-        const dbUser = await prisma.user.findUnique({
+      // OPTIMIZACIÓN: Si no tenemos dbUser y tenemos token.id, hacer una sola query para validación
+      // Evita N+1: no hacemos segunda query si ya tenemos los datos de login
+      if (!dbUser && authToken.id) {
+        dbUser = await prisma.user.findUnique({
           where: { id: authToken.id },
           select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true },
         })
+      }
 
-        if (!dbUser || !dbUser.isActive || dbUser.deletedAt || dbUser.sessionVersion !== authToken.sessionVersion) {
-          delete authToken.id
-          delete authToken.role
-          delete authToken.sessionVersion
-          return token
-        }
+      if (dbUser && (!dbUser.isActive || dbUser.deletedAt || dbUser.sessionVersion !== authToken.sessionVersion)) {
+        delete authToken.id
+        delete authToken.role
+        delete authToken.sessionVersion
+        return token
+      }
 
+      if (dbUser && authToken.id) {
         authToken.role = dbUser.role
       }
       return token
