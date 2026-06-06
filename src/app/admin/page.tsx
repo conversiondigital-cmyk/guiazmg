@@ -90,28 +90,28 @@ export default async function AdminDashboard() {
     }),
     prisma.boost.count({ where: { status: "ACTIVE" } }),
     prisma.$queryRaw<DailyRow[]>`
-      SELECT DATE(created_at) as date, COUNT(*)::int as count
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM users
-      WHERE created_at >= ${startOfWeek} AND deleted_at IS NULL
-      GROUP BY DATE(created_at) ORDER BY date
+      WHERE "createdAt" >= ${startOfWeek} AND "deletedAt" IS NULL
+      GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.$queryRaw<DailyRow[]>`
-      SELECT DATE(created_at) as date, COUNT(*)::int as count
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM businesses
-      WHERE created_at >= ${startOfWeek} AND deleted_at IS NULL
-      GROUP BY DATE(created_at) ORDER BY date
+      WHERE "createdAt" >= ${startOfWeek} AND "deletedAt" IS NULL
+      GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.$queryRaw<DailyRow[]>`
-      SELECT DATE(created_at) as date, COUNT(*)::int as count
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM leads
-      WHERE created_at >= ${startOfWeek}
-      GROUP BY DATE(created_at) ORDER BY date
+      WHERE "createdAt" >= ${startOfWeek}
+      GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.$queryRaw<DailyRow[]>`
-      SELECT DATE(created_at) as date, COUNT(*)::int as count
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM marketplace_listings
-      WHERE created_at >= ${startOfWeek} AND deleted_at IS NULL
-      GROUP BY DATE(created_at) ORDER BY date
+      WHERE "createdAt" >= ${startOfWeek} AND "deletedAt" IS NULL
+      GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.user.findMany({
       where: { deletedAt: null },

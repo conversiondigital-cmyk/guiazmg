@@ -48,13 +48,13 @@ export default async function AdminFinancialPage() {
       SELECT COUNT(*)::int as count
       FROM payments
       WHERE status = 'APPROVED' AND type = 'MEMBERSHIP'
-        AND created_at >= ${startOfMonth}
+        AND "createdAt" >= ${startOfMonth}
         AND (metadata->>'isFirstPayment' IS DISTINCT FROM 'true')
     `,
     prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*)::int as count
       FROM business_memberships
-      WHERE status = 'CANCELLED' AND updated_at >= ${startOfMonth}
+      WHERE status = 'CANCELLED' AND "updatedAt" >= ${startOfMonth}
     `,
     prisma.businessMembership.count({
       where: { status: "ACTIVE", createdAt: { lt: startOfMonth } },
@@ -65,12 +65,12 @@ export default async function AdminFinancialPage() {
       _sum: { amount: true },
     }),
     prisma.$queryRaw<{ month: string; total: number }[]>`
-      SELECT TO_CHAR(date_trunc('month', created_at), 'YYYY-MM') as month,
+      SELECT TO_CHAR(date_trunc('month', "createdAt"), 'YYYY-MM') as month,
              SUM(amount)::float as total
       FROM payments
       WHERE status = 'APPROVED'
-        AND created_at >= ${new Date(now.getFullYear() - 1, now.getMonth(), 1)}
-      GROUP BY date_trunc('month', created_at)
+        AND "createdAt" >= ${new Date(now.getFullYear() - 1, now.getMonth(), 1)}
+      GROUP BY date_trunc('month', "createdAt")
       ORDER BY month
     `,
     prisma.payment.findMany({

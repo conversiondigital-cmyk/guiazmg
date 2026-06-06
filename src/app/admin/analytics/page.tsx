@@ -83,18 +83,18 @@ export default async function AdminAnalyticsPage() {
       GROUP BY date ORDER BY date
     `,
     prisma.$queryRaw<{ date: Date; count: number }[]>`
-      SELECT DATE(created_at) as date, COUNT(*)::int as count
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM leads
-      WHERE created_at >= ${thirtyDaysAgo}
-      GROUP BY DATE(created_at) ORDER BY date
+      WHERE "createdAt" >= ${thirtyDaysAgo}
+      GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.$queryRaw<{ date: Date; amount: number }[]>`
       SELECT
-        DATE_TRUNC('month', created_at) as date,
+        DATE_TRUNC('month', "createdAt") as date,
         SUM(amount)::numeric::int as amount
       FROM payments
-      WHERE status = 'APPROVED' AND created_at >= ${twelveMonthsAgo}
-      GROUP BY DATE_TRUNC('month', created_at) ORDER BY date
+      WHERE status = 'APPROVED' AND "createdAt" >= ${twelveMonthsAgo}
+      GROUP BY DATE_TRUNC('month', "createdAt") ORDER BY date
     `,
     prisma.$queryRaw<{ query: string; count: number }[]>`
       SELECT query, COUNT(*)::int as count
@@ -116,10 +116,10 @@ export default async function AdminAnalyticsPage() {
         COALESCE(l.leads, 0)::int as leads
       FROM neighborhoods n
       JOIN municipalities m ON m.id = n.municipality_id
-      LEFT JOIN businesses b ON b.neighborhood_id = n.id AND b.deleted_at IS NULL
-      LEFT JOIN business_analytics_daily bad ON bad.business_id = b.id
-      LEFT JOIN (SELECT business_id, COUNT(*)::int as leads FROM leads GROUP BY business_id) l ON l.business_id = b.id
-      WHERE n.isActive = true
+      LEFT JOIN businesses b ON b."neighborhoodId" = n.id AND b."deletedAt" IS NULL
+      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id
+      LEFT JOIN (SELECT "businessId", COUNT(*)::int as leads FROM leads GROUP BY "businessId") l ON l."businessId" = b.id
+      WHERE n."isActive" = true
       GROUP BY n.id, n.name, m.name, l.leads
       ORDER BY views DESC LIMIT 10
     `,
@@ -130,9 +130,9 @@ export default async function AdminAnalyticsPage() {
         COALESCE(l.leads, 0)::int as leads
       FROM municipalities m
       LEFT JOIN neighborhoods n ON n.municipality_id = m.id
-      LEFT JOIN businesses b ON b.neighborhood_id = n.id AND b.deleted_at IS NULL
-      LEFT JOIN business_analytics_daily bad ON bad.business_id = b.id
-      LEFT JOIN (SELECT business_id, COUNT(*)::int as leads FROM leads GROUP BY business_id) l ON l.business_id = b.id
+      LEFT JOIN businesses b ON b."neighborhoodId" = n.id AND b."deletedAt" IS NULL
+      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id
+      LEFT JOIN (SELECT "businessId", COUNT(*)::int as leads FROM leads GROUP BY "businessId") l ON l."businessId" = b.id
       GROUP BY m.id, m.name, l.leads
       ORDER BY views DESC LIMIT 10
     `,
