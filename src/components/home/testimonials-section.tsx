@@ -1,70 +1,64 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Star, MessageCircle } from "@/lib/icons"
-
-const testimonials = [
+const TESTIMONIALS = [
   {
-    name: "María García",
-    business: "Dental Care Chapalita",
-    text: "Gracias a Guía ZMG he recibido más de 20 pacientes nuevos en mi consultorio. La plataforma es muy fácil de usar y mis pacientes me encuentran rápido.",
-    rating: 5,
+    quote: "Encontré el mejor restaurante italiano gracias a Guía ZMG. La información es súper completa y confiable.",
+    name: "María González",
+    location: "Guadalajara, Jalisco",
+    initials: "MG",
+    color: "bg-green-100 text-green-800",
   },
   {
-    name: "Carlos López",
-    business: "Taller Mecánico El Chaparral",
-    text: "Desde que me registré en Guía ZMG, mi teléfono no deja de sonar. La gente encuentra mi taller cuando más lo necesita. Excelente plataforma.",
-    rating: 5,
+    quote: "He conseguido muchos clientes para mi negocio desde que estoy en Guía ZMG. 100% recomendaría la plataforma.",
+    name: "Carlos Ramírez",
+    location: "Zapopan, Jalisco",
+    initials: "CR",
+    color: "bg-blue-100 text-blue-800",
   },
   {
-    name: "Ana Martínez",
-    business: "Veterinaria Providencia",
-    text: "Lo mejor es que los clientes pueden verme en el mapa y contactarme directo por WhatsApp. He duplicado mis clientes en 3 meses.",
-    rating: 5,
+    quote: "Me encanta que pueda encontrar todo lo que necesito en un solo lugar. ¡Es súper fácil de usar!",
+    name: "Ana López",
+    location: "Tlaquepaque, Jalisco",
+    initials: "AL",
+    color: "bg-amber-100 text-amber-800",
   },
 ]
 
 export function TestimonialsSection() {
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-600 to-blue-800">
+    <section className="py-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-white">Lo que dicen nuestros usuarios</h2>
-          <p className="mt-2 text-lg text-blue-100">
-            Negocios reales, resultados reales
+        <div className="text-center mb-12">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">
+            Lo que dicen nuestros usuarios
           </p>
+          <h2 className="text-3xl font-black text-gray-900">
+            Historias reales de nuestra comunidad
+          </h2>
         </div>
+
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((t) => (
-            <Card key={t.name} className="bg-white/10 backdrop-blur-sm border-white/20 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-1 mb-3">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  ))}
+          {TESTIMONIALS.map((t) => (
+            <div
+              key={t.name}
+              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm flex flex-col gap-4"
+            >
+              {/* Quote mark */}
+              <span className="text-5xl font-black text-green-100 leading-none select-none">"</span>
+
+              <p className="text-gray-600 leading-relaxed text-sm -mt-4">
+                {t.quote}
+              </p>
+
+              <div className="mt-auto flex items-center gap-3 pt-4 border-t border-gray-100">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${t.color}`}>
+                  {t.initials}
                 </div>
-                <p className="text-sm text-blue-100 leading-relaxed mb-4">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-medium">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">{t.name}</p>
-                    <p className="text-blue-200 text-xs">{t.business}</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{t.name}</p>
+                  <p className="text-xs text-gray-400">{t.location}</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
-        </div>
-        <div className="mt-8 text-center">
-          <a
-            href="/registrar-negocio"
-            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Únete a los que ya crecen con Guía ZMG
-          </a>
         </div>
       </div>
     </section>

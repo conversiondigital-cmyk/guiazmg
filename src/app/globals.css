@@ -55,10 +55,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #0F172A;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: #14B8A6;
-  --secondary-foreground: oklch(0.985 0 0);
+  --primary: #166534;
+  --primary-foreground: #ffffff;
+  --secondary: #D97706;
+  --secondary-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: #e2e8f0;

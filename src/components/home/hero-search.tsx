@@ -2,110 +2,123 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { MapPin, Loader2 } from "@/lib/icons"
-import { SearchAutocomplete } from "@/components/search/search-autocomplete"
+import { Search, MapPin, BadgeCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { staggerContainer, staggerItem } from "@/lib/animations"
-import { SEARCH_SUGGESTIONS } from "@/lib/constants"
+
+const POPULAR = ["Restaurantes", "Plomeros", "Clínicas", "Salones de belleza", "Talleres"]
 
 export function HeroSearch() {
   const router = useRouter()
   const [query, setQuery] = useState("")
-  const [geoLoading, setGeoLoading] = useState(false)
 
-  const handleSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) return
-    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    handleSearch(query)
-  }
-
-  const handleGeoSearch = () => {
-    setGeoLoading(true)
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          router.push(
-            `/search?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&q=cerca de mí`
-          )
-        },
-        () => setGeoLoading(false)
-      )
-    } else {
-      setGeoLoading(false)
-    }
+  const handleSearch = (q: string) => {
+    const t = (q || query).trim()
+    if (!t) return
+    router.push(`/search?q=${encodeURIComponent(t)}`)
   }
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
-      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="text-center"
-        >
-          <motion.h1 variants={staggerItem} className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
-            Encuentra lo que necesitas
-            <span className="block text-blue-200">en la Zona Metropolitana de Guadalajara</span>
-          </motion.h1>
-          <motion.p variants={staggerItem} className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
-            El buscador hiperlocal más rápido. Encuentra negocios, servicios y profesionales
-            en Guadalajara, Zapopan, Tlaquepaque, Tonalá y Tlajomulco.
-          </motion.p>
+    <section className="bg-white overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[520px] py-16">
 
-          <motion.form
-            variants={staggerItem}
-            onSubmit={handleSubmit}
-            className="mx-auto mt-8 max-w-2xl"
-          >
-            <div className="flex items-center gap-2 rounded-2xl bg-white p-2 shadow-2xl">
-              <div className="relative flex-1">
-                <SearchAutocomplete
+          {/* Left — Text + Search */}
+          <div className="flex flex-col gap-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
+              Descubre lo mejor de la Zona Metropolitana de Guadalajara
+            </p>
+
+            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight">
+              Encuentra negocios,<br />
+              servicios y productos{" "}
+              <span className="text-green-700">cerca de ti</span>
+            </h1>
+
+            <p className="text-gray-500 text-lg leading-relaxed max-w-md">
+              Conectamos personas con los mejores negocios locales.
+              Busca, compara y elige lo que necesitas.
+            </p>
+
+            {/* Search form */}
+            <div className="flex gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-md max-w-xl">
+              <div className="flex flex-1 items-center gap-2 px-3">
+                <Search className="h-5 w-5 shrink-0 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="¿Qué estás buscando?"
                   value={query}
-                  onChange={setQuery}
-                  onSubmit={handleSearch}
-                  autoFocus={false}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch("")}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
                 />
               </div>
+              <div className="hidden sm:flex items-center gap-1.5 border-l border-gray-100 pl-3 pr-2">
+                <MapPin className="h-4 w-4 text-green-700" />
+                <span className="text-sm text-gray-600 whitespace-nowrap">Guadalajara, Jalisco</span>
+              </div>
               <Button
-                type="submit"
-                size="lg"
-                className="rounded-xl bg-blue-600 px-8 py-6 text-white hover:bg-blue-700 transition-colors"
+                onClick={() => handleSearch("")}
+                className="rounded-xl bg-green-800 px-5 text-white hover:bg-green-900"
               >
                 Buscar
               </Button>
             </div>
-          </motion.form>
 
-          <motion.div
-            variants={staggerItem}
-            className="mt-6 flex flex-wrap items-center justify-center gap-3"
-          >
-            <button
-              onClick={handleGeoSearch}
-              disabled={geoLoading}
-              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2 text-sm text-white hover:bg-white/20 transition-colors disabled:opacity-50"
-            >
-              {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-              {geoLoading ? "Buscando ubicación..." : "Cerca de mí"}
-            </button>
-            {SEARCH_SUGGESTIONS.slice(0, 6).map((s) => (
-              <button
-                key={s}
-                onClick={() => router.push(`/search?q=${encodeURIComponent(s)}`)}
-                className="rounded-full bg-white/10 px-4 py-1.5 text-sm text-blue-100 hover:bg-white/20 transition-colors"
-              >
-                {s}
-              </button>
-            ))}
-          </motion.div>
-        </motion.div>
+            {/* Popular searches */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium">Búsquedas populares:</span>
+              {POPULAR.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleSearch(s)}
+                  className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 hover:border-green-700 hover:text-green-700 transition-colors"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right — Image + Float card */}
+          <div className="relative hidden lg:flex items-center justify-center">
+            {/* Cathedral image */}
+            <div className="relative h-[420px] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-2xl">
+              {/* Try to load local image, fallback to gradient */}
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: "url('/guadalajara.jpg')" }}
+              />
+              {/* Overlay for fallback visibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 to-transparent" />
+
+              {/* Fallback text if no image */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-white/20 select-none">
+                  <MapPin className="h-24 w-24 mx-auto mb-4" />
+                  <p className="text-2xl font-bold">Guadalajara, ZMG</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Float stats card */}
+            <div className="absolute bottom-6 right-6 rounded-2xl bg-white p-4 shadow-xl border border-gray-100 min-w-[180px]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100">
+                  <BadgeCheck className="h-5 w-5 text-green-700" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Negocios verificados</p>
+                  <p className="text-2xl font-black text-green-800">+2,500</p>
+                  <p className="text-xs text-gray-400">en toda la ZMG</p>
+                  <a href="/search" className="mt-1 text-xs text-green-700 font-semibold hover:underline">
+                    Conócelos todos →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
   )

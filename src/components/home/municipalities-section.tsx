@@ -1,6 +1,5 @@
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Building2 } from "@/lib/icons"
+import { MapPin } from "lucide-react"
 import type { Municipality, Neighborhood } from "@/types"
 
 interface MunicipalitiesSectionProps {
@@ -11,47 +10,45 @@ export function MunicipalitiesSection({ municipalities }: MunicipalitiesSectionP
   if (!municipalities.length) return null
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-14 bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900">Municipios de la ZMG</h2>
-          <p className="mt-2 text-gray-600">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">
+            Cobertura local
+          </p>
+          <h2 className="text-3xl font-black text-gray-900">Municipios de la ZMG</h2>
+          <p className="mt-2 text-gray-500">
             Busca negocios cerca de ti en cualquier municipio del área metropolitana
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {municipalities.map((municipio) => (
-            <Link key={municipio.id} href={`/search?municipio=${municipio.slug}`}>
-              <Card className="group h-full transition-all hover:shadow-md hover:border-blue-200 cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {municipio.name}
-                    </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {municipalities.map((mun) => (
+            <Link key={mun.id} href={`/search?municipio=${mun.slug}`}>
+              <div className="group rounded-2xl border border-gray-100 bg-white p-5 hover:border-green-200 hover:shadow-md transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-100 group-hover:bg-green-800 transition-colors">
+                    <MapPin className="h-4 w-4 text-green-800 group-hover:text-white transition-colors" />
                   </div>
-                  {municipio.neighborhoods.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {municipio.neighborhoods.slice(0, 6).map((n) => (
-                        <span
-                          key={n.id}
-                          className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600"
-                        >
-                          {n.name}
-                        </span>
-                      ))}
-                      {municipio.neighborhoods.length > 6 && (
-                        <span className="text-xs text-gray-400">
-                          +{municipio.neighborhoods.length - 6} más
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  <h3 className="font-bold text-gray-900 group-hover:text-green-800 transition-colors">
+                    {mun.name}
+                  </h3>
+                </div>
+                {mun.neighborhoods.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {mun.neighborhoods.slice(0, 5).map((n) => (
+                      <span key={n.id} className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] text-gray-500">
+                        {n.name}
+                      </span>
+                    ))}
+                    {mun.neighborhoods.length > 5 && (
+                      <span className="text-[11px] text-gray-400">
+                        +{mun.neighborhoods.length - 5} más
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </Link>
           ))}
         </div>

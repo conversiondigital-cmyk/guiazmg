@@ -1,76 +1,80 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Store, Search, Star } from "@/lib/icons"
+import { Rocket, BadgeCheck, Star } from "lucide-react"
 
 export function CTASection() {
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800">
+    <section className="py-20 bg-green-900">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+        <div className="grid gap-12 lg:grid-cols-2 items-center">
+
+          {/* Left */}
           <div>
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              ¿Tienes un negocio en la ZMG?
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 mb-6">
+              <Rocket className="h-7 w-7 text-amber-400" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+              ¿Tienes un negocio?{" "}
+              <span className="text-amber-400">Hazlo crecer con Guía ZMG</span>
             </h2>
-            <p className="mt-4 text-lg text-blue-100">
-              Llega a más clientes. Regístra tu negocio gratis y comienza a recibir
-              clientes potenciales de personas que buscan tus servicios.
+            <p className="mt-4 text-lg text-green-200 leading-relaxed">
+              Únete a nuestra plataforma y llega a miles de clientes
+              que buscan productos y servicios como los tuyos.
             </p>
-            <ul className="mt-8 space-y-4">
-              {[
-                { icon: Store, text: "Perfil público con toda tu información" },
-                { icon: Search, text: "Aparece en las búsquedas hiperlocales" },
-                { icon: Star, text: "Recibe reseñas y calificaciones" },
-              ].map((item) => (
-                <li key={item.text} className="flex items-center gap-3 text-blue-100">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                    <item.icon className="h-4 w-4 text-white" />
-                  </div>
-                  <span>{item.text}</span>
-                </li>
-              ))}
-            </ul>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/auth/register">
-                <Button
-                  size="lg"
-                  className="bg-white text-blue-700 hover:bg-blue-50 rounded-xl px-8"
-                >
-                  Registrar mi negocio gratis
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              <Link
+                href="/registrar-negocio"
+                className="rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-white hover:bg-amber-400 transition-colors"
+              >
+                Agregar mi negocio
               </Link>
-              <Link href="/planes">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 rounded-xl px-8"
-                >
-                  Ver planes
-                </Button>
+              <Link
+                href="/planes"
+                className="rounded-xl border border-white/30 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
+              >
+                Conocer planes
               </Link>
             </div>
           </div>
 
+          {/* Right — Example business card */}
           <div className="hidden lg:block">
-            <div className="rounded-2xl bg-white/5 p-8 backdrop-blur-sm">
-              <div className="space-y-4">
-                {[
-                  { label: "Usuarios activos", value: "10,000+" },
-                  { label: "Negocios registrados", value: "1,500+" },
-                  { label: "Búsquedas mensuales", value: "50,000+" },
-                  { label: "Municipios cubiertos", value: "8" },
-                ].map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="flex items-center justify-between rounded-xl bg-white/10 px-6 py-4"
-                  >
-                    <span className="text-blue-100">{stat.label}</span>
-                    <span className="text-2xl font-bold text-white">{stat.value}</span>
-                  </div>
-                ))}
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-semibold text-white">Tu negocio destacado</p>
+                <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">
+                  Patrocinado
+                </span>
               </div>
+              <div className="rounded-xl bg-white p-4 flex gap-4 items-start">
+                <div className="h-16 w-16 shrink-0 rounded-xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+                  <span className="text-2xl font-black text-amber-700">C</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900">Café La Estación</h3>
+                  <div className="flex items-center gap-1 my-1">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                    <span className="text-xs text-gray-500 ml-1">4.9 (128)</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Guadalajara, Jalisco</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <BadgeCheck className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-xs font-medium text-blue-600">Verificado</span>
+                    <span className="mx-1 text-gray-300">·</span>
+                    <span className="text-xs text-green-600 font-medium">Abierto ahora</span>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/registrar-negocio"
+                className="mt-4 block w-full rounded-xl bg-green-700 py-3 text-center text-sm font-bold text-white hover:bg-green-600 transition-colors"
+              >
+                Ver perfil del negocio
+              </Link>
             </div>
           </div>
+
         </div>
       </div>
     </section>
