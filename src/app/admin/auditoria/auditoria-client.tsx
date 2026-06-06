@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Search, Filter, ChevronDown, ChevronRight, ChevronLeft,
@@ -214,9 +214,9 @@ export function AuditoriaClient({ logs, users, pagination, filters: initialFilte
           </thead>
           <tbody>
             {logs.map((log) => (
-              <>
+              // @ts-ignore Fragment with key
+              <React.Fragment key={log.id}>
                 <tr
-                  key={log.id}
                   className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
                 >
@@ -249,13 +249,13 @@ export function AuditoriaClient({ logs, users, pagination, filters: initialFilte
                   </td>
                 </tr>
                 {expandedId === log.id && (
-                  <tr key={`${log.id}-details`}>
+                  <tr>
                     <td colSpan={6} className="bg-muted/30 p-4">
                       <DiffView oldVal={log.oldValue} newVal={log.newValue} />
                     </td>
                   </tr>
                 )}
-              </>
+              </React.Fragment>
             ))}
             {logs.length === 0 && (
               <tr>
