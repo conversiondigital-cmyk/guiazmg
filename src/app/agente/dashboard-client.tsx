@@ -177,7 +177,9 @@ export function AgentDashboardClient() {
       if (data.prospect) {
         setProspects((prev) => [data.prospect, ...prev])
       }
-    } catch {}
+    } catch (error) {
+      console.error("[AGENTE_PROSPECT_CREATE_ERROR]", error instanceof Error ? error.message : String(error))
+    }
     setFormData({ name: "", businessName: "", phone: "", email: "", notes: "" })
     setShowForm(false)
   }
@@ -192,7 +194,9 @@ export function AgentDashboardClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: newStatus }),
       })
-    } catch {}
+    } catch (error) {
+      console.error("[AGENTE_PROSPECT_MOVE_ERROR]", error instanceof Error ? error.message : String(error))
+    }
   }
 
   function deleteProspect(id: string) {

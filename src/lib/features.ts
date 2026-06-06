@@ -24,7 +24,9 @@ try {
   if (fs.existsSync(flagsPath)) {
     overrides = JSON.parse(fs.readFileSync(flagsPath, "utf-8"))
   }
-} catch {}
+} catch (error) {
+  console.error("[FEATURES_LOAD_ERROR]", error instanceof Error ? error.message : String(error))
+}
 
 export function isFeatureEnabled(name: string): boolean {
   const flag = overrides[name] ?? flags[name]

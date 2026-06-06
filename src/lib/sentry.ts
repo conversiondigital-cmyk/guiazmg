@@ -5,7 +5,9 @@ export function initSentry() {
   if (!enabled) return
   try {
     require("@sentry/nextjs")
-  } catch {}
+  } catch (error) {
+    console.error("[SENTRY_INIT_ERROR]", error instanceof Error ? error.message : String(error))
+  }
 }
 
 export function captureError(error: Error, context?: Record<string, any>) {
@@ -16,8 +18,8 @@ export function captureError(error: Error, context?: Record<string, any>) {
   try {
     const Sentry = require("@sentry/nextjs")
     Sentry.captureException(error, { extra: context })
-  } catch {
-    console.error("[SENTRY_ERROR]", error.message)
+  } catch (sentryError) {
+    console.error("[SENTRY_CAPTURE_ERROR]", sentryError instanceof Error ? sentryError.message : String(sentryError), "Original error:", error.message)
   }
 }
 
@@ -29,8 +31,8 @@ export function captureMessage(message: string, level: "info" | "warning" | "err
   try {
     const Sentry = require("@sentry/nextjs")
     Sentry.captureMessage(message, level)
-  } catch {
-    console.log(`[SENTRY_LOG] ${level.toUpperCase()}: ${message}`)
+  } catch (error) {
+    console.error("[SENTRY_MESSAGE_ERROR]", error instanceof Error ? error.message : String(error), `Message: ${message}`)
   }
 }
 

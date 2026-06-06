@@ -77,8 +77,12 @@ export async function sendEmail(
   } catch (err: any) {
     console.error(`Failed to send email (${template} to ${to}):`, err.message)
     try {
-      await prisma.emailLog.create({ data: { userId, to, subject, template, failedAt: new Date() } }).catch(() => {})
-    } catch {}
+      await prisma.emailLog.create({ data: { userId, to, subject, template, failedAt: new Date() } }).catch((e) => {
+        console.error("[EMAIL_LOG_CREATE_ERROR]", e instanceof Error ? e.message : String(e))
+      })
+    } catch (error) {
+      console.error("[EMAIL_SEND_FALLBACK_ERROR]", error instanceof Error ? error.message : String(error))
+    }
     return false
   }
 }

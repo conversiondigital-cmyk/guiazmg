@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
             resultsCount: results.total,
           },
         })
-      } catch {}
+      } catch (error) {
+        console.error("[SEARCH_LOG_ERROR]", error instanceof Error ? error.message : String(error))
+      }
     }
 
     return NextResponse.json(results)

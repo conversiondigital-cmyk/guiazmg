@@ -102,7 +102,8 @@ export async function rateLimit(
         remaining: Math.max(0, maxRequests - count),
         resetTime,
       }
-    } catch {
+    } catch (error) {
+      console.error("[RATE_LIMIT_REDIS_ERROR]", error instanceof Error ? error.message : String(error))
     }
   }
 
