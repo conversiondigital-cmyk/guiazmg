@@ -129,7 +129,7 @@ export default async function AdminAnalyticsPage() {
         COALESCE(SUM(bad.views), 0)::int as views,
         COALESCE(l.leads, 0)::int as leads
       FROM municipalities m
-      LEFT JOIN neighborhoods n ON n.municipality_id = m.id
+      LEFT JOIN neighborhoods n ON n."municipalityId" = m.id
       LEFT JOIN businesses b ON b."neighborhoodId" = n.id AND b."deletedAt" IS NULL
       LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id
       LEFT JOIN (SELECT "businessId", COUNT(*)::int as leads FROM leads GROUP BY "businessId") l ON l."businessId" = b.id
