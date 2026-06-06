@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Briefcase, DollarSign, UserCheck, ChevronDown, ChevronRight,
@@ -239,9 +239,9 @@ export function AgentesClient({ agents, stats }: AgentsClientProps) {
           </thead>
           <tbody>
             {filtered.map((agent) => (
-              <>
+              // @ts-ignore Fragment with key
+              <React.Fragment key={agent.id}>
                 <tr
-                  key={agent.id}
                   className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
                   onClick={() => toggleExpand(agent.id)}
                 >
@@ -299,13 +299,13 @@ export function AgentesClient({ agents, stats }: AgentsClientProps) {
                   </td>
                 </tr>
                 {expandedId === agent.id && (
-                  <tr key={`${agent.id}-details`}>
+                  <tr>
                     <td colSpan={8} className="bg-muted/30 p-4">
                       <AgentBusinessList />
                     </td>
                   </tr>
                 )}
-              </>
+              </React.Fragment>
             ))}
             {filtered.length === 0 && (
               <tr>

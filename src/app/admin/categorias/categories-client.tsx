@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Tag, Plus, Edit3, Trash2, Eye, EyeOff, ChevronRight, ChevronDownIcon,
@@ -314,7 +314,8 @@ function ExpandableCategoryRow({
   onSortChange: (val: number) => void
 }) {
   return (
-    <>
+    // @ts-ignore Fragment with key
+    <React.Fragment key={cat.id}>
       <TableRow className="cursor-pointer" onClick={onToggle}>
         <TableCell>
           {cat.subcategories.length > 0 ? (
@@ -385,6 +386,6 @@ function ExpandableCategoryRow({
           </TableCell>
         </TableRow>
       ))}
-    </>
+    </React.Fragment>
   )
 }
