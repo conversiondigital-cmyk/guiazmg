@@ -214,15 +214,90 @@ export default async function AdminConfigSectionPage({ params }: { params: Promi
       )}
 
       {section !== "general" && section !== "branding" && section !== "auth" && section !== "pagos" && section !== "membresias" && section !== "boosts" && section !== "seo" && (
+      )}
+    </div>
+  )
+}
+
+      {section === "correo" && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{meta.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-600">
-            <p>Sección en desarrollo. Próximamente habrá configuración interactiva para esta sección.</p>
-            <Link href="/admin/configuracion" className="inline-flex rounded-lg border px-3 py-2 text-slate-700 hover:bg-slate-50">
-              Volver al hub
-            </Link>
+          <CardHeader><CardTitle className="text-base">SMTP</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">Host</label><Input placeholder="smtp.gmail.com" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Puerto</label><Input type="number" placeholder="587" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Usuario</label><Input type="email" placeholder="email@gmail.com" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Contraseña</label><Input type="password" placeholder="••••" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "sms" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">SMS</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">Proveedor</label><Input placeholder="Twilio" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">API Key</label><Input type="password" placeholder="••••" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "seguridad" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Seguridad</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">CSP</label><Input placeholder="default-src 'self'" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">CORS Origins</label><Input placeholder="https://ejemplo.com" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Rate Limit</label><Input type="number" defaultValue="100" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "storage" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Storage</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">Bucket S3</label><Input placeholder="bucket-name" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Región</label><Input defaultValue="us-east-1" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Tamaño máx</label><Input type="number" defaultValue="50" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "moderacion" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Moderación</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">Palabras prohibidas</label><Input placeholder="palabra1,palabra2" className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Límite spam</label><Input type="number" defaultValue="75" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "legal" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Legal</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div><label className="text-sm font-medium text-slate-900">Términos</label><Input placeholder="https://..." className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Privacidad</label><Input placeholder="https://..." className="mt-1" /></div>
+            <div><label className="text-sm font-medium text-slate-900">Email legal</label><Input type="email" placeholder="legal@guia-zmg.local" className="mt-1" /></div>
+            <Button className="bg-green-600">Guardar</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {section === "flags" && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Feature Flags</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between items-center p-2 border rounded"><span className="text-sm font-medium">Marketplace</span><Badge>Activo</Badge></div>
+            <div className="flex justify-between items-center p-2 border rounded"><span className="text-sm font-medium">Boosts</span><Badge>Activo</Badge></div>
+            <div className="flex justify-between items-center p-2 border rounded"><span className="text-sm font-medium">Reviews</span><Badge>Activo</Badge></div>
+            <Button className="bg-green-600">Guardar</Button>
           </CardContent>
         </Card>
       )}
