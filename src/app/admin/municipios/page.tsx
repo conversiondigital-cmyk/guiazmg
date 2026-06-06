@@ -25,24 +25,8 @@ export default async function AdminMunicipiosPage() {
       columns={[
         { key: "name", label: "Nombre" },
         { key: "slug", label: "Slug" },
-        {
-          key: "_count.neighborhoods",
-          label: "Colonias",
-          render: (v: any) => (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-              {v}
-            </span>
-          ),
-        },
-        {
-          key: "_count.businesses",
-          label: "Negocios",
-          render: (v: any) => (
-            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-              {v}
-            </span>
-          ),
-        },
+        { key: "_count.neighborhoods", label: "Colonias" },
+        { key: "_count.businesses", label: "Negocios" },
       ]}
       formFields={[
         { name: "name", label: "Nombre", required: true },

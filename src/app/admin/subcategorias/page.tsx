@@ -27,15 +27,7 @@ export default async function AdminSubcategoriasPage() {
         { key: "name", label: "Subcategoría" },
         { key: "category.name", label: "Categoría" },
         { key: "slug", label: "Slug" },
-        {
-          key: "_count.businesses",
-          label: "Negocios",
-          render: (v: any) => (
-            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-              {v}
-            </span>
-          ),
-        },
+        { key: "_count.businesses", label: "Negocios" },
       ]}
       formFields={[
         { name: "name", label: "Nombre", required: true },
