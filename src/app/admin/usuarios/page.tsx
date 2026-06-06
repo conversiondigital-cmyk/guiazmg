@@ -42,62 +42,63 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ rol?: string; status?: string; q?: string; page?: string }>
 }) {
-  const session = await auth()
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/dashboard")
-  }
+  try {
+    const session = await auth()
+    if (!session?.user || session.user.role !== "ADMIN") {
+      redirect("/dashboard")
+    }
 
-  const params = await searchParams
-  const currentRol = params.rol ?? "ALL"
-  const currentStatus = params.status ?? "active"
-  const currentQ = params.q ?? ""
-  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10))
-  const limit = 20
+    const params = await searchParams
+    const currentRol = params.rol ?? "ALL"
+    const currentStatus = params.status ?? "active"
+    const currentQ = params.q ?? ""
+    const currentPage = Math.max(1, parseInt(params.page ?? "1", 10))
+    const limit = 20
 
-  const where: Record<string, unknown> = { deletedAt: null }
+    const where: Record<string, unknown> = { deletedAt: null }
 
-  if (currentRol !== "ALL") {
-    where.role = currentRol
-  }
+    if (currentRol !== "ALL") {
+      where.role = currentRol
+    }
 
-  if (currentStatus === "suspended") {
-    where.isActive = false
-  } else if (currentStatus !== "all") {
-    where.isActive = true
-  }
+    if (currentStatus === "suspended") {
+      where.isActive = false
+    } else if (currentStatus !== "all") {
+      where.isActive = true
+    }
 
-  if (currentQ) {
-    where.OR = [
-      { name: { contains: currentQ, mode: "insensitive" } },
-      { email: { contains: currentQ, mode: "insensitive" } },
-    ]
-  }
+    if (currentQ) {
+      where.OR = [
+        { name: { contains: currentQ, mode: "insensitive" } },
+        { email: { contains: currentQ, mode: "insensitive" } },
+      ]
+    }
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        image: true,
-        _count: {
-          select: {
-            businesses: true,
-            reviews: true,
-            marketplaceListings: true,
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          image: true,
+          _count: {
+            select: {
+              businesses: true,
+              reviews: true,
+              marketplaceListings: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      skip: (currentPage - 1) * limit,
-      take: limit,
-    }),
-    prisma.user.count({ where }),
-  ])
+        orderBy: { createdAt: "desc" },
+        skip: (currentPage - 1) * limit,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ])
 
   const totalPages = Math.ceil(total / limit)
 
@@ -294,5 +295,8 @@ export default async function AdminUsersPage({
         </div>
       )}
     </div>
-  )
+  ) } catch (error) {
+    console.error("[ADMIN_USUARIOS_ERROR]", error)
+    throw error
+  }
 }
