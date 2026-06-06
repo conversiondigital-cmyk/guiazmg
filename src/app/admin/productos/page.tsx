@@ -1,2 +1,5 @@
 import { redirect } from "next/navigation"
-export default function AdminProductosRedirect() { redirect("/admin/anuncios") }
+
+export default async function AdminRedirect() {
+  redirect("/admin/anuncios")
+}

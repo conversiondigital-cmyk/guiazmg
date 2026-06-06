@@ -1,2 +1,5 @@
 import { redirect } from "next/navigation"
-export default function AdminResenasRedirect() { redirect("/admin/reviews") }
+
+export default async function AdminRedirect() {
+  redirect("/admin/reviews")
+}

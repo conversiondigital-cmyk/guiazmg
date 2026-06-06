@@ -1,2 +1,5 @@
 import { redirect } from "next/navigation"
-export default function AdminLandingPagesRedirect() { redirect("/admin/seo") }
+
+export default async function AdminRedirect() {
+  redirect("/admin/seo")
+}

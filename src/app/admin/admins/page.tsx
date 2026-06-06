@@ -1,2 +1,5 @@
 import { redirect } from "next/navigation"
-export default function AdminAdminsRedirect() { redirect("/admin/usuarios?role=ADMIN") }
+
+export default async function AdminAdminsRedirect() {
+  redirect("/admin/usuarios?role=ADMIN")
+}

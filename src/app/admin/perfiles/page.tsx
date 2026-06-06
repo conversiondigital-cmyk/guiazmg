@@ -1,2 +1,5 @@
 import { redirect } from "next/navigation"
-export default function AdminPerfilesRedirect() { redirect("/admin/negocios") }
+
+export default async function AdminRedirect() {
+  redirect("/admin/negocios")
+}
