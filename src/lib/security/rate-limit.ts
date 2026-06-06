@@ -72,7 +72,20 @@ export function getTrustedClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
   if (forwarded) return forwarded
 
-  return "unknown"
+  // HARDENING: Si no hay IP confiable, usar fingerprint basado en headers
+  // Esto diversifica la clave rate-limit para evitar agrupar múltiples usuarios bajo "unknown"
+  const userAgent = request.headers.get("user-agent") || ""
+  const accept = request.headers.get("accept-language") || ""
+  const acceptEncoding = request.headers.get("accept-encoding") || ""
+
+  // Crear hash simple de headers para diversificar la clave
+  let hash = 5381
+  const str = userAgent + accept + acceptEncoding
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i)
+  }
+
+  return `unknown:${Math.abs(hash).toString(36).substring(0, 8)}`
 }
 
 if (typeof setInterval !== "undefined") {
