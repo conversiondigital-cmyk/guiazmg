@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
           </div>
           <ForgotPasswordForm />
           <p className="mt-6 text-center text-sm text-gray-500">
-            <Link href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/auth/login" className="text-green-700 hover:text-green-800 font-medium">
               Volver a inicio de sesión
             </Link>
           </p>

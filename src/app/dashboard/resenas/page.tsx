@@ -60,8 +60,8 @@ export default async function ResenasPage() {
         </Card>
         <Card>
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
-              <MessageCircle className="h-7 w-7 text-blue-500" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+              <MessageCircle className="h-7 w-7 text-green-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Número de reseñas</p>
@@ -112,7 +112,7 @@ export default async function ResenasPage() {
                 <div key={review.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
                         {review.user.name?.charAt(0) || "?"}
                       </div>
                       <div>
@@ -147,8 +147,8 @@ export default async function ResenasPage() {
 
                   {/* Response */}
                   {review.response && (
-                    <div className="mt-3 rounded-lg bg-blue-50 p-3">
-                      <div className="flex items-center gap-2 text-sm text-blue-600 mb-1">
+                    <div className="mt-3 rounded-lg bg-green-50 p-3">
+                      <div className="flex items-center gap-2 text-sm text-green-700 mb-1">
                         <Reply className="h-3 w-3" />
                         <span className="font-medium">Respuesta del negocio</span>
                       </div>

@@ -25,7 +25,7 @@ export function GamificationTips() {
           <Link
             key={tip.label}
             href={tip.href}
-            className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:border-blue-100 hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:border-green-100 hover:bg-green-50 transition-colors"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
               <tip.icon className="h-4 w-4 text-gray-600" />

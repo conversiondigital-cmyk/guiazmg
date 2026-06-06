@@ -45,7 +45,7 @@ export function ReferralCodeDisplay({ code, shareUrl }: Props) {
       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex-1">
           <p className="text-xs text-gray-500 mb-1">Tu código</p>
-          <p className="text-2xl font-mono font-bold text-blue-600 tracking-wider">
+          <p className="text-2xl font-mono font-bold text-green-700 tracking-wider">
             {code}
           </p>
         </div>

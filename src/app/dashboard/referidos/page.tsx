@@ -71,9 +71,9 @@ export default async function ReferidosPage() {
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                   Enviados
                 </p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{sentCount}</p>
+                <p className="text-2xl font-bold text-green-700 mt-1">{sentCount}</p>
               </div>
-              <Users className="h-5 w-5 text-blue-500" />
+              <Users className="h-5 w-5 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -150,7 +150,7 @@ export default async function ReferidosPage() {
                         r.status === "REWARDED"
                           ? "bg-green-100 text-green-700 border-green-200"
                           : r.status === "CONVERTED"
-                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                            ? "bg-green-100 text-green-800 border-green-200"
                             : "bg-yellow-100 text-yellow-700 border-yellow-200"
                       }
                     >
@@ -183,8 +183,8 @@ export default async function ReferidosPage() {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="text-center">
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-                <LinkIcon className="h-6 w-6 text-blue-600" />
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                <LinkIcon className="h-6 w-6 text-green-700" />
               </div>
               <h3 className="font-semibold text-gray-900">1. Comparte</h3>
               <p className="text-sm text-gray-500 mt-1">

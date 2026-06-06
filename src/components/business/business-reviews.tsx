@@ -114,7 +114,7 @@ export function BusinessReviews({ reviews, businessId }: BusinessReviewsProps) {
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
+                    <AvatarFallback className="text-xs bg-green-100 text-green-700">
                       {review.user.name ? getInitials(review.user.name) : "U"}
                     </AvatarFallback>
                   </Avatar>

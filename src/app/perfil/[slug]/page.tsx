@@ -97,13 +97,13 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <nav className="mb-6 text-sm text-gray-500">
-            <Link href="/" className="hover:text-blue-600 transition-colors">Inicio</Link>
+            <Link href="/" className="hover:text-green-700 transition-colors">Inicio</Link>
             <span className="mx-2">/</span>
             {business.category && (
               <>
                 <Link
                   href={`/categoria/${business.category.slug}`}
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-green-700 transition-colors"
                 >
                   {business.category.name}
                 </Link>

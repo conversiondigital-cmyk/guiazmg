@@ -46,7 +46,7 @@ export default async function FavoritesPage() {
               <Link key={fav.id} href={`/perfil/${biz.slug}`}>
                 <Card className="group h-full transition-all hover:shadow-md cursor-pointer">
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
                       {biz.name}
                     </h3>
                     <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">

@@ -97,7 +97,7 @@ function ResetPasswordContent() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/" className="text-2xl font-bold mb-2 inline-block">
-            <span className="text-blue-600">Guía</span> ZMG
+            <span className="text-green-700">Guía</span> ZMG
           </Link>
           <CardTitle className="text-xl">Nueva contraseña</CardTitle>
           <CardDescription>Ingresa tu nueva contraseña</CardDescription>
@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-green-700" />
       </div>
     }>
       <ResetPasswordContent />

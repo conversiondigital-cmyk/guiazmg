@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
   PENDING: "bg-yellow-100 text-yellow-700",
   FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-blue-100 text-blue-700",
+  REFUNDED: "bg-green-100 text-green-800",
   CANCELLED: "bg-gray-100 text-gray-700",
 }
 
@@ -69,7 +69,7 @@ export default async function PagosPage() {
         <Card>
           <CardContent className="p-5">
             <p className="text-sm text-gray-500">Total gastado</p>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalSpent)}</p>
+            <p className="text-2xl font-bold text-green-700">{formatCurrency(totalSpent)}</p>
           </CardContent>
         </Card>
         <Card>

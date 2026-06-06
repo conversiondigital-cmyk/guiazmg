@@ -70,7 +70,7 @@ function CheckoutContent() {
       <>
         <Header />
         <main className="flex min-h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-green-700" />
         </main>
         <Footer />
       </>
@@ -138,7 +138,7 @@ function CheckoutContent() {
                 )}
 
                 <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-green-700 hover:bg-green-800"
                   size="lg"
                   onClick={handlePayment}
                   disabled={loading}
@@ -173,7 +173,7 @@ export default function CheckoutPage() {
       <>
         <Header />
         <main className="flex min-h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-green-700" />
         </main>
         <Footer />
       </>

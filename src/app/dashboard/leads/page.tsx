@@ -23,7 +23,7 @@ const LEAD_TYPE_COLORS: Record<string, string> = {
   PHONE_CALL: "bg-orange-100 text-orange-700",
   ROUTE: "bg-red-100 text-red-700",
   WEBSITE: "bg-purple-100 text-purple-700",
-  FORM: "bg-blue-100 text-blue-700",
+  FORM: "bg-green-100 text-green-800",
 }
 
 export default async function LeadsPage() {
@@ -73,7 +73,7 @@ export default async function LeadsPage() {
 
       {/* Quick filters */}
       <div className="flex items-center gap-2">
-        <Badge className="bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200">Hoy ({leadsToday.length})</Badge>
+        <Badge className="bg-green-100 text-green-800 cursor-pointer hover:bg-green-200">Hoy ({leadsToday.length})</Badge>
         <Badge className="bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">7 días ({leads7d.length})</Badge>
         <Badge className="bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">30 días ({leads30d.length})</Badge>
         <Badge className="bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">Todos ({leads.length})</Badge>

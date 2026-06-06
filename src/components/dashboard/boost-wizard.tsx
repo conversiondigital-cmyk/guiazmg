@@ -100,7 +100,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
             <div
               className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
                 s === step
-                  ? "bg-blue-600 text-white"
+                  ? "bg-green-700 text-white"
                   : s < step
                     ? "bg-green-100 text-green-700"
                     : "bg-gray-100 text-gray-400"
@@ -108,7 +108,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
             >
               {s < step ? <CheckCircle className="h-4 w-4" /> : s}
             </div>
-            <span className={`hidden sm:inline ${s === step ? "text-blue-600 font-medium" : "text-gray-400"}`}>
+            <span className={`hidden sm:inline ${s === step ? "text-green-700 font-medium" : "text-gray-400"}`}>
               {s === 1 && "Tipo"}
               {s === 2 && "Objetivo"}
               {s === 3 && "Duración"}
@@ -136,11 +136,11 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                     onClick={() => setTargetType(t.value)}
                     className={`text-left p-5 rounded-xl border-2 transition-all ${
                       targetType === t.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300"
+                        ? "border-blue-500 bg-green-50"
+                        : "border-gray-200 hover:border-green-300"
                     }`}
                   >
-                    <Icon className="h-8 w-8 text-blue-600 mb-3" />
+                    <Icon className="h-8 w-8 text-green-700 mb-3" />
                     <h3 className="font-semibold text-gray-900">{t.label}</h3>
                     <p className="text-xs text-gray-500 mt-1">{t.desc}</p>
                   </button>
@@ -181,11 +181,11 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                     }}
                     className={`text-left p-4 rounded-lg border-2 transition-all ${
                       selectedBusinessId === b.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300"
+                        ? "border-blue-500 bg-green-50"
+                        : "border-gray-200 hover:border-green-300"
                     }`}
                   >
-                    <Store className="h-5 w-5 text-blue-600 mb-1" />
+                    <Store className="h-5 w-5 text-green-700 mb-1" />
                     <p className="font-medium text-gray-900">{b.name}</p>
                   </button>
                 ))}
@@ -209,11 +209,11 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                         onClick={() => setSelectedListingId(l.id)}
                         className={`text-left p-4 rounded-lg border-2 transition-all ${
                           selectedListingId === l.id
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:border-blue-300"
+                            ? "border-blue-500 bg-green-50"
+                            : "border-gray-200 hover:border-green-300"
                         }`}
                       >
-                        <MapPin className="h-5 w-5 text-blue-600 mb-1" />
+                        <MapPin className="h-5 w-5 text-green-700 mb-1" />
                         <p className="font-medium text-gray-900">{l.title}</p>
                       </button>
                     ))}
@@ -242,12 +242,12 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                   onClick={() => setSelectedDefId(d.id)}
                   className={`text-left p-5 rounded-xl border-2 transition-all ${
                     selectedDefId === d.id
-                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                      : "border-gray-200 hover:border-blue-300"
+                      ? "border-blue-500 bg-green-50 ring-2 ring-blue-200"
+                      : "border-gray-200 hover:border-green-300"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <Calendar className="h-5 w-5 text-green-700" />
                     <span className="font-semibold text-gray-900">{d.name}</span>
                   </div>
                   <p className="text-3xl font-bold text-gray-900">{d.durationDays}</p>
@@ -257,7 +257,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                      <span className="font-medium text-amber-600">{d.price.toLocaleString()} MXN</span>
                   </div>
                   {d.priorityBonus > 0 && (
-                    <Badge className="mt-2 bg-blue-100 text-blue-700 border-blue-200">
+                    <Badge className="mt-2 bg-green-100 text-green-800 border-green-200">
                       +{d.priorityBonus} prioridad
                     </Badge>
                   )}

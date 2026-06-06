@@ -82,7 +82,7 @@ export function DashboardSidebar() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg"
+        className="lg:hidden fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-green-700 text-white shadow-lg"
       >
         <Menu className="h-6 w-6" />
       </button>
@@ -102,7 +102,7 @@ export function DashboardSidebar() {
       >
         <div className="flex h-16 items-center justify-between border-b px-6">
           <Link href="/" className="text-xl font-bold">
-            <span className="text-blue-600">Guía</span> ZMG
+            <span className="text-green-700">Guía</span> ZMG
           </Link>
           <button onClick={() => setOpen(false)} className="lg:hidden">
             <X className="h-5 w-5 text-gray-500" />
@@ -128,7 +128,7 @@ export function DashboardSidebar() {
                       className={cn(
                         "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                         isActive
-                          ? "bg-blue-50 text-blue-700"
+                          ? "bg-green-50 text-green-800"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       )}
                     >

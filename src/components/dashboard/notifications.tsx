@@ -31,7 +31,7 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
     <Card>
       <CardHeader>
         <CardTitle className="text-sm flex items-center gap-2">
-          <Bell className="h-4 w-4 text-blue-600" />
+          <Bell className="h-4 w-4 text-green-700" />
           Notificaciones
         </CardTitle>
       </CardHeader>
@@ -40,7 +40,7 @@ export function NotificationsPanel({ notifications }: NotificationsPanelProps) {
           <div
             key={n.id}
             className={`rounded-lg border p-3 text-sm ${
-              n.read ? "border-gray-100" : "border-blue-100 bg-blue-50"
+              n.read ? "border-gray-100" : "border-green-100 bg-green-50"
             }`}
           >
             <p className="font-medium text-gray-900">{n.title}</p>

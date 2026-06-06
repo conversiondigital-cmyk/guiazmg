@@ -120,7 +120,7 @@ export default async function EstadisticasPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Vistas totales</CardTitle>
-            <Eye className="h-4 w-4 text-blue-600" />
+            <Eye className="h-4 w-4 text-green-700" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalViews}</div>
@@ -188,7 +188,7 @@ export default async function EstadisticasPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Eye className="h-5 w-5 text-blue-500" />
+              <Eye className="h-5 w-5 text-green-600" />
               Anuncios más vistos
             </CardTitle>
             <CardDescription>Top 5 por visualizaciones</CardDescription>

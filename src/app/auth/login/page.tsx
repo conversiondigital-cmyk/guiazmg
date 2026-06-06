@@ -47,7 +47,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/" className="text-2xl font-bold mb-2 inline-block">
-            <span className="text-blue-600">Guía</span> ZMG
+            <span className="text-green-700">Guía</span> ZMG
           </Link>
           <CardTitle className="text-xl">Iniciar Sesión</CardTitle>
           <CardDescription>Accede a tu cuenta de Guía ZMG</CardDescription>
@@ -106,7 +106,7 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center text-sm text-gray-500">
             ¿No tienes cuenta?{" "}
-            <Link href="/auth/register" className="text-blue-600 hover:underline">
+            <Link href="/auth/register" className="text-green-700 hover:underline">
               Registrarse
             </Link>
           </div>

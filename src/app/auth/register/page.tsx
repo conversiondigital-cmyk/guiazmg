@@ -68,7 +68,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/" className="text-2xl font-bold mb-2 inline-block">
-            <span className="text-blue-600">Guía</span> ZMG
+            <span className="text-green-700">Guía</span> ZMG
           </Link>
           <CardTitle className="text-xl">Crear cuenta</CardTitle>
           <CardDescription>Registra tu negocio o únete como usuario</CardDescription>
@@ -122,19 +122,19 @@ export default function RegisterPage() {
               <label className="flex items-start gap-2">
                 <input type="checkbox" className="mt-1" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} />
                 <span>
-                  Acepto los <Link href="/terminos" className="text-blue-600 hover:underline">términos</Link>
+                  Acepto los <Link href="/terminos" className="text-green-700 hover:underline">términos</Link>
                 </span>
               </label>
               <label className="flex items-start gap-2">
                 <input type="checkbox" className="mt-1" checked={acceptedPrivacy} onChange={(e) => setAcceptedPrivacy(e.target.checked)} />
                 <span>
-                  Acepto la <Link href="/privacidad" className="text-blue-600 hover:underline">política de privacidad</Link>
+                  Acepto la <Link href="/privacidad" className="text-green-700 hover:underline">política de privacidad</Link>
                 </span>
               </label>
               <label className="flex items-start gap-2">
                 <input type="checkbox" className="mt-1" checked={acceptedCommunity} onChange={(e) => setAcceptedCommunity(e.target.checked)} />
                 <span>
-                  Acepto las <Link href="/normas-comunidad" className="text-blue-600 hover:underline">normas de comunidad</Link>
+                  Acepto las <Link href="/normas-comunidad" className="text-green-700 hover:underline">normas de comunidad</Link>
                 </span>
               </label>
             </div>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
 
           <div className="mt-4 text-center text-sm text-gray-500">
             ¿Ya tienes cuenta?{" "}
-            <Link href="/auth/login" className="text-blue-600 hover:underline">
+            <Link href="/auth/login" className="text-green-700 hover:underline">
               Iniciar sesión
             </Link>
           </div>

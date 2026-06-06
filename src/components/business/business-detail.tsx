@@ -14,7 +14,7 @@ export function BusinessDetail({ business, avgRating }: BusinessDetailProps) {
   return (
     <div>
       {business.coverImageUrl && (
-        <div className="relative aspect-[21/9] rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-blue-100 to-blue-50">
+        <div className="relative aspect-[21/9] rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-green-100 to-green-50">
           <Image src={business.coverImageUrl} alt={business.name} fill className="object-cover" />
         </div>
       )}
@@ -29,7 +29,7 @@ export function BusinessDetail({ business, avgRating }: BusinessDetailProps) {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-gray-900">{business.name}</h1>
             {business.isVerified && (
-              <Badge className="bg-blue-600 text-white">Verificado</Badge>
+              <Badge className="bg-green-700 text-white">Verificado</Badge>
             )}
             {activeMembership && (
               <Badge className="bg-amber-500 text-white">{activeMembership.plan.name}</Badge>

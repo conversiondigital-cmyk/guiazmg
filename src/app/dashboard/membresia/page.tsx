@@ -15,12 +15,12 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   PAST_DUE: { label: "VENCIDA", color: "bg-red-100 text-red-700 border-red-300" },
   EXPIRED: { label: "EXPIRADA", color: "bg-gray-100 text-gray-700 border-gray-300" },
   CANCELLED: { label: "CANCELADA", color: "bg-yellow-100 text-yellow-700 border-yellow-300" },
-  TRIAL: { label: "PRUEBA", color: "bg-blue-100 text-blue-700 border-blue-300" },
+  TRIAL: { label: "PRUEBA", color: "bg-green-100 text-green-800 border-green-300" },
 }
 
 const planIcon: Record<string, React.ReactNode> = {
   free: <Star className="h-5 w-5 text-gray-400" />,
-  basic: <Zap className="h-5 w-5 text-blue-500" />,
+  basic: <Zap className="h-5 w-5 text-green-600" />,
   professional: <Crown className="h-5 w-5 text-amber-500" />,
   premium: <Gem className="h-5 w-5 text-purple-500" />,
 }
@@ -79,7 +79,7 @@ export default async function MembresiaPage() {
 
       {activeMembership ? (
         <>
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white overflow-hidden">
+          <Card className="border-green-200 bg-gradient-to-br from-blue-50 to-white overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div className="flex-1 min-w-[240px]">
@@ -107,7 +107,7 @@ export default async function MembresiaPage() {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        className="bg-green-700 h-2 rounded-full transition-all"
                         style={{ width: `${periodRemaining}%` }}
                       />
                     </div>
@@ -148,7 +148,7 @@ export default async function MembresiaPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-3xl font-bold text-green-700">
                   {activeMembership.plan.maxListings}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Anuncios máximos</p>
@@ -156,7 +156,7 @@ export default async function MembresiaPage() {
             </Card>
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-blue-600">
+                <p className="text-3xl font-bold text-green-700">
                   {activeMembership.plan.maxGalleryImages}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Imágenes por anuncio</p>
@@ -164,7 +164,7 @@ export default async function MembresiaPage() {
             </Card>
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-blue-600">Incluido</p>
+                <p className="text-3xl font-bold text-green-700">Incluido</p>
                 <p className="text-xs text-gray-500 mt-1">Boosts y visibilidad</p>
               </CardContent>
             </Card>
@@ -175,7 +175,7 @@ export default async function MembresiaPage() {
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   )}
                   {activeMembership.plan.hasSocialLinks && (
-                    <LinkIcon className="h-5 w-5 text-blue-500" />
+                    <LinkIcon className="h-5 w-5 text-green-600" />
                   )}
                   {activeMembership.plan.hasWebsiteLink && (
                     <Globe className="h-5 w-5 text-purple-500" />
@@ -194,7 +194,7 @@ export default async function MembresiaPage() {
       ) : (
         <Card>
           <CardContent className="p-8 text-center">
-            <Gem className="mx-auto h-12 w-12 text-blue-300" />
+            <Gem className="mx-auto h-12 w-12 text-green-300" />
             <h2 className="mt-4 text-lg font-semibold text-gray-900">
               Sin membresía activa
             </h2>
@@ -237,7 +237,7 @@ export default async function MembresiaPage() {
                 >
                   {isActive && (
                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-blue-600 text-white">Actual</Badge>
+                      <Badge className="bg-green-700 text-white">Actual</Badge>
                     </div>
                   )}
                   {plan.slug === "professional" && !activeMembership && (

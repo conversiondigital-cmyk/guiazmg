@@ -168,7 +168,7 @@ export function BusinessRegistrationWizard() {
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors ${
                   step === s.id
-                    ? "bg-blue-600 text-white"
+                    ? "bg-green-700 text-white"
                     : step > s.id
                     ? "bg-green-500 text-white"
                     : "bg-gray-100 text-gray-400"
@@ -188,7 +188,7 @@ export function BusinessRegistrationWizard() {
         </div>
         <div className="mt-2 hidden sm:flex justify-between text-xs text-gray-500">
           {steps.map((s) => (
-            <span key={s.id} className={step === s.id ? "font-medium text-blue-600" : ""}>
+            <span key={s.id} className={step === s.id ? "font-medium text-green-700" : ""}>
               {s.label}
             </span>
           ))}

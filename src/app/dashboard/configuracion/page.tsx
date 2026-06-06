@@ -55,7 +55,7 @@ export default async function ConfiguracionPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Bell className="h-5 w-5 text-blue-500" />
+            <Bell className="h-5 w-5 text-green-600" />
             Notificaciones
           </CardTitle>
         </CardHeader>

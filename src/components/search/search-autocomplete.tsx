@@ -129,7 +129,7 @@ export function SearchAutocomplete({
             }
           }}
           placeholder={placeholder}
-          className="w-full rounded-xl border-0 bg-transparent py-3.5 pl-12 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full rounded-xl border-0 bg-transparent py-3.5 pl-12 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600 text-base"
         />
         {loading && (
           <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 animate-spin" />
@@ -146,7 +146,7 @@ export function SearchAutocomplete({
                   onClick={() => handleSelect(s)}
                   onMouseEnter={() => setHighlightedIndex(i)}
                   className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer transition-colors ${
-                    i === highlightedIndex ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"
+                    i === highlightedIndex ? "bg-green-50 text-green-800" : "text-gray-700 hover:bg-gray-50"
                   } ${i === 0 ? "rounded-t-xl" : ""} ${i === suggestions.length - 1 ? "rounded-b-xl" : ""}`}
                 >
                   <Search className="h-4 w-4 text-gray-400 shrink-0" />
@@ -167,7 +167,7 @@ export function SearchAutocomplete({
                     onClick={() => handleSelect(s)}
                     onMouseEnter={() => setHighlightedIndex(i)}
                     className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer transition-colors ${
-                      i === highlightedIndex ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-50"
+                      i === highlightedIndex ? "bg-green-50 text-green-800" : "text-gray-700 hover:bg-gray-50"
                     } ${i === popular.length - 1 ? "rounded-b-xl" : ""}`}
                   >
                     <Clock className="h-4 w-4 text-gray-400 shrink-0" />

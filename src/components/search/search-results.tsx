@@ -39,7 +39,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
         <h1 className="text-2xl font-bold text-gray-900">
           {query ? (
             <>
-              Resultados para <span className="text-blue-600">&ldquo;{query}&rdquo;</span>
+              Resultados para <span className="text-green-700">&ldquo;{query}&rdquo;</span>
             </>
           ) : (
             "Todos los perfiles"
@@ -95,7 +95,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
                             href={`/perfil/${business.slug}`}
-                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                              className="text-lg font-semibold text-gray-900 hover:text-green-700 transition-colors"
                             >
                               {business.name}
                             </Link>
@@ -121,7 +121,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
                         {business.score && (
                           <div className="text-right ml-4 shrink-0">
                             <div className="text-xs text-gray-400">Relevancia</div>
-                            <div className="text-lg font-bold text-blue-600">
+                            <div className="text-lg font-bold text-green-700">
                               {Math.round(business.score)}%
                             </div>
                           </div>
@@ -137,7 +137,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
                           </span>
                         )}
                         {business.distance !== undefined && (
-                          <span className="inline-flex items-center gap-1 font-medium text-blue-600">
+                          <span className="inline-flex items-center gap-1 font-medium text-green-700">
                             <Navigation className="h-3 w-3" />
                             {business.distance.toFixed(1)} km
                           </span>
@@ -219,7 +219,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
                 key={p}
                 href={`/search?page=${p}&q=${query || ""}`}
                 className={`inline-flex items-center rounded-lg border px-4 py-2 text-sm ${
-                  p === page ? "bg-blue-600 text-white border-blue-600" : "hover:bg-gray-50"
+                  p === page ? "bg-green-800 text-white border-green-800" : "hover:bg-gray-50"
                 }`}
               >
                 {p}

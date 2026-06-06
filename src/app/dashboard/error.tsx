@@ -17,7 +17,7 @@ export default function DashboardError({
       <p className="text-gray-500 mb-6">Ocurrió un error al cargar esta sección.</p>
       <button
         onClick={reset}
-        className="rounded-xl bg-blue-600 px-6 py-2 text-white font-medium hover:bg-blue-700 transition-colors"
+        className="rounded-xl bg-green-800 px-6 py-2 text-white font-medium hover:bg-green-900 transition-colors"
       >
         Reintentar
       </button>

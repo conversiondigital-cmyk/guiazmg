@@ -68,7 +68,7 @@ export function NotificationPreferencesForm({ settings, userId }: { settings: Se
               id={item.key}
               onClick={() => toggle(item.key)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                prefs[item.key] ? "bg-blue-600" : "bg-gray-200"
+                prefs[item.key] ? "bg-green-700" : "bg-gray-200"
               }`}
             >
               <span

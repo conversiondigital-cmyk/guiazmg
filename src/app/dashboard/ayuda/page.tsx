@@ -25,7 +25,7 @@ export default function AyudaPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <HelpCircle className="h-5 w-5 text-blue-500" />
+            <HelpCircle className="h-5 w-5 text-green-600" />
             Preguntas frecuentes
           </CardTitle>
           <CardDescription>Las dudas más comunes de nuestros usuarios</CardDescription>
@@ -60,7 +60,7 @@ export default function AyudaPage() {
           <div className="flex flex-wrap gap-4">
             <Link
               href="mailto:soporte@guiazmg.com"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:border-blue-200 hover:text-blue-600 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:border-green-200 hover:text-green-700 transition-colors"
             >
               <Mail className="h-4 w-4" />
               soporte@guiazmg.com

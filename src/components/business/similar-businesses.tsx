@@ -18,14 +18,14 @@ export function SimilarBusinesses({ businesses }: SimilarBusinessesProps) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {businesses.map((b) => (
           <Link key={b.id} href={`/perfil/${b.slug}`}>
-            <Card className="group h-full transition-all hover:shadow-md hover:border-blue-200 cursor-pointer">
+            <Card className="group h-full transition-all hover:shadow-md hover:border-green-200 cursor-pointer">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-lg font-bold text-blue-600">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-green-50 text-lg font-bold text-green-700">
                     {b.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors truncate">
                       {b.name}
                     </h3>
                     {b.shortDescription && (
@@ -41,7 +41,7 @@ export function SimilarBusinesses({ businesses }: SimilarBusinessesProps) {
                         </span>
                       )}
                       {b.isVerified && (
-                        <Badge className="bg-blue-600 text-white text-[10px] px-1.5 py-0">Verificado</Badge>
+                        <Badge className="bg-green-700 text-white text-[10px] px-1.5 py-0">Verificado</Badge>
                       )}
                     </div>
                   </div>

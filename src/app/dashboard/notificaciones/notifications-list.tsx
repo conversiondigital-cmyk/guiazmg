@@ -26,7 +26,7 @@ const typeIcons: Record<string, typeof Bell> = {
 
 const typeColors: Record<string, string> = {
   REVIEW: "bg-yellow-100 text-yellow-600",
-  MESSAGE: "bg-blue-100 text-blue-600",
+  MESSAGE: "bg-green-100 text-green-700",
   PAYMENT: "bg-green-100 text-green-600",
   EXPIRATION: "bg-orange-100 text-orange-600",
   PROMOTION: "bg-purple-100 text-purple-600",
@@ -105,7 +105,7 @@ export function NotificationsList({ notifications: initial, unreadCount: initial
           className={cn(
             "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
             tab === "all"
-              ? "border-blue-600 text-blue-600"
+              ? "border-blue-600 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-700"
           )}
         >
@@ -116,13 +116,13 @@ export function NotificationsList({ notifications: initial, unreadCount: initial
           className={cn(
             "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
             tab === "unread"
-              ? "border-blue-600 text-blue-600"
+              ? "border-blue-600 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-700"
           )}
         >
           No leídas
           {unreadCount > 0 && (
-            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-bold text-white">
+            <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-700 px-1.5 text-[10px] font-bold text-white">
               {unreadCount}
             </span>
           )}
@@ -146,7 +146,7 @@ export function NotificationsList({ notifications: initial, unreadCount: initial
                 onClick={() => markAsRead(notification.id)}
                 className={cn(
                   "flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors hover:bg-gray-50",
-                  !notification.isRead && "bg-blue-50/50 border-blue-100"
+                  !notification.isRead && "bg-green-50/50 border-green-100"
                 )}
               >
                 <div
@@ -166,7 +166,7 @@ export function NotificationsList({ notifications: initial, unreadCount: initial
                     </p>
                     <div className="flex items-center gap-2 shrink-0">
                       {!notification.isRead && (
-                        <span className="h-2 w-2 rounded-full bg-blue-600" />
+                        <span className="h-2 w-2 rounded-full bg-green-700" />
                       )}
                       <span className="text-xs text-gray-400 whitespace-nowrap">
                         {timeAgo(new Date(notification.createdAt))}

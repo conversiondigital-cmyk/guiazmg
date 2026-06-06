@@ -95,7 +95,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Vistas este mes</CardTitle>
-            <Eye className="h-4 w-4 text-blue-600" />
+            <Eye className="h-4 w-4 text-green-700" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalViews}</div>
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
         <Card>
           <CardContent className="p-5">
             <p className="text-sm text-gray-500">Total visitas</p>
-            <p className="text-2xl font-bold text-blue-600">{totalViews}</p>
+            <p className="text-2xl font-bold text-green-700">{totalViews}</p>
           </CardContent>
         </Card>
         <Card>
