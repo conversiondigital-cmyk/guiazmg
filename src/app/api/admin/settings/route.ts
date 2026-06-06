@@ -81,10 +81,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Valor inválido" }, { status: 400 })
     }
 
-    if (value.trim() === "") {
-      return NextResponse.json({ error: "Valor vacío no permitido" }, { status: 400 })
-    }
-
     const setting = await prisma.systemSetting.upsert({
       where: { key },
       update: { value, isSecret: false },

@@ -34,26 +34,43 @@ export function ConfigurationSectionClient({
     setMessage(null)
     try {
       const results = await Promise.all(
-        config.fields.map((field) =>
-          fetch("/api/admin/settings", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              key: field.key,
-              value: values[field.key] || "",
-              section,
-            }),
-          })
-        )
+        config.fields.map(async (field) => {
+          try {
+            const res = await fetch("/api/admin/settings", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                key: field.key,
+                value: values[field.key] || "",
+                section,
+              }),
+            })
+
+            if (!res.ok) {
+              const error = await res.json()
+              console.error(`Error guardando ${field.key}:`, error)
+            }
+
+            return res.ok
+          } catch (err) {
+            console.error(`Error guardando ${field.key}:`, err)
+            return false
+          }
+        })
       )
 
-      const allOk = results.every((r) => r.ok)
-      if (allOk) {
-        setMessage({ type: "success", text: "✅ Configuración guardada correctamente" })
+      const successCount = results.filter((r) => r).length
+      const totalCount = results.length
+
+      if (successCount === totalCount) {
+        setMessage({ type: "success", text: `✅ Configuración guardada correctamente (${successCount}/${totalCount})` })
+      } else if (successCount > 0) {
+        setMessage({ type: "error", text: `⚠️ Se guardaron ${successCount}/${totalCount} campos. Revisa los logs.` })
       } else {
-        setMessage({ type: "error", text: "❌ Error al guardar algunos campos" })
+        setMessage({ type: "error", text: "❌ Error al guardar configuración" })
       }
     } catch (error) {
+      console.error("Error general al guardar:", error)
       setMessage({ type: "error", text: "❌ Error al guardar configuración" })
     } finally {
       setLoading(false)
