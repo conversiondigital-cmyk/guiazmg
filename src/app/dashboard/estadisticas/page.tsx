@@ -39,12 +39,14 @@ export default async function EstadisticasPage() {
       ? await prisma.listing.findMany({
           where: { businessId: { in: businessIds } },
           include: {
-            business: { select: { name: true } },
             _count: { select: { leads: true, leadEvents: true } },
           },
           orderBy: { createdAt: "desc" },
         })
       : []
+
+  // bizMap para lookup sin include relacional (evita P2022)
+  const bizMap = Object.fromEntries(businesses.map((b) => [b.id, b]))
 
   const activeCoupons =
     businessIds.length > 0
@@ -54,7 +56,6 @@ export default async function EstadisticasPage() {
             isActive: true,
             OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
           },
-          include: { business: { select: { name: true } } },
           orderBy: { createdAt: "desc" },
         })
       : []
@@ -204,7 +205,7 @@ export default async function EstadisticasPage() {
                       <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{listing.title}</p>
-                        <p className="text-xs text-gray-500">{listing.business.name}</p>
+                        <p className="text-xs text-gray-500">{bizMap[listing.businessId]?.name ?? ""}</p>
                       </div>
                     </div>
                     <Badge variant="outline">{listing._count.leadEvents} vistas</Badge>
@@ -233,7 +234,7 @@ export default async function EstadisticasPage() {
                       <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{listing.title}</p>
-                        <p className="text-xs text-gray-500">{listing.business.name}</p>
+                        <p className="text-xs text-gray-500">{bizMap[listing.businessId]?.name ?? ""}</p>
                       </div>
                     </div>
                     <Badge variant="outline">{listing._count.leads} leads</Badge>
@@ -263,7 +264,7 @@ export default async function EstadisticasPage() {
                   <div key={c.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div>
                       <p className="text-sm font-medium text-gray-900">{c.title}</p>
-                      <p className="text-xs text-gray-500">{c.business.name}</p>
+                      <p className="text-xs text-gray-500">{bizMap[c.businessId]?.name ?? ""}</p>
                       {c.description && <p className="text-xs text-gray-400 mt-1">{c.description}</p>}
                     </div>
                     <Badge className="bg-green-100 text-green-700">Activa</Badge>

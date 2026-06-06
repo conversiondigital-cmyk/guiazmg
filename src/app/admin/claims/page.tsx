@@ -9,8 +9,10 @@ export default async function AdminClaimsPage() {
   const session = await auth()
   if (session?.user?.role !== "ADMIN" && session?.user?.role !== "EDITOR") redirect("/dashboard")
 
+  // Evita include { business } — falla por mismatch de columna FK en DB.
+  // El `user` include sí funciona ya que no usa el Proxy.
   const claims = await prisma.businessClaimRequest.findMany({
-    include: { user: { select: { id: true, name: true, email: true } }, business: { select: { id: true, name: true, slug: true } } },
+    include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: "desc" },
   })
 

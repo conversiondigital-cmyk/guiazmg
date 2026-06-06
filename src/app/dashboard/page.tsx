@@ -47,9 +47,10 @@ export default async function DashboardPage() {
         where: { businessId: { in: businessIds } },
         orderBy: { createdAt: "desc" },
         take: 10,
-        include: { business: { select: { name: true } } },
       })
     : []
+  // bizMap para lookup local del nombre sin include relacional (evita P2022)
+  const bizMap = Object.fromEntries(businesses.map((b) => [b.id, { name: b.name }]))
 
   const recentNotifications = businessIds.length > 0
     ? await prisma.notification.findMany({
@@ -199,7 +200,7 @@ export default async function DashboardPage() {
               {leadsRecent.map((lead) => (
                 <div key={lead.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{lead.business.name}</p>
+                    <p className="text-sm font-medium text-gray-900">{bizMap[lead.businessId]?.name ?? lead.businessId}</p>
                     <p className="text-xs text-gray-500">{lead.type} · {lead.source}</p>
                   </div>
                   <span className="text-xs text-gray-400">
