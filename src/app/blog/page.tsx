@@ -3,20 +3,21 @@ import { Footer } from "@/components/layout/footer"
 import { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { Calendar, User, Clock, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, User, Clock, ArrowRight, ChevronLeft, ChevronRight, Search } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
 const PAGE_SIZE = 12
 
 interface Props {
-  searchParams: Promise<{ categoria?: string; page?: string }>
+  searchParams: Promise<{ categoria?: string; page?: string; q?: string }>
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { categoria } = await searchParams
+  const { categoria, q } = await searchParams
+  const prefix = q ? `"${q}"` : categoria ? categoria : null
   return {
-    title: categoria ? `${categoria} | Blog Guía ZMG` : "Blog | Guía ZMG",
+    title: prefix ? `${prefix} | Blog Guía ZMG` : "Blog | Guía ZMG",
     description: "Consejos, tendencias y estrategias para el éxito de tu negocio en Guadalajara.",
   }
 }
@@ -27,11 +28,18 @@ function formatDate(date: Date | null) {
 }
 
 export default async function BlogPage({ searchParams }: Props) {
-  const { categoria, page: pageParam } = await searchParams
+  const { categoria, page: pageParam, q } = await searchParams
   const page = Math.max(1, Number(pageParam ?? 1))
 
   const where: any = { status: "PUBLISHED" }
   if (categoria) where.category = categoria
+  if (q) {
+    where.OR = [
+      { title:   { contains: q, mode: "insensitive" } },
+      { excerpt: { contains: q, mode: "insensitive" } },
+      { tags:    { has: q } },
+    ]
+  }
 
   let posts: any[] = []
   let total = 0
@@ -67,15 +75,17 @@ export default async function BlogPage({ searchParams }: Props) {
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
-  const featured = page === 1 && !categoria ? posts.slice(0, 3) : []
-  const rest = page === 1 && !categoria ? posts.slice(3) : posts
+  const isSearching = !!q
+  const featured = page === 1 && !categoria && !isSearching ? posts.slice(0, 3) : []
+  const rest = page === 1 && !categoria && !isSearching ? posts.slice(3) : posts
 
-  const buildHref = (p: number, cat?: string) => {
+  const buildHref = (p: number, cat?: string, search?: string) => {
     const params = new URLSearchParams()
     if (cat) params.set("categoria", cat)
+    if (search) params.set("q", search)
     if (p > 1) params.set("page", String(p))
-    const q = params.toString()
-    return `/blog${q ? `?${q}` : ""}`
+    const qs = params.toString()
+    return `/blog${qs ? `?${qs}` : ""}`
   }
 
   return (
@@ -88,11 +98,39 @@ export default async function BlogPage({ searchParams }: Props) {
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Blog</p>
             <h1 className="text-4xl font-black text-white sm:text-5xl">
-              {categoria ? categoria : "Blog de Guía ZMG"}
+              {q ? `Búsqueda: "${q}"` : categoria ? categoria : "Blog de Guía ZMG"}
             </h1>
-            <p className="mt-4 text-xl text-green-200 max-w-2xl mx-auto">
+            <p className="mt-4 text-lg text-green-200 max-w-2xl mx-auto">
               Consejos, tendencias y estrategias para el éxito de tu negocio
             </p>
+            {/* Search bar */}
+            <form action="/blog" method="GET" className="mt-6 flex gap-2 max-w-lg mx-auto">
+              {categoria && <input type="hidden" name="categoria" value={categoria} />}
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  name="q"
+                  defaultValue={q ?? ""}
+                  placeholder="Buscar artículos..."
+                  className="w-full rounded-xl bg-white/10 border border-white/20 pl-10 pr-4 py-2.5 text-sm text-white placeholder-green-300 focus:outline-none focus:ring-2 focus:ring-amber-400 backdrop-blur-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-400 transition-colors"
+              >
+                Buscar
+              </button>
+              {q && (
+                <a
+                  href={categoria ? `/blog?categoria=${encodeURIComponent(categoria)}` : "/blog"}
+                  className="flex items-center rounded-xl border border-white/30 px-3 py-2.5 text-xs text-green-200 hover:text-white transition-colors"
+                >
+                  × Limpiar
+                </a>
+              )}
+            </form>
           </div>
         </section>
 
@@ -113,7 +151,7 @@ export default async function BlogPage({ searchParams }: Props) {
               {allCategories.map((cat) => (
                 <Link
                   key={cat}
-                  href={buildHref(1, cat)}
+                  href={buildHref(1, cat, q)}
                   className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
                     categoria === cat
                       ? "bg-green-800 text-white"
@@ -237,7 +275,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 <div className="mt-12 flex items-center justify-center gap-2">
                   {page > 1 ? (
                     <Link
-                      href={buildHref(page - 1, categoria)}
+                      href={buildHref(page - 1, categoria, q)}
                       className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-700 transition-colors"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -261,7 +299,7 @@ export default async function BlogPage({ searchParams }: Props) {
                       ) : (
                         <Link
                           key={p}
-                          href={buildHref(p as number, categoria)}
+                          href={buildHref(p as number, categoria, q)}
                           className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-colors ${
                             page === p
                               ? "bg-green-800 text-white"
@@ -275,7 +313,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
                   {page < totalPages ? (
                     <Link
-                      href={buildHref(page + 1, categoria)}
+                      href={buildHref(page + 1, categoria, q)}
                       className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-green-400 hover:text-green-700 transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />
