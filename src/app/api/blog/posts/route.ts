@@ -11,7 +11,7 @@ const createSchema = z.object({
   coverImageUrl:   z.string().url().optional().or(z.literal("")).nullable(),
   category:        z.string().max(80).optional().nullable(),
   tags:            z.array(z.string().max(40)).max(10).optional(),
-  status:          z.enum(["DRAFT", "PENDING_REVIEW"]).default("DRAFT"),
+  status:          z.enum(["DRAFT", "PENDING_REVIEW", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
   readTimeMinutes: z.number().int().min(1).max(60).default(5),
   metaTitle:       z.string().max(70).optional().nullable(),
   metaDescription: z.string().max(160).optional().nullable(),
@@ -98,9 +98,12 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.post.findUnique({ where: { slug: data.slug } })
   if (existing) return NextResponse.json({ error: "El slug ya está en uso" }, { status: 409 })
 
-  // ADMIN can publish directly; EDITOR goes to PENDING_REVIEW
   const isAdmin = role === "ADMIN"
-  const finalStatus = isAdmin && data.status === "PENDING_REVIEW" ? "PUBLISHED" : data.status
+
+  // Editors cannot set PUBLISHED or ARCHIVED directly — force to DRAFT
+  const finalStatus = !isAdmin && (data.status === "PUBLISHED" || data.status === "ARCHIVED")
+    ? "DRAFT"
+    : data.status
 
   const post = await prisma.post.create({
     data: {
