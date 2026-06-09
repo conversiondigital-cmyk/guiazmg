@@ -7,8 +7,13 @@ import { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
 
-export const metadata: Metadata = {
-  title: "Mis artículos | Editor — Guía ZMG",
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ status?: string }> }): Promise<Metadata> {
+  const { status } = await searchParams
+  const labels: Record<string, string> = {
+    PUBLISHED: "Publicados", DRAFT: "Borradores",
+    PENDING_REVIEW: "En revisión", REJECTED: "Rechazados", ARCHIVED: "Archivados",
+  }
+  return { title: `${status && labels[status] ? labels[status] + " | " : ""}Mis artículos | Editor — Guía ZMG` }
 }
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
@@ -19,12 +24,18 @@ const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   ARCHIVED:       { label: "Archivado",     cls: "bg-slate-100 text-slate-600" },
 }
 
+const VALID_STATUSES = ["PUBLISHED", "DRAFT", "PENDING_REVIEW", "REJECTED", "ARCHIVED"] as const
+
 function formatDate(date: Date | null) {
   if (!date) return "—"
   return new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short", year: "numeric" }).format(date)
 }
 
-export default async function EditorBlogPage() {
+export default async function EditorBlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
   const session = await auth()
   if (!session?.user) redirect("/auth/login")
 
@@ -32,8 +43,12 @@ export default async function EditorBlogPage() {
   const userId = (session.user as any)?.id
   if (role !== "EDITOR" && role !== "ADMIN") redirect("/")
 
+  const sp = await searchParams
+  const statusFilter = VALID_STATUSES.includes(sp.status as any) ? sp.status : undefined
+
   // ADMIN ve todos — EDITOR solo sus artículos
-  const where = role === "ADMIN" ? {} : { authorId: userId }
+  const whereBase = role === "ADMIN" ? {} : { authorId: userId }
+  const where = statusFilter ? { ...whereBase, status: statusFilter } : whereBase
 
   const posts = await prisma.post.findMany({
     where,
@@ -41,12 +56,17 @@ export default async function EditorBlogPage() {
     include: { author: { select: { name: true } } },
   })
 
+  // Count over ALL posts (no status filter) for stats
+  const allPosts = statusFilter
+    ? await prisma.post.findMany({ where: whereBase, select: { status: true } })
+    : posts
+
   const counts = {
-    PUBLISHED:      posts.filter((p) => p.status === "PUBLISHED").length,
-    DRAFT:          posts.filter((p) => p.status === "DRAFT").length,
-    PENDING_REVIEW: posts.filter((p) => p.status === "PENDING_REVIEW").length,
-    REJECTED:       posts.filter((p) => p.status === "REJECTED").length,
-    ARCHIVED:       posts.filter((p) => p.status === "ARCHIVED").length,
+    PUBLISHED:      allPosts.filter((p) => p.status === "PUBLISHED").length,
+    DRAFT:          allPosts.filter((p) => p.status === "DRAFT").length,
+    PENDING_REVIEW: allPosts.filter((p) => p.status === "PENDING_REVIEW").length,
+    REJECTED:       allPosts.filter((p) => p.status === "REJECTED").length,
+    ARCHIVED:       allPosts.filter((p) => p.status === "ARCHIVED").length,
   }
 
   return (
@@ -56,9 +76,19 @@ export default async function EditorBlogPage() {
         <div>
           <h1 className="text-2xl font-black text-gray-900">
             {role === "ADMIN" ? "Todos los artículos" : "Mis artículos"}
+            {statusFilter && (
+              <span className={`ml-2 text-base font-semibold ${STATUS_BADGE[statusFilter]?.cls.replace("bg-", "text-").split(" ")[0]}`}>
+                — {STATUS_BADGE[statusFilter]?.label}
+              </span>
+            )}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {role === "ADMIN" ? "Vista global del blog" : "Gestiona tus artículos del blog"}
+            {statusFilter && (
+              <Link href="/editor/blog" className="ml-2 text-green-700 hover:underline text-xs font-semibold">
+                × Quitar filtro
+              </Link>
+            )}
           </p>
         </div>
         <Link
@@ -70,16 +100,22 @@ export default async function EditorBlogPage() {
         </Link>
       </div>
 
-      {/* Stats */}
+      {/* Stats — click to filter */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
         {[
-          { label: "Publicados",   value: counts.PUBLISHED,      icon: Globe,     color: "text-green-700 bg-green-100" },
-          { label: "Borradores",   value: counts.DRAFT,          icon: FileText,  color: "text-gray-600 bg-gray-100" },
-          { label: "En revisión",  value: counts.PENDING_REVIEW, icon: Clock,     color: "text-amber-700 bg-amber-100" },
-          { label: "Rechazados",   value: counts.REJECTED,       icon: XCircle,   color: "text-red-600 bg-red-100" },
-          { label: "Archivados",   value: counts.ARCHIVED,       icon: Archive,   color: "text-slate-600 bg-slate-100" },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="rounded-xl bg-white border border-gray-100 p-4 flex items-center gap-3">
+          { label: "Publicados",   value: counts.PUBLISHED,      icon: Globe,     color: "text-green-700 bg-green-100",  status: "PUBLISHED" },
+          { label: "Borradores",   value: counts.DRAFT,          icon: FileText,  color: "text-gray-600 bg-gray-100",    status: "DRAFT" },
+          { label: "En revisión",  value: counts.PENDING_REVIEW, icon: Clock,     color: "text-amber-700 bg-amber-100",  status: "PENDING_REVIEW" },
+          { label: "Rechazados",   value: counts.REJECTED,       icon: XCircle,   color: "text-red-600 bg-red-100",      status: "REJECTED" },
+          { label: "Archivados",   value: counts.ARCHIVED,       icon: Archive,   color: "text-slate-600 bg-slate-100",  status: "ARCHIVED" },
+        ].map(({ label, value, icon: Icon, color, status }) => (
+          <Link
+            key={label}
+            href={statusFilter === status ? "/editor/blog" : `/editor/blog?status=${status}`}
+            className={`rounded-xl bg-white border p-4 flex items-center gap-3 hover:shadow-sm transition-all ${
+              statusFilter === status ? "border-green-400 ring-1 ring-green-400" : "border-gray-100"
+            }`}
+          >
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
               <Icon className="h-4 w-4" />
             </div>
@@ -87,7 +123,7 @@ export default async function EditorBlogPage() {
               <p className="text-xl font-black text-gray-900">{value}</p>
               <p className="text-[11px] text-gray-500 leading-tight">{label}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
