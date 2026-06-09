@@ -7,6 +7,7 @@ import { Calendar, User, Clock, ArrowLeft, Tag } from "lucide-react"
 import { Metadata } from "next"
 import { safeJsonLd } from "@/lib/seo/schema"
 import { ViewCounter } from "@/components/blog/view-counter"
+import { ReadingProgress } from "@/components/blog/reading-progress"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -68,6 +69,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
+      <ReadingProgress />
       <Header />
       <main className="flex-1">
         {/* Hero */}

@@ -12,15 +12,15 @@ const NAV = [
   { label: "Inicio", href: "/" },
   { label: "Categorías", href: "/search" },
   { label: "Promociones", href: "/search?tipo=promocion" },
-  { label: "Blog", href: "/preguntas" },
-  { label: "Contacto", href: "/preguntas" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contacto", href: "/contacto" },
 ]
 
 const FOR_BUSINESS = [
   { label: "Agregar negocio", href: "/registrar-negocio" },
   { label: "Planes y precios", href: "/planes" },
   { label: "Beneficios", href: "/planes" },
-  { label: "Guía para negocios", href: "/preguntas" },
+  { label: "Guía para negocios", href: "/blog" },
   { label: "Centro de ayuda", href: "/preguntas" },
 ]
 
@@ -29,7 +29,7 @@ const SUPPORT = [
   { label: "Términos y condiciones", href: "/terminos" },
   { label: "Política de privacidad", href: "/privacidad" },
   { label: "Aviso de privacidad", href: "/aviso-legal" },
-  { label: "Contacto", href: "/preguntas" },
+  { label: "Contacto", href: "/contacto" },
 ]
 
 const SOCIALS = [
