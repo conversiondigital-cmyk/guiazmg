@@ -201,6 +201,7 @@ model User {
   referralsSent         Referral[] @relation("ReferralsSent")
   referralsReceived     Referral[] @relation("ReferralsReceived")
   emailLogs             EmailLog[]
+  posts                 Post[]
 
   @@map("users")
 }
@@ -1234,6 +1235,40 @@ model EmailLog {
   user User? @relation(fields: [userId], references: [id])
 
   @@map("email_logs")
+}
+
+/// ── Blog ───────────────────────────────────────────────
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Post {
+  id              String     @id @default(cuid())
+  authorId        String
+  title           String
+  slug            String     @unique
+  excerpt         String?
+  content         String     @db.Text
+  coverImageUrl   String?
+  category        String?
+  tags            String[]
+  status          PostStatus @default(DRAFT)
+  readTimeMinutes Int        @default(5)
+  publishedAt     DateTime?
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([status, publishedAt])
+  @@index([slug])
+  @@index([category])
+  @@map("posts")
 }
 
 /// ── Idempotency (webhooks, payments) ────────────────────

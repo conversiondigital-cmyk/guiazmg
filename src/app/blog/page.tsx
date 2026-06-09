@@ -1,219 +1,202 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Metadata } from "next"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar, User, ArrowRight } from "lucide-react"
+import { prisma } from "@/lib/prisma"
+import Link from "next/link"
+import { Calendar, User, Clock, ArrowRight, Tag } from "lucide-react"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Blog | Guía ZMG",
-  description: "Lee artículos y consejos para emprendedores y dueños de negocios en Guadalajara.",
+  description: "Consejos, tendencias y estrategias para el éxito de tu negocio en Guadalajara.",
 }
 
-export default function BlogPage() {
-  const articles = [
-    {
-      id: 1,
-      title: "5 consejos para mejorar la presencia digital de tu negocio",
-      excerpt:
-        "En la era digital, es fundamental que tu negocio tenga una presencia en línea fuerte. Descubre los 5 consejos más importantes para lograrlo.",
-      author: "Carlos Mendoza",
-      date: "2026-06-01",
-      category: "Marketing Digital",
-      readTime: "5 min",
-      featured: true,
-      slug: "presencia-digital-negocios",
-    },
-    {
-      id: 2,
-      title: "Cómo atraer y retener clientes en tu restaurante",
-      excerpt:
-        "La competencia en el sector gastronómico es fuerte. Aprende estrategias probadas para atraer nuevos clientes y fidelizarlos.",
-      author: "Elena García",
-      date: "2026-05-28",
-      category: "Restaurantes",
-      readTime: "7 min",
-      featured: true,
-      slug: "atraer-retener-clientes-restaurantes",
-    },
-    {
-      id: 3,
-      title: "Guía completa de atención al cliente en negocios",
-      excerpt:
-        "La atención al cliente es la clave del éxito. Conoce las mejores prácticas para ofrecer un servicio de calidad.",
-      author: "Miguel Torres",
-      date: "2026-05-25",
-      category: "Servicio al Cliente",
-      readTime: "6 min",
-      featured: true,
-      slug: "atencion-cliente-negocios",
-    },
-    {
-      id: 4,
-      title: "Redes sociales: estrategia de contenido para 2026",
-      excerpt:
-        "Descubre cómo crear una estrategia de contenido efectiva para redes sociales que aumente tu engagement y conversiones.",
-      author: "Sofia Ramírez",
-      date: "2026-05-20",
-      category: "Marketing Digital",
-      readTime: "8 min",
-      featured: false,
-      slug: "redes-sociales-estrategia-2026",
-    },
-    {
-      id: 5,
-      title: "Presupuesto marketing para pequeños negocios",
-      excerpt:
-        "No necesitas un presupuesto gigante para hacer marketing. Aprende a maximizar tu inversión con presupuesto limitado.",
-      author: "Javier López",
-      date: "2026-05-15",
-      category: "Marketing",
-      readTime: "6 min",
-      featured: false,
-      slug: "presupuesto-marketing-pequenos-negocios",
-    },
-    {
-      id: 6,
-      title: "Tendencias de diseño para sitios web en 2026",
-      excerpt:
-        "El diseño web evoluciona constantemente. Conoce las tendencias más importantes para mantener tu sitio moderno y atractivo.",
-      author: "Ana Martínez",
-      date: "2026-05-10",
-      category: "Diseño",
-      readTime: "5 min",
-      featured: false,
-      slug: "tendencias-diseno-web-2026",
-    },
-  ]
+function formatDate(date: Date | null) {
+  if (!date) return ""
+  return new Intl.DateTimeFormat("es-MX", { year: "numeric", month: "long", day: "numeric" }).format(date)
+}
 
-  const featuredArticles = articles.filter((a) => a.featured)
-  const regularArticles = articles.filter((a) => !a.featured)
+export default async function BlogPage() {
+  let posts: any[] = []
 
-  const categories = ["Marketing Digital", "Restaurantes", "Servicio al Cliente", "Marketing", "Diseño"]
+  try {
+    posts = await prisma.post.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+      select: {
+        id: true, title: true, slug: true, excerpt: true,
+        coverImageUrl: true, category: true, tags: true,
+        readTimeMinutes: true, publishedAt: true,
+        author: { select: { name: true, image: true } },
+      },
+    })
+  } catch {
+    // DB no disponible — render vacío
+  }
+
+  const featured = posts.slice(0, 3)
+  const rest = posts.slice(3)
+
+  const categories = [...new Set(posts.map((p) => p.category).filter(Boolean))]
 
   return (
     <>
       <Header />
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero */}
         <section className="bg-green-900 py-16 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Blog</p>
-              <h1 className="text-4xl font-black text-white sm:text-5xl">Blog de Guía ZMG</h1>
-              <p className="mt-4 text-xl text-green-200">
-                Consejos, tendencias y estrategias para el éxito de tu negocio
-              </p>
-            </div>
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Blog</p>
+            <h1 className="text-4xl font-black text-white sm:text-5xl">Blog de Guía ZMG</h1>
+            <p className="mt-4 text-xl text-green-200 max-w-2xl mx-auto">
+              Consejos, tendencias y estrategias para el éxito de tu negocio
+            </p>
           </div>
         </section>
 
-        {/* Featured Articles */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">Artículos Destacados</h2>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {featuredArticles.map((article) => (
-              <Card key={article.id} className="overflow-hidden transition-all hover:shadow-lg">
-                <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50" />
-                <CardHeader>
-                  <Badge className="w-fit bg-green-700">{article.category}</Badge>
-                  <CardTitle className="mt-2 text-xl">{article.title}</CardTitle>
-                  <CardDescription>{article.excerpt}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {article.author}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(article.date).toLocaleDateString("es-MX")}
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full" asChild>
-                      <a href={`/blog/${article.slug}`}>
-                        Leer artículo
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Filter and All Articles */}
-        <section className="bg-gray-50 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-              <h2 className="text-3xl font-bold tracking-tight">Todos los Artículos</h2>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Todos</Badge>
-                {categories.map((cat) => (
-                  <Badge key={cat} variant="outline">
-                    {cat}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {regularArticles.map((article) => (
-                <Card key={article.id} className="overflow-hidden">
-                  <div className="grid gap-6 md:grid-cols-4">
-                    <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50 md:aspect-auto" />
-                    <div className="col-span-3 p-6">
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-green-700">{article.category}</Badge>
-                        <span className="text-sm text-gray-500">{article.readTime} de lectura</span>
-                      </div>
-                      <h3 className="mt-3 text-xl font-bold">{article.title}</h3>
-                      <p className="mt-2 text-gray-600">{article.excerpt}</p>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            {article.author}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(article.date).toLocaleDateString("es-MX")}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm">
-                          Leer más <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+        {/* Category pills */}
+        {categories.length > 0 && (
+          <div className="border-b border-gray-100 bg-white">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex gap-2 flex-wrap">
+              <Link href="/blog" className="rounded-full bg-green-800 px-4 py-1.5 text-xs font-semibold text-white">
+                Todos
+              </Link>
+              {categories.map((cat) => (
+                <Link
+                  key={cat}
+                  href={`/blog?categoria=${encodeURIComponent(cat)}`}
+                  className="rounded-full border border-gray-200 px-4 py-1.5 text-xs font-semibold text-gray-600 hover:border-green-600 hover:text-green-700 transition-colors"
+                >
+                  {cat}
+                </Link>
               ))}
             </div>
           </div>
-        </section>
+        )}
 
-        {/* Newsletter CTA */}
-        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-8 text-center">
-            <h2 className="text-2xl font-bold">No te pierdas nuestros artículos</h2>
-            <p className="mt-2 text-gray-600">
-              Suscríbete a nuestro boletín para recibir los mejores consejos para tu negocio
-            </p>
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <input
-                type="email"
-                placeholder="tu@correo.com"
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm"
-              />
-              <Button>Suscribirse</Button>
+        {/* No posts yet */}
+        {posts.length === 0 && (
+          <section className="py-24 text-center">
+            <p className="text-gray-400 text-lg">Pronto habrá artículos aquí. ¡Vuelve pronto!</p>
+          </section>
+        )}
+
+        {/* Featured articles */}
+        {featured.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Artículos destacados</p>
+                <h2 className="text-3xl font-black text-gray-900">Lo más reciente</h2>
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {featured.map((post, i) => (
+                <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+                  <article className="rounded-2xl overflow-hidden bg-white border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all h-full flex flex-col">
+                    {/* Cover */}
+                    <div className={`relative ${i === 0 ? "aspect-video" : "aspect-[16/9]"} bg-gradient-to-br from-green-50 to-emerald-100 overflow-hidden`}>
+                      {post.coverImageUrl ? (
+                        <img src={post.coverImageUrl} alt={post.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <span className="text-6xl font-black text-green-800/10">{post.title.charAt(0)}</span>
+                        </div>
+                      )}
+                      {post.category && (
+                        <span className="absolute top-3 left-3 rounded-full bg-green-700 px-3 py-1 text-[11px] font-bold text-white">
+                          {post.category}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex flex-col gap-3 p-5 flex-1">
+                      <h3 className="font-black text-gray-900 text-lg leading-tight group-hover:text-green-800 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">{post.excerpt}</p>
+                      )}
+
+                      <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                        <div className="flex items-center gap-3">
+                          {post.author?.name && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {post.author.name}
+                            </span>
+                          )}
+                          {post.publishedAt && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(new Date(post.publishedAt))}
+                            </span>
+                          )}
+                        </div>
+                        <span className="flex items-center gap-1 font-semibold text-green-700">
+                          <Clock className="h-3 w-3" />
+                          {post.readTimeMinutes} min
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Rest of articles */}
+        {rest.length > 0 && (
+          <section className="bg-gray-50 py-16">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-black text-gray-900 mb-8">Más artículos</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {rest.map((post) => (
+                  <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+                    <article className="flex gap-4 rounded-xl bg-white border border-gray-100 p-4 hover:border-green-200 hover:shadow-md transition-all">
+                      <div className="flex-1 min-w-0">
+                        {post.category && (
+                          <span className="text-[10px] font-bold uppercase text-green-700 tracking-wide">{post.category}</span>
+                        )}
+                        <h3 className="font-bold text-gray-900 text-sm leading-snug group-hover:text-green-800 line-clamp-2 mt-1">
+                          {post.title}
+                        </h3>
+                        <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                          {post.publishedAt && <span>{formatDate(new Date(post.publishedAt))}</span>}
+                          <span>·</span>
+                          <span>{post.readTimeMinutes} min</span>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-gray-300 group-hover:text-green-600 mt-1 transition-colors" />
+                    </article>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* CTA */}
+        <section className="py-16 bg-white">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
+            <div className="rounded-2xl bg-green-900 p-10">
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-2">¿Tienes un negocio?</p>
+              <h2 className="text-2xl font-black text-white">Hazlo crecer con Guía ZMG</h2>
+              <p className="mt-3 text-green-200 text-sm leading-relaxed">
+                Registra tu negocio y llega a miles de clientes en la Zona Metropolitana de Guadalajara.
+              </p>
+              <Link
+                href="/registrar-negocio"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-white hover:bg-amber-400 transition-colors"
+              >
+                Agregar mi negocio <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </section>
