@@ -1,140 +1,174 @@
-import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { formatDate } from "@/lib/admin-utils"
-import { ShoppingBag, Flag, Star, ArrowRight, Store } from "lucide-react"
-import Link from "next/link"
-
 export const dynamic = "force-dynamic"
+
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
+import Link from "next/link"
+import { BookOpen, FilePlus, Clock, Eye, Globe, FileText, ArrowRight } from "lucide-react"
+import { Metadata } from "next"
+
+export const metadata: Metadata = { title: "Dashboard Editorial | Guía ZMG" }
 
 export default async function EditorDashboard() {
   const session = await auth()
-  if (!session?.user || session.user.role !== "EDITOR") {
-    redirect("/auth/login")
-  }
+  if (!session?.user) redirect("/auth/login")
+  const role = (session.user as any).role
+  if (role !== "EDITOR" && role !== "ADMIN") redirect("/")
 
-  const [
-    pendingBusinesses,
-    pendingMarketplace,
-    openReports,
-    pendingReviews,
-    recentPendingBusinesses,
-    recentReports,
-  ] = await Promise.all([
-    prisma.business.count({ where: { status: "PENDING_REVIEW" } }),
-    prisma.marketplaceListing.count({ where: { status: "ACTIVE", deletedAt: null, type: "PROMOTION" as any } }),
-    prisma.report.count({ where: { status: "PENDING" } }),
-    prisma.review.count({ where: { status: "PENDING" } }),
-    prisma.business.findMany({
-      where: { status: "PENDING_REVIEW" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, name: true, slug: true, createdAt: true, owner: { select: { name: true } } },
+  const userId = (session.user as any).id
+
+  const [totalPublished, totalDraft, totalPending, recentActivity, topPosts] = await Promise.all([
+    prisma.post.count({ where: { authorId: userId, status: "PUBLISHED" } }),
+    prisma.post.count({ where: { authorId: userId, status: "DRAFT" } }),
+    prisma.post.count({ where: { authorId: userId, status: "PENDING_REVIEW" } }),
+    prisma.post.findMany({
+      where: { authorId: userId },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+      select: { id: true, title: true, slug: true, status: true, updatedAt: true },
     }),
-    prisma.report.findMany({
-      where: { status: "PENDING" },
-      orderBy: { createdAt: "desc" },
+    prisma.post.findMany({
+      where: { authorId: userId, status: "PUBLISHED" },
+      orderBy: { viewCount: "desc" },
       take: 5,
-      select: { id: true, reason: true, createdAt: true, business: { select: { name: true } } },
-    }),
-    prisma.marketplaceListing.findMany({
-      where: { status: "ACTIVE", deletedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, title: true, createdAt: true },
+      select: { id: true, title: true, slug: true, viewCount: true },
     }),
   ])
 
   const kpis = [
-    { label: "Negocios pendientes", value: pendingBusinesses, icon: Store, href: "/editor/negocios", color: "from-amber-500/20 to-amber-600/10 text-amber-600" },
-    { label: "Marketplace pendientes", value: pendingMarketplace, icon: ShoppingBag, href: "/editor/marketplace", color: "from-pink-500/20 to-pink-600/10 text-pink-600" },
-    { label: "Reportes abiertos", value: openReports, icon: Flag, href: "/editor/reportes", color: "from-red-500/20 to-red-600/10 text-red-600" },
-    { label: "Reseñas pendientes", value: pendingReviews, icon: Star, href: "/editor/reviews", color: "from-purple-500/20 to-purple-600/10 text-purple-600" },
+    { label: "Publicados",  value: totalPublished, icon: Globe,    color: "bg-green-50 text-green-700",  href: "/editor/blog?status=PUBLISHED" },
+    { label: "Borradores",  value: totalDraft,     icon: FileText, color: "bg-gray-50  text-gray-600",   href: "/editor/blog?status=DRAFT" },
+    { label: "En revisión", value: totalPending,   icon: Clock,    color: "bg-amber-50 text-amber-700",  href: "/editor/blog?status=PENDING_REVIEW" },
   ]
 
+  const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+    PUBLISHED:      { label: "Publicado",  cls: "text-green-700 bg-green-50" },
+    PENDING_REVIEW: { label: "En revisión",cls: "text-amber-700 bg-amber-50" },
+    DRAFT:          { label: "Borrador",   cls: "text-gray-500  bg-gray-100" },
+    REJECTED:       { label: "Rechazado",  cls: "text-red-700   bg-red-50"   },
+    ARCHIVED:       { label: "Archivado",  cls: "text-gray-400  bg-gray-100" },
+  }
+
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard del Editor</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {formatDate(new Date())} &middot; {session.user.name || "Editor"}
-        </p>
+    <div className="max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900">Dashboard Editorial</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Administra el contenido del blog de Guía ZMG</p>
+        </div>
+        <Link
+          href="/editor/blog/nuevo"
+          className="flex items-center gap-2 rounded-xl bg-green-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-900 transition-colors"
+        >
+          <FilePlus className="h-4 w-4" />
+          Nuevo artículo
+        </Link>
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {kpis.map((kpi) => {
-          const Icon = kpi.icon
-          return (
-            <Link
-              key={kpi.label}
-              href={kpi.href}
-              className="group relative overflow-hidden rounded-xl bg-gradient-to-br p-4 ring-1 ring-foreground/5 transition-all hover:shadow-md"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br opacity-80 ${kpi.color}`} />
-              <div className="relative z-10">
-                <Icon className="mb-2 size-5 opacity-70" />
-                <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{kpi.label}</p>
-              </div>
-            </Link>
-          )
-        })}
+      {/* KPIs */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {kpis.map(({ label, value, icon: Icon, color, href }) => (
+          <Link key={label} href={href} className="rounded-2xl bg-white border border-gray-100 p-5 hover:shadow-md transition-all group">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${color} mb-3`}>
+              <Icon className="h-4.5 w-4.5" />
+            </div>
+            <p className="text-3xl font-black text-gray-900">{value}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{label}</p>
+          </Link>
+        ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border bg-card p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-heading text-sm font-medium">Negocios pendientes de revisión</h3>
-            <Link
-              href="/editor/negocios"
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Ver todo <ArrowRight className="size-3" />
+      <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
+        {/* Recent activity */}
+        <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-green-700" />
+              <h2 className="text-sm font-bold text-gray-900">Actividad reciente</h2>
+            </div>
+            <Link href="/editor/blog" className="flex items-center gap-1 text-xs text-green-700 hover:text-green-900">
+              Ver todos <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="space-y-2.5">
-            {recentPendingBusinesses.length === 0 && (
-              <p className="text-xs text-muted-foreground">Sin pendientes</p>
-            )}
-            {recentPendingBusinesses.map((b) => (
-              <div key={b.id} className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{b.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{b.owner?.name || "—"}</p>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {b.createdAt.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                </span>
-              </div>
-            ))}
-          </div>
+          {recentActivity.length === 0 ? (
+            <div className="p-10 text-center">
+              <FileText className="h-10 w-10 text-gray-200 mx-auto mb-2" />
+              <p className="text-sm text-gray-400">Aún no tienes artículos</p>
+              <Link href="/editor/blog/nuevo" className="mt-3 inline-flex text-sm font-semibold text-green-700 hover:underline">
+                Crear tu primer artículo →
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {recentActivity.map((post) => {
+                const badge = STATUS_LABEL[post.status] ?? STATUS_LABEL.DRAFT
+                return (
+                  <div key={post.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors group">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 line-clamp-1">{post.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {new Date(post.updatedAt).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>
+                      <Link
+                        href={`/editor/blog/${post.id}`}
+                        className="opacity-0 group-hover:opacity-100 rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-500 hover:text-green-700 transition-all"
+                      >
+                        Editar
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="rounded-xl border bg-card p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-heading text-sm font-medium">Reportes abiertos</h3>
-            <Link
-              href="/editor/reportes"
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              Ver todo <ArrowRight className="size-3" />
-            </Link>
-          </div>
-          <div className="space-y-2.5">
-            {recentReports.length === 0 && (
-              <p className="text-xs text-muted-foreground">Sin reportes</p>
-            )}
-            {recentReports.map((r) => (
-              <div key={r.id} className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{r.reason}</p>
-                  <p className="truncate text-xs text-muted-foreground">{r.business?.name || "—"}</p>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {r.createdAt.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                </span>
+        {/* Top posts */}
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl bg-white border border-gray-100 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Eye className="h-4 w-4 text-green-700" />
+              <h2 className="text-sm font-bold text-gray-900">Más leídos</h2>
+            </div>
+            {topPosts.length === 0 ? (
+              <p className="text-xs text-gray-400">Sin artículos publicados aún</p>
+            ) : (
+              <div className="space-y-3">
+                {topPosts.map((p, i) => (
+                  <div key={p.id} className="flex items-start gap-2">
+                    <span className="text-xs font-black text-gray-300 mt-0.5 w-4 shrink-0">{i + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{p.title}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{p.viewCount.toLocaleString("es-MX")} vistas</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Quick actions */}
+          <div className="rounded-2xl bg-green-900 p-5 text-white">
+            <p className="text-xs font-bold uppercase tracking-wide text-green-300 mb-3">Acceso rápido</p>
+            <div className="space-y-2">
+              {[
+                { label: "Todos los artículos", href: "/editor/blog", icon: BookOpen },
+                { label: "Nuevo artículo",      href: "/editor/blog/nuevo", icon: FilePlus },
+              ].map(({ label, href, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-2.5 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-green-100 hover:bg-white/20 transition-colors"
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

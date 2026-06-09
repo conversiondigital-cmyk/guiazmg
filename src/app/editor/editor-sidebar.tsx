@@ -4,35 +4,32 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
-  Store, ShoppingBag, Tag, Star, Flag, History, Sparkles, XCircle,
-  User, Bell, Menu, X, LogOut,
+  LayoutDashboard, FileText, FilePlus, BookOpen,
+  FolderOpen, Tags, Image, Search,
+  User, Bell, LogOut, Menu, X, ChevronRight,
+  Pencil,
 } from "lucide-react"
 
 const navGroups = [
   {
-    label: "Moderación",
+    label: "Blog",
     items: [
-      { label: "Perfiles pendientes", href: "/editor/negocios", icon: Store },
-      { label: "Marketplace pendiente", href: "/editor/marketplace", icon: ShoppingBag },
-      { label: "Promociones pendientes", href: "/editor/promociones", icon: Tag },
-      { label: "Reseñas", href: "/editor/reviews", icon: Star },
-      { label: "Reportes", href: "/editor/reportes", icon: Flag },
+      { label: "Dashboard editorial", href: "/editor",            icon: LayoutDashboard, exact: true },
+      { label: "Artículos",           href: "/editor/blog",       icon: BookOpen },
+      { label: "Nuevo artículo",      href: "/editor/blog/nuevo", icon: FilePlus },
     ],
   },
   {
-    label: "Control editorial",
+    label: "SEO Editorial",
     items: [
-      { label: "Contenido destacado", href: "/editor/destacado", icon: Sparkles },
-      { label: "Contenido rechazado", href: "/editor/rechazado", icon: XCircle },
-      { label: "Historial de moderación", href: "/editor/historial", icon: History },
+      { label: "Contenido SEO", href: "/editor/seo", icon: Search },
     ],
   },
   {
     label: "Cuenta",
     items: [
-      { label: "Mi cuenta", href: "/editor/cuenta", icon: User },
+      { label: "Mi cuenta",      href: "/editor/cuenta",         icon: User },
       { label: "Notificaciones", href: "/editor/notificaciones", icon: Bell },
     ],
   },
@@ -53,82 +50,99 @@ export function EditorSidebar({ user }: EditorSidebarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden"
-          onClick={() => setMobileOpen(true)}
-        >
-          <Menu className="size-5" />
-        </Button>
-        <Link href="/editor" className="font-heading text-base font-semibold tracking-tight">
-          Guía ZMG
-        </Link>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="hidden text-sm text-muted-foreground sm:inline">
-            {user.name || "Editor"}
-          </span>
-          <form action="/api/auth/signout" method="POST">
-            <Button variant="ghost" size="icon-sm" type="submit">
-              <LogOut className="size-4" />
-            </Button>
-          </form>
-        </div>
-      </header>
+      {/* Mobile button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-green-700 text-white shadow-lg"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 border-r bg-background transition-transform duration-200 lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-white transition-transform lg:translate-x-0 lg:static lg:z-auto",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-14 items-center justify-between border-b px-4 lg:hidden">
-          <span className="font-heading text-base font-semibold">Guía ZMG</span>
-          <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(false)}>
-            <X className="size-4" />
-          </Button>
+        {/* Header */}
+        <div className="flex h-16 items-center justify-between border-b px-6">
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+            <Pencil className="h-4 w-4 text-green-700" />
+            <span><span className="text-green-700">Guía</span> ZMG</span>
+          </Link>
+          <button onClick={() => setMobileOpen(false)} className="lg:hidden">
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
         </div>
 
-        <nav className="h-[calc(100vh-3.5rem)] overflow-y-auto p-3 space-y-5">
+        {/* User badge */}
+        <div className="flex items-center gap-3 border-b bg-gray-50 px-5 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-700 text-xs font-bold text-white">
+            {(user.name ?? user.email ?? "E").charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold text-gray-900">{user.name ?? user.email}</p>
+            <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-green-700">
+              Editor
+            </span>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-5">
           {navGroups.map((group) => (
             <div key={group.label}>
-              <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-gray-400">
                 {group.label}
               </p>
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                  const isActive = (item as any).exact
+                    ? pathname === item.href
+                    : pathname === item.href || pathname.startsWith(item.href + "/")
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                        "flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                         isActive
-                          ? "bg-primary/10 font-medium text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ? "bg-green-50 text-green-800"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       )}
                     >
-                      <Icon className="size-4 shrink-0" />
-                      {item.label}
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </div>
+                      {isActive && <ChevronRight className="h-3.5 w-3.5" />}
                     </Link>
                   )
                 })}
               </div>
             </div>
           ))}
+
+          <div className="border-t pt-4">
+            <Link
+              href="/"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Volver al sitio
+            </Link>
+          </div>
         </nav>
       </aside>
-
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
     </>
   )
 }

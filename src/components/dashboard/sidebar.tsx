@@ -23,60 +23,76 @@ import {
   Menu,
   X,
   LogOut,
-} from "@/lib/icons"
+} from "lucide-react"
 import { useState } from "react"
 
-const navGroups = [
-  {
-    label: "General",
-    items: [
-      { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
-      { href: "/dashboard/negocio", label: "Mi Perfil", icon: Store },
-    ],
-  },
-  {
-    label: "Catálogo",
-    items: [
-      { href: "/dashboard/productos", label: "Productos", icon: ShoppingBag },
-      { href: "/dashboard/servicios", label: "Servicios", icon: Wrench },
-      { href: "/dashboard/promociones", label: "Promociones", icon: Tag },
-    ],
-  },
-  {
-    label: "Marketplace",
-    items: [
-      { href: "/dashboard/marketplace", label: "Mis publicaciones", icon: Package },
-    ],
-  },
-  {
-    label: "Interacción",
-    items: [
-      { href: "/dashboard/resenas", label: "Reseñas", icon: MessageCircle },
-      { href: "/dashboard/leads", label: "Leads", icon: Users },
-      { href: "/dashboard/estadisticas", label: "Estadísticas", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Monetización",
-    items: [
-      { href: "/dashboard/membresia", label: "Membresía", icon: Star },
-      { href: "/dashboard/boosts", label: "Boosts", icon: TrendingUp },
-      { href: "/dashboard/pagos", label: "Pagos", icon: CreditCard },
-    ],
-  },
-  {
-    label: "Cuenta",
-    items: [
-      { href: "/dashboard/notificaciones", label: "Notificaciones", icon: Bell },
-      { href: "/dashboard/configuracion", label: "Configuración de cuenta", icon: Settings },
-      { href: "/dashboard/ayuda", label: "Ayuda", icon: HelpCircle },
-    ],
-  },
-]
+type NavItem = { href: string; label: string; icon: React.ElementType; exact?: boolean }
+type NavGroup = { label: string; items: NavItem[] }
 
-export function DashboardSidebar() {
+function buildGroups(mode: "EMPRENDEDOR" | "NEGOCIO"): NavGroup[] {
+  const isEmprendedor = mode === "EMPRENDEDOR"
+
+  return [
+    {
+      label: "General",
+      items: [
+        { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
+        { href: "/dashboard/negocio", label: isEmprendedor ? "Mi emprendimiento" : "Mi perfil comercial", icon: Store },
+      ],
+    },
+    {
+      label: isEmprendedor ? "Mi catálogo" : "Operación comercial",
+      items: [
+        { href: "/dashboard/productos", label: "Productos", icon: ShoppingBag },
+        { href: "/dashboard/servicios", label: "Servicios", icon: Wrench },
+        { href: "/dashboard/promociones", label: "Promociones", icon: Tag },
+        ...(!isEmprendedor ? [{ href: "/dashboard/marketplace", label: "Marketplace", icon: Package }] : []),
+      ],
+    },
+    ...(isEmprendedor
+      ? [
+          {
+            label: "Marketplace",
+            items: [{ href: "/dashboard/marketplace", label: "Mis publicaciones", icon: Package }],
+          },
+        ]
+      : []),
+    {
+      label: "Interacción",
+      items: [
+        ...(!isEmprendedor ? [{ href: "/dashboard/resenas", label: "Reseñas", icon: MessageCircle }] : []),
+        { href: "/dashboard/leads", label: "Clientes potenciales", icon: Users },
+        { href: "/dashboard/estadisticas", label: isEmprendedor ? "Estadísticas" : "Estadísticas completas", icon: BarChart3 },
+      ],
+    },
+    {
+      label: isEmprendedor ? "Comercial" : "Monetización",
+      items: [
+        { href: "/dashboard/membresia", label: isEmprendedor ? "Mi plan" : "Membresía", icon: Star },
+        { href: "/dashboard/boosts", label: "Boosts", icon: TrendingUp },
+        { href: "/dashboard/pagos", label: "Pagos", icon: CreditCard },
+      ],
+    },
+    {
+      label: "Cuenta",
+      items: [
+        { href: "/dashboard/notificaciones", label: "Notificaciones", icon: Bell },
+        { href: "/dashboard/configuracion", label: "Configuración de cuenta", icon: Settings },
+        { href: "/dashboard/ayuda", label: "Ayuda", icon: HelpCircle },
+      ],
+    },
+  ]
+}
+
+interface DashboardSidebarProps {
+  profileType?: "EMPRENDEDOR" | "NEGOCIO"
+}
+
+export function DashboardSidebar({ profileType = "NEGOCIO" }: DashboardSidebarProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const navGroups = buildGroups(profileType)
+  const isEmprendedor = profileType === "EMPRENDEDOR"
 
   return (
     <>
@@ -107,6 +123,18 @@ export function DashboardSidebar() {
           <button onClick={() => setOpen(false)} className="lg:hidden">
             <X className="h-5 w-5 text-gray-500" />
           </button>
+        </div>
+
+        {/* Plan badge */}
+        <div className="px-5 py-2.5 border-b bg-gray-50">
+          <span className={cn(
+            "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+            isEmprendedor
+              ? "bg-amber-100 text-amber-800"
+              : "bg-green-100 text-green-800"
+          )}>
+            {isEmprendedor ? "Plan Emprendedor" : "Plan Negocio"}
+          </span>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4 space-y-6">

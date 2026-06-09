@@ -107,6 +107,11 @@ enum PaymentType {
   LISTING
 }
 
+enum BusinessProfileType {
+  EMPRENDEDOR
+  NEGOCIO
+}
+
 enum NotificationType {
   REVIEW
   MESSAGE
@@ -452,6 +457,7 @@ model Profile {
   longitude         Float?
   logoUrl           String?
   coverImageUrl     String?
+  profileType       BusinessProfileType  @default(NEGOCIO)
   status            BusinessStatus      @default(PENDING_REVIEW)
   verificationStatus VerificationStatus @default(UNVERIFIED)
   visibilityScore   Int                 @default(0)
