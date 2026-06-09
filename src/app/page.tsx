@@ -10,6 +10,7 @@ import { BenefitsSection } from "@/components/home/benefits-section"
 import { MunicipalitiesSection } from "@/components/home/municipalities-section"
 import { TestimonialsCarousel } from "@/components/home/testimonials-carousel"
 import { CTASection } from "@/components/home/cta-section"
+import { LatestBlogPosts } from "@/components/home/latest-blog-posts"
 import { getCategories, getFeaturedBusinesses, getMunicipalities } from "@/lib/queries"
 import { prisma } from "@/lib/prisma"
 
@@ -18,15 +19,26 @@ export default async function HomePage() {
   let businesses: Awaited<ReturnType<typeof getFeaturedBusinesses>> = []
   let municipalities: Awaited<ReturnType<typeof getMunicipalities>> = []
   let categoryCounts: { id: string; _count: { businesses: number } }[] = []
+  let latestPosts: any[] = []
 
   try {
-    ;[categories, businesses, municipalities, categoryCounts] = await Promise.all([
+    ;[categories, businesses, municipalities, categoryCounts, latestPosts] = await Promise.all([
       getCategories(),
       getFeaturedBusinesses(),
       getMunicipalities(),
       prisma.category.findMany({
         where: { isActive: true },
         select: { id: true, _count: { select: { businesses: true } } },
+      }),
+      prisma.post.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
+        take: 3,
+        select: {
+          id: true, title: true, slug: true, excerpt: true,
+          coverImageUrl: true, category: true, readTimeMinutes: true, publishedAt: true,
+          author: { select: { name: true } },
+        },
       }),
     ])
   } catch {
@@ -48,6 +60,7 @@ export default async function HomePage() {
         <StatsSection />
         <BenefitsSection />
         <MunicipalitiesSection municipalities={municipalities} />
+        <LatestBlogPosts posts={latestPosts} />
         <CTASection />
         <TestimonialsCarousel />
       </main>
