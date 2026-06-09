@@ -97,11 +97,13 @@ export default function BlogPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-purple-600 to-purple-800 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="bg-green-900 py-16 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Blog de Guía ZMG</h1>
-              <p className="mt-4 text-xl text-purple-100">
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Blog</p>
+              <h1 className="text-4xl font-black text-white sm:text-5xl">Blog de Guía ZMG</h1>
+              <p className="mt-4 text-xl text-green-200">
                 Consejos, tendencias y estrategias para el éxito de tu negocio
               </p>
             </div>
@@ -117,9 +119,9 @@ export default function BlogPage() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {featuredArticles.map((article) => (
               <Card key={article.id} className="overflow-hidden transition-all hover:shadow-lg">
-                <div className="aspect-video bg-gradient-to-br from-purple-100 to-purple-50" />
+                <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50" />
                 <CardHeader>
-                  <Badge className="w-fit bg-purple-600">{article.category}</Badge>
+                  <Badge className="w-fit bg-green-700">{article.category}</Badge>
                   <CardTitle className="mt-2 text-xl">{article.title}</CardTitle>
                   <CardDescription>{article.excerpt}</CardDescription>
                 </CardHeader>
@@ -167,10 +169,10 @@ export default function BlogPage() {
               {regularArticles.map((article) => (
                 <Card key={article.id} className="overflow-hidden">
                   <div className="grid gap-6 md:grid-cols-4">
-                    <div className="aspect-video bg-gradient-to-br from-purple-100 to-purple-50 md:aspect-auto" />
+                    <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50 md:aspect-auto" />
                     <div className="col-span-3 p-6">
                       <div className="flex items-center gap-3">
-                        <Badge className="bg-purple-600">{article.category}</Badge>
+                        <Badge className="bg-green-700">{article.category}</Badge>
                         <span className="text-sm text-gray-500">{article.readTime} de lectura</span>
                       </div>
                       <h3 className="mt-3 text-xl font-bold">{article.title}</h3>
@@ -200,7 +202,7 @@ export default function BlogPage() {
 
         {/* Newsletter CTA */}
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-8 text-center">
+          <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-8 text-center">
             <h2 className="text-2xl font-bold">No te pierdas nuestros artículos</h2>
             <p className="mt-2 text-gray-600">
               Suscríbete a nuestro boletín para recibir los mejores consejos para tu negocio

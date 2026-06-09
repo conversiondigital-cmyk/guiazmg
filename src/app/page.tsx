@@ -2,13 +2,13 @@ export const dynamic = "force-dynamic"
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { HeroSearch } from "@/components/home/hero-search"
+import { HeroCarousel } from "@/components/home/hero-carousel"
 import { CategoryGrid } from "@/components/home/category-grid"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 import { StatsSection } from "@/components/home/stats-section"
 import { BenefitsSection } from "@/components/home/benefits-section"
 import { MunicipalitiesSection } from "@/components/home/municipalities-section"
-import { TestimonialsSection } from "@/components/home/testimonials-section"
+import { TestimonialsCarousel } from "@/components/home/testimonials-carousel"
 import { CTASection } from "@/components/home/cta-section"
 import { getCategories, getFeaturedBusinesses, getMunicipalities } from "@/lib/queries"
 import { prisma } from "@/lib/prisma"
@@ -42,14 +42,14 @@ export default async function HomePage() {
     <>
       <Header />
       <main className="flex-1">
-        <HeroSearch />
+        <HeroCarousel />
         <CategoryGrid categories={categoriesWithCounts as any} />
         <FeaturedBusinesses businesses={businesses} />
         <StatsSection />
         <BenefitsSection />
         <MunicipalitiesSection municipalities={municipalities} />
         <CTASection />
-        <TestimonialsSection />
+        <TestimonialsCarousel />
       </main>
       <Footer />
     </>

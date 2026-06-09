@@ -13,10 +13,12 @@ export default function PoliticaPrivacidadPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-gray-900 to-gray-800 py-16">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-bold text-white">Política de Privacidad</h1>
-            <p className="mt-2 text-gray-300">Última actualización: 1 de junio de 2026</p>
+        <section className="bg-green-900 py-16 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
+          <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Legal · LFPDPPP</p>
+            <h1 className="text-4xl font-black text-white">Política de Privacidad</h1>
+            <p className="mt-2 text-green-300 text-sm">Última actualización: 1 de junio de 2026</p>
           </div>
         </section>
 

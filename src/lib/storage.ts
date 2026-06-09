@@ -1,4 +1,4 @@
-type StorageProvider = "local" | "s3" | "r2" | "supabase"
+type StorageProvider = "local" | "s3" | "r2"
 
 interface UploadOptions {
   folder?: string
@@ -70,20 +70,7 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
 
   const bucket = process.env.S3_BUCKET || "guiazmg"
   try {
-    if (provider === "supabase") {
-      const { createClient } = await import("@supabase/supabase-js")
-      const client = createClient(
-        process.env.SUPABASE_URL || "",
-        process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-      )
-      const ext = getSafeImageExtension(file.type) || "bin"
-      const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const sbBucket = process.env.SUPABASE_STORAGE_BUCKET || "guiazmg"
-      const { data, error } = await client.storage.from(sbBucket).upload(key, file, { contentType: file.type })
-      if (error) throw new Error(error.message)
-      const { data: urlData } = client.storage.from(sbBucket).getPublicUrl(data.path)
-      return { url: urlData.publicUrl, key, provider: "supabase" }
-    }
+    // Supabase storage removed — use Cloudflare R2 (S3-compatible) instead
     const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3")
     const client = new S3Client({
       region: process.env.S3_REGION || "us-east-1",
