@@ -4,50 +4,73 @@ import { auth } from "@/lib/auth"
 import { z } from "zod"
 
 const createSchema = z.object({
-  title:          z.string().min(5).max(200),
-  slug:           z.string().min(3).max(200).regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
-  excerpt:        z.string().max(500).optional(),
-  content:        z.string(),
-  coverImageUrl:  z.string().url().optional().or(z.literal("")),
-  category:       z.string().max(80).optional(),
-  tags:           z.array(z.string().max(40)).max(10).optional(),
-  status:         z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
-  readTimeMinutes:z.number().int().min(1).max(60).default(5),
-  metaTitle:      z.string().max(70).optional(),
-  metaDescription:z.string().max(160).optional(),
+  title:           z.string().min(5).max(200),
+  slug:            z.string().min(3).max(200).regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
+  excerpt:         z.string().max(500).optional(),
+  content:         z.string(),
+  coverImageUrl:   z.string().url().optional().or(z.literal("")).nullable(),
+  category:        z.string().max(80).optional().nullable(),
+  tags:            z.array(z.string().max(40)).max(10).optional(),
+  status:          z.enum(["DRAFT", "PENDING_REVIEW"]).default("DRAFT"),
+  readTimeMinutes: z.number().int().min(1).max(60).default(5),
+  metaTitle:       z.string().max(70).optional().nullable(),
+  metaDescription: z.string().max(160).optional().nullable(),
 })
 
-// GET /api/blog/posts — public list (published only unless editor/admin)
 export async function GET(req: NextRequest) {
   const session = await auth()
   const role = (session?.user as any)?.role as string | undefined
-  const isEditor = role === "EDITOR" || role === "ADMIN"
+  const isAdmin  = role === "ADMIN"
+  const isEditor = role === "EDITOR" || isAdmin
+  const userId   = session?.user?.id
 
   const { searchParams } = new URL(req.url)
-  const page    = Math.max(1, Number(searchParams.get("page")  ?? 1))
-  const limit   = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 10)))
-  const category = searchParams.get("category") ?? undefined
-  const status   = searchParams.get("status") ?? undefined
+  const page     = Math.max(1, Number(searchParams.get("page")  ?? 1))
+  const limit    = Math.min(50, Math.max(1, Number(searchParams.get("limit") ?? 12)))
+  const category = searchParams.get("category")  ?? undefined
+  const status   = searchParams.get("status")    ?? undefined
+  const search   = searchParams.get("q")         ?? undefined
+  const featured = searchParams.get("featured")  === "true" ? true : undefined
+  const mine     = searchParams.get("mine")      === "true"
 
   const where: any = {}
 
-  if (!isEditor) {
+  if (isAdmin) {
+    // Admin can filter by any status or see all
+    if (status) where.status = status
+  } else if (isEditor) {
+    // Editors see their own posts (all statuses) OR published posts by others
+    if (mine && userId) {
+      where.authorId = userId
+      if (status) where.status = status
+    } else {
+      where.status = "PUBLISHED"
+    }
+  } else {
+    // Public: only published
     where.status = "PUBLISHED"
-  } else if (status) {
-    where.status = status
   }
+
   if (category) where.category = category
+  if (featured !== undefined) where.isFeatured = featured
+  if (search) {
+    where.OR = [
+      { title:   { contains: search, mode: "insensitive" } },
+      { excerpt: { contains: search, mode: "insensitive" } },
+    ]
+  }
 
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
-      orderBy: { publishedAt: "desc" },
+      orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
       skip:  (page - 1) * limit,
       take:  limit,
       select: {
         id: true, title: true, slug: true, excerpt: true,
         coverImageUrl: true, category: true, tags: true,
-        status: true, readTimeMinutes: true, publishedAt: true, createdAt: true,
+        status: true, readTimeMinutes: true, viewCount: true,
+        isFeatured: true, publishedAt: true, createdAt: true,
         author: { select: { id: true, name: true, image: true } },
       },
     }),
@@ -57,7 +80,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ posts, total, page, totalPages: Math.ceil(total / limit) })
 }
 
-// POST /api/blog/posts — create (EDITOR or ADMIN only)
 export async function POST(req: NextRequest) {
   const session = await auth()
   const role = (session?.user as any)?.role as string | undefined
@@ -73,18 +95,20 @@ export async function POST(req: NextRequest) {
 
   const data = parsed.data
 
-  // Check slug uniqueness
   const existing = await prisma.post.findUnique({ where: { slug: data.slug } })
-  if (existing) {
-    return NextResponse.json({ error: "El slug ya está en uso" }, { status: 409 })
-  }
+  if (existing) return NextResponse.json({ error: "El slug ya está en uso" }, { status: 409 })
+
+  // ADMIN can publish directly; EDITOR goes to PENDING_REVIEW
+  const isAdmin = role === "ADMIN"
+  const finalStatus = isAdmin && data.status === "PENDING_REVIEW" ? "PUBLISHED" : data.status
 
   const post = await prisma.post.create({
     data: {
       ...data,
+      status: finalStatus as any,
       authorId: session!.user!.id!,
       coverImageUrl: data.coverImageUrl || null,
-      publishedAt: data.status === "PUBLISHED" ? new Date() : null,
+      publishedAt: finalStatus === "PUBLISHED" ? new Date() : null,
     },
   })
 

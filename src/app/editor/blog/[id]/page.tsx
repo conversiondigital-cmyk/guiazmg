@@ -19,9 +19,13 @@ export default async function EditPostPage({ params }: Props) {
   const role = (session?.user as any)?.role
   if (role !== "EDITOR" && role !== "ADMIN") redirect("/")
 
+  const isAdmin = role === "ADMIN"
   const { id } = await params
   const post = await prisma.post.findUnique({ where: { id } })
   if (!post) notFound()
+
+  // EDITOR can only edit own posts (unless admin)
+  if (!isAdmin && post.authorId !== (session?.user as any)?.id) notFound()
 
   const initialData = {
     id: post.id,
@@ -32,10 +36,11 @@ export default async function EditPostPage({ params }: Props) {
     coverImageUrl: post.coverImageUrl,
     category: post.category,
     tags: post.tags,
-    status: post.status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
+    status: post.status as "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED" | "ARCHIVED",
     readTimeMinutes: post.readTimeMinutes,
     metaTitle: post.metaTitle,
     metaDescription: post.metaDescription,
+    rejectionReason: post.rejectionReason,
   }
 
   return (
@@ -49,7 +54,7 @@ export default async function EditPostPage({ params }: Props) {
           <span className="text-sm font-semibold text-gray-900 line-clamp-1">{post.title}</span>
         </div>
 
-        <PostForm initialData={initialData} />
+        <PostForm initialData={initialData} isAdmin={isAdmin} />
       </div>
     </div>
   )

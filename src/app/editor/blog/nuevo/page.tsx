@@ -12,6 +12,8 @@ export default async function NuevoPostPage() {
   const role = (session?.user as any)?.role
   if (role !== "EDITOR" && role !== "ADMIN") redirect("/")
 
+  const isAdmin = role === "ADMIN"
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -23,7 +25,7 @@ export default async function NuevoPostPage() {
           <span className="text-sm font-semibold text-gray-900">Nuevo artículo</span>
         </div>
 
-        <PostForm />
+        <PostForm isAdmin={isAdmin} />
       </div>
     </div>
   )

@@ -201,7 +201,8 @@ model User {
   referralsSent         Referral[] @relation("ReferralsSent")
   referralsReceived     Referral[] @relation("ReferralsReceived")
   emailLogs             EmailLog[]
-  posts                 Post[]
+  postsAuthored         Post[] @relation("PostAuthor")
+  postsReviewed         Post[] @relation("PostReviewer")
 
   @@map("users")
 }
@@ -1241,7 +1242,9 @@ model EmailLog {
 
 enum PostStatus {
   DRAFT
+  PENDING_REVIEW
   PUBLISHED
+  REJECTED
   ARCHIVED
 }
 
@@ -1252,7 +1255,7 @@ model Post {
   slug            String     @unique
   excerpt         String?
   content         String     @db.Text
-  coverImageUrl   String?
+  coverImageUrl   String?    // Stored in Cloudflare R2
   category        String?
   tags            String[]
   status          PostStatus @default(DRAFT)
@@ -1260,14 +1263,25 @@ model Post {
   publishedAt     DateTime?
   metaTitle       String?
   metaDescription String?
+  // Moderation
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  // Featured
+  isFeatured      Boolean    @default(false)
+  featuredAt      DateTime?
+  // Analytics
+  viewCount       Int        @default(0)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  author User @relation(fields: [authorId], references: [id])
+  author     User  @relation("PostAuthor",   fields: [authorId],     references: [id])
+  reviewedBy User? @relation("PostReviewer", fields: [reviewedById], references: [id])
 
   @@index([status, publishedAt])
   @@index([slug])
   @@index([category])
+  @@index([isFeatured])
   @@map("posts")
 }
 

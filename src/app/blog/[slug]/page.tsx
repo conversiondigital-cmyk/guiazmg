@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Calendar, User, Clock, ArrowLeft, Tag } from "lucide-react"
 import { Metadata } from "next"
 import { safeJsonLd } from "@/lib/seo/schema"
+import { ViewCounter } from "@/components/blog/view-counter"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -180,6 +181,9 @@ export default async function BlogPostPage({ params }: Props) {
           </section>
         )}
       </main>
+
+      {/* View counter — client-side, fire-and-forget with Redis 24h debounce */}
+      <ViewCounter postId={post.id} />
 
       <script
         type="application/ld+json"
