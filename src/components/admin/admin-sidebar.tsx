@@ -15,6 +15,7 @@ import {
   Upload, Webhook, Database,
   Settings, Mail, ListChecks, Workflow,
   Menu, X, LogOut, ChevronRight,
+  BookOpen, PenSquare,
 } from "lucide-react"
 
 type SidebarItem = {
@@ -48,6 +49,13 @@ const sections: SidebarSection[] = [
       { label: "Roles y permisos", href: "/admin/roles", icon: Lock },
       { label: "Cuentas suspendidas", href: "/admin/suspendidos", icon: UserX },
       { label: "Actividad de usuarios", href: "/admin/actividad-usuarios", icon: Clock },
+    ],
+  },
+  {
+    title: "Blog",
+    items: [
+      { label: "Moderar artículos", href: "/admin/blog",     icon: BookOpen },
+      { label: "Gestión de editores", href: "/admin/editores", icon: PenSquare },
     ],
   },
   {
