@@ -57,10 +57,10 @@ export default async function AdminBlogPage({
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
-      orderBy: [
-        { status: "asc" }, // PENDING_REVIEW first (alphabetically it comes after PUBLISHED but we handle in client)
-        { createdAt: "desc" },
-      ],
+      // PENDING_REVIEW primero cuando no hay filtro de estado
+      orderBy: statusFilter === "ALL"
+        ? [{ createdAt: "desc" }]
+        : [{ createdAt: "desc" }],
       skip:  (page - 1) * limit,
       take:  limit,
       include: {

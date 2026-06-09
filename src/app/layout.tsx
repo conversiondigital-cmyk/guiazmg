@@ -44,6 +44,11 @@ export const metadata: Metadata = {
     locale: "es_MX",
     type: "website",
   },
+  alternates: {
+    types: {
+      "application/rss+xml": "/blog/rss.xml",
+    },
+  },
 }
 
 export default function RootLayout({
