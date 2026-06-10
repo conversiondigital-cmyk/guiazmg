@@ -44,7 +44,7 @@ export default async function PagosPage() {
       amount: true,
       provider: true,
       type: true,
-      business: { select: { name: true } },
+      profile: { select: { name: true } },
     },
   })
 
@@ -113,12 +113,12 @@ export default async function PagosPage() {
                     <TableCell>
                     <span className="text-sm font-medium text-gray-900">
                       {p.type}
-                      {p.business && (
-                        <span className="text-xs text-gray-400 ml-1">({p.business.name})</span>
+                      {p.profile && (
+                        <span className="text-xs text-gray-400 ml-1">({p.profile.name})</span>
                       )}
                     </span>
-                      {p.business && (
-                        <span className="text-xs text-gray-400 ml-1">({p.business.name})</span>
+                      {p.profile && (
+                        <span className="text-xs text-gray-400 ml-1">({p.profile.name})</span>
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{formatCurrency(Number(p.amount))}</TableCell>

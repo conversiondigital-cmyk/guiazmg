@@ -31,7 +31,7 @@ async function getListings(searchParams: Record<string, string | string[] | unde
   if (search) {
     where.OR = [
       { title: { contains: search, mode: "insensitive" } },
-      { business: { name: { contains: search, mode: "insensitive" } } },
+      { profile: { name: { contains: search, mode: "insensitive" } } },
     ]
   }
 
@@ -39,7 +39,7 @@ async function getListings(searchParams: Record<string, string | string[] | unde
     prisma.listing.findMany({
       where,
       include: {
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         category: { select: { id: true, name: true } },
         _count: { select: { leads: true } },
       },
@@ -81,7 +81,7 @@ export default async function AdminAnunciosPage({
   }
 
   const params = await searchParams
-  const { listings, pagination, stats } = await getListings(params)
+  const { listings, stats } = await getListings(params)
 
   return (
     <div className="space-y-6">
@@ -175,7 +175,7 @@ export default async function AdminAnunciosPage({
                         {listing.title}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
-                        {listing.business.name}
+                        {listing.profile.name}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {listing.category.name}

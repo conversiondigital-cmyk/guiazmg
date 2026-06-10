@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ID de negocio requerido" }, { status: 400 })
   }
 
-  const business = await prisma.business.findUnique({ where: { id: businessId } })
+  const business = await prisma.profile.findUnique({ where: { id: businessId } })
   if (!business) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 })
   }
@@ -22,14 +22,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Ya eres el dueño de este negocio" }, { status: 400 })
   }
 
-  const existingClaim = await prisma.businessClaimRequest.findFirst({
+  const existingClaim = await prisma.profileClaimRequest.findFirst({
     where: { userId: session.user.id, businessName: business.name, status: "PENDING" },
   })
   if (existingClaim) {
     return NextResponse.json({ error: "Ya tienes una solicitud pendiente para este negocio" }, { status: 409 })
   }
 
-  const claim = await prisma.businessClaimRequest.create({
+  const claim = await prisma.profileClaimRequest.create({
     data: {
       userId: session.user.id,
       businessName: business.name,
@@ -47,7 +47,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const claims = await prisma.businessClaimRequest.findMany({
+  const claims = await prisma.profileClaimRequest.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
   })

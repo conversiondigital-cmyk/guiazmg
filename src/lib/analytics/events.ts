@@ -41,7 +41,7 @@ const bizAnalyticsFieldMap: Record<string, keyof Prisma.ProfileAnalyticsDailyCre
   WAZE_CLICK: "wazeClicks",
   FACEBOOK_CLICK: "facebookClicks",
   INSTAGRAM_CLICK: "instagramClicks",
-  TIKTOK_CLICK: "whatsappClicks",
+  TIKTOK_CLICK: "tiktokClicks",
 }
 
 function getToday(): Date {
@@ -65,12 +65,13 @@ export async function logAnalyticsEvent(params: {
     if (businessId && eventType in bizAnalyticsFieldMap) {
       const field = bizAnalyticsFieldMap[eventType] as string
       try {
-        await prisma.businessAnalyticsDaily.upsert({
+        await prisma.profileAnalyticsDaily.upsert({
           where: { businessId_date: { businessId, date: today } },
           update: { [field]: { increment: 1 } },
           create: { businessId, date: today, [field]: 1 },
         })
-      } catch {
+      } catch (error) {
+        console.error("[analytics] profileAnalyticsDaily upsert failed:", error)
       }
     }
 
@@ -95,7 +96,8 @@ export async function logAnalyticsEvent(params: {
             ipAddress: metadata?.ipAddress ?? null,
           },
         })
-      } catch {
+      } catch (error) {
+        console.error("[analytics] LEAD_GENERATED persistence failed:", error)
       }
     }
 
@@ -110,10 +112,12 @@ export async function logAnalyticsEvent(params: {
             resultsCount: metadata?.resultsCount ?? 0,
           },
         })
-      } catch {
+      } catch (error) {
+        console.error("[analytics] SEARCH_EXECUTED log failed:", error)
       }
     }
-  } catch {
+  } catch (error) {
+    console.error("[analytics] logAnalyticsEvent failed:", error)
   }
 }
 
@@ -128,12 +132,13 @@ export async function getDailyAnalytics(options: {
     }
     if (options.businessId) where.businessId = options.businessId
 
-    const rows = await prisma.businessAnalyticsDaily.findMany({
+    const rows = await prisma.profileAnalyticsDaily.findMany({
       where,
       orderBy: { date: "asc" },
     })
     return rows
-  } catch {
+  } catch (error) {
+    console.error("[analytics] getDailyAnalytics failed:", error)
     return []
   }
 }

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -38,7 +37,7 @@ export default async function AdminServiciosPage() {
       category: { slug: { contains: "servicio" } },
     },
     include: {
-      business: { select: { id: true, name: true, slug: true } },
+      profile: { select: { id: true, name: true, slug: true } },
       category: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -102,7 +101,7 @@ export default async function AdminServiciosPage() {
                 {listings.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium">{l.title}</TableCell>
-                    <TableCell className="text-muted-foreground">{l.business.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{l.profile.name}</TableCell>
                     <TableCell className="text-muted-foreground">{l.category.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColors[l.status]}>

@@ -17,7 +17,7 @@ enum UserRole {
   ADMIN
 }
 
-enum BusinessStatus {
+enum ProfileStatus {
   DRAFT
   PENDING_REVIEW
   ACTIVE
@@ -107,7 +107,7 @@ enum PaymentType {
   LISTING
 }
 
-enum BusinessProfileType {
+enum ProfileType {
   EMPRENDEDOR
   NEGOCIO
 }
@@ -297,7 +297,7 @@ model SalesCommission {
   updatedAt     DateTime @updatedAt
 
   salesAgent SalesAgent @relation(fields: [salesAgentId], references: [id])
-   business   Profile   @relation(fields: [businessId], references: [id])
+   profile   Profile   @relation(fields: [businessId], references: [id])
 
   @@map("sales_commissions")
 }
@@ -457,8 +457,8 @@ model Profile {
   longitude         Float?
   logoUrl           String?
   coverImageUrl     String?
-  profileType       BusinessProfileType  @default(NEGOCIO)
-  status            BusinessStatus      @default(PENDING_REVIEW)
+  profileType       ProfileType  @default(NEGOCIO)
+  status            ProfileStatus      @default(PENDING_REVIEW)
   verificationStatus VerificationStatus @default(UNVERIFIED)
   visibilityScore   Int                 @default(0)
   googleRating      Float?
@@ -467,6 +467,7 @@ model Profile {
   isFeatured        Boolean             @default(false)
   isPremium         Boolean             @default(false)
   isActive          Boolean             @default(true)
+  isDemo            Boolean             @default(false)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   deletedAt         DateTime?
@@ -508,6 +509,7 @@ model Profile {
   @@index([latitude, longitude])
   @@index([status])
   @@index([verificationStatus])
+  @@index([isDemo])
   @@map("businesses")
 }
 
@@ -519,7 +521,7 @@ model ProfileImage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("business_images")
 }
@@ -530,7 +532,7 @@ model ProfileTag {
   tagId      String
   createdAt  DateTime @default(now())
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
   tag      Tag      @relation(fields: [tagId], references: [id])
 
   @@unique([businessId, tagId])
@@ -547,7 +549,7 @@ model ProfileHour {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, dayOfWeek])
   @@map("business_hours")
@@ -589,7 +591,7 @@ model ProfileMembership {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-   business Profile       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile       @relation(fields: [businessId], references: [id], onDelete: Cascade)
   plan     MembershipPlan @relation(fields: [planId], references: [id])
 
   @@map("business_memberships")
@@ -614,7 +616,7 @@ model Listing {
   updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
-   business    Profile    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile    Profile    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   category    Category    @relation(fields: [categoryId], references: [id])
   subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
 
@@ -658,7 +660,7 @@ model Boost {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
   listing  Listing? @relation(fields: [listingId], references: [id])
   payment  Payment? @relation(fields: [paymentId], references: [id])
 
@@ -683,7 +685,7 @@ model Coupon {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("coupons")
 }
@@ -777,7 +779,7 @@ model Review {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   response ReviewResponse?
@@ -796,7 +798,7 @@ model ReviewResponse {
   updatedAt  DateTime @updatedAt
 
   review   Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-   business Profile @relation(fields: [businessId], references: [id])
+   profile Profile @relation(fields: [businessId], references: [id])
   user     User?    @relation(fields: [userId], references: [id])
 
   @@index([businessId])
@@ -814,7 +816,7 @@ model Favorite {
   createdAt            DateTime           @default(now())
 
   user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-   business          Profile?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile          Profile?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
   marketplaceListing MarketplaceListing? @relation(fields: [marketplaceListingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, businessId])
@@ -834,7 +836,7 @@ model Report {
   updatedAt      DateTime     @updatedAt
 
   user     User      @relation("reportedReports", fields: [reporterUserId], references: [id])
-  business Profile? @relation("profileReports", fields: [businessId], references: [id])
+  profile Profile? @relation("profileReports", fields: [businessId], references: [id])
   listing  Listing?  @relation(fields: [listingId], references: [id])
 
   @@map("reports")
@@ -855,7 +857,7 @@ model ProfileClaimRequest {
   updatedAt     DateTime @updatedAt
 
   user     User     @relation(fields: [userId], references: [id])
-   business Profile? @relation(fields: [businessId], references: [id])
+   profile Profile? @relation(fields: [businessId], references: [id])
 
   @@index([userId])
   @@index([businessId])
@@ -882,7 +884,7 @@ model Payment {
   updatedAt         DateTime       @updatedAt
 
   user     User      @relation(fields: [userId], references: [id])
-   business Profile? @relation(fields: [businessId], references: [id])
+   profile Profile? @relation(fields: [businessId], references: [id])
   boost    Boost?
 
   @@index([businessId])
@@ -905,7 +907,7 @@ model Lead {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-   business  Profile    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile  Profile    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   user      User?       @relation(fields: [userId], references: [id])
   listing   Listing?    @relation(fields: [listingId], references: [id])
 
@@ -922,7 +924,7 @@ model LeadEvent {
   ipAddress  String?
   createdAt  DateTime @default(now())
 
-   business Profile  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   listing  Listing?  @relation(fields: [listingId], references: [id])
 
   @@map("lead_events")
@@ -941,6 +943,7 @@ model ProfileAnalyticsDaily {
   websiteClicks  Int      @default(0)
   facebookClicks Int      @default(0)
   instagramClicks Int     @default(0)
+  tiktokClicks   Int      @default(0)
   mapClicks      Int      @default(0)
   wazeClicks     Int      @default(0)
   couponViews    Int      @default(0)
@@ -948,7 +951,7 @@ model ProfileAnalyticsDaily {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, date])
   @@map("business_analytics_daily")
@@ -1220,7 +1223,7 @@ model ProfileBadge {
   badgeId    String
   awardedAt  DateTime @default(now())
 
-   business Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
   badge    Badge    @relation(fields: [badgeId], references: [id])
 
   @@unique([businessId, badgeId])
@@ -1301,4 +1304,30 @@ model IdempotencyKey {
   expiresAt DateTime
 
   @@map("idempotency_keys")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String // MERCADO_PAGO | STRIPE
+  eventType String?
+  eventId   String? // id de la notificación del proveedor
+  status    String   @default("RECEIVED") // RECEIVED | PROCESSED | ERROR
+  payload   String // JSON crudo recibido
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+  @@map("webhook_events")
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  source    String? // origen de la suscripción (p.ej. "footer")
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
 }

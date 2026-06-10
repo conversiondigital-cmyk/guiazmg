@@ -1,8 +1,8 @@
-import { notFound, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search as SearchIcon, LayoutDashboard, Users, Store, Settings, BarChart3, Lock } from "lucide-react"
+import { Search as SearchIcon } from "lucide-react"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"

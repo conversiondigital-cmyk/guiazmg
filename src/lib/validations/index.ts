@@ -59,3 +59,54 @@ export const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
   comment: z.string().max(500).optional(),
 })
+
+export const marketplaceListingSchema = z.object({
+  title: z.string().min(3, "Mínimo 3 caracteres").max(200),
+  description: z.string().max(5000).optional(),
+  price: z.number().min(0).optional(),
+  type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]),
+  categoryId: z.string().min(1, "Categoría requerida"),
+  municipalityId: z.string().optional(),
+  neighborhood: z.string().max(100).optional(),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  contactEmail: z.string().email().optional().or(z.literal("")),
+})
+
+export const serviceRequestSchema = z.object({
+  title: z.string().min(3).max(200),
+  description: z.string().max(5000).optional(),
+  categoryId: z.string().optional(),
+  municipalityId: z.string().optional(),
+  neighborhood: z.string().max(100).optional(),
+})
+
+export const paymentPreferenceSchema = z.object({
+  type: z.enum(["membership", "boost"]),
+  plan: z.string().optional(),
+  businessId: z.string().optional(),
+  boostDefinitionId: z.string().optional(),
+  listingId: z.string().optional(),
+  couponCode: z.string().optional(),
+})
+
+export function sanitizeString(input: string): string {
+  return input
+    .replace(/<[^>]*>/g, "")
+    .replace(/[<>]/g, "")
+    .trim()
+}
+
+export function validateAndSanitize<T>(
+  schema: z.ZodType<T>,
+  data: unknown
+): { success: boolean; data?: T; errors?: string[] } {
+  const result = schema.safeParse(data)
+  if (!result.success) {
+    return {
+      success: false,
+      errors: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`),
+    }
+  }
+  return { success: true, data: result.data }
+}

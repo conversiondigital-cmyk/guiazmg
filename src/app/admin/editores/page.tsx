@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { BookOpen, Globe, Clock, Users } from "lucide-react"
+import { BookOpen, Clock, Users } from "lucide-react"
 import { Metadata } from "next"
 import { EditoresClient } from "./editores-client"
 
@@ -23,7 +23,7 @@ export default async function AdminEditoresPage() {
       isActive: true,
       createdAt: true,
       lastLoginAt: true,
-      _count: { select: { posts: true } },
+      _count: { select: { postsAuthored: true } },
     },
     orderBy: { createdAt: "desc" },
   })
@@ -37,6 +37,7 @@ export default async function AdminEditoresPage() {
       ])
       return {
         ...editor,
+        _count: { posts: editor._count.postsAuthored },
         createdAt: editor.createdAt.toISOString(),
         lastLoginAt: editor.lastLoginAt?.toISOString() ?? null,
         publishedCount,

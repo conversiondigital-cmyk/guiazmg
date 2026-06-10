@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Mail, Calendar, Search, UserPlus, Shield, ShieldOff, LogIn, BookOpen, Loader2, X, CheckCircle } from "lucide-react"
+import { Mail, Search, UserPlus, Shield, ShieldOff, LogIn, BookOpen, Loader2, X, CheckCircle } from "lucide-react"
 
 interface Editor {
   id: string
@@ -28,7 +28,7 @@ function fmt(d: string | null) {
 export function EditoresClient({ editors: initial }: EditoresClientProps) {
   const router = useRouter()
   const [editors, setEditors] = useState(initial)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   // Promote modal state
   const [promoteOpen, setPromoteOpen] = useState(false)

@@ -78,8 +78,8 @@ export default async function AdminDashboard() {
     recentPendingBusinesses,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
-    prisma.business.count({ where: { status: "ACTIVE", deletedAt: null } }),
-    prisma.business.count({ where: { status: "PENDING_REVIEW" } }),
+    prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    prisma.profile.count({ where: { status: "PENDING_REVIEW" } }),
     prisma.listing.count({ where: { status: "ACTIVE" } }),
     prisma.marketplaceListing.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.serviceRequest.count({ where: { status: "ACTIVE" } }),
@@ -130,7 +130,7 @@ export default async function AdminDashboard() {
       take: 5,
       select: { id: true, reason: true, status: true, createdAt: true },
     }),
-    prisma.business.findMany({
+    prisma.profile.findMany({
       where: { status: "PENDING_REVIEW" },
       orderBy: { createdAt: "desc" },
       take: 5,

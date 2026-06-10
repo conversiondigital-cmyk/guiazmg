@@ -43,7 +43,7 @@ type PaymentBusiness = { id: string; name: string }
 type Payment = {
   id: string
   user: PaymentUser
-  business: PaymentBusiness | null
+  profile: PaymentBusiness | null
   provider: string
   providerPaymentId: string | null
   type: string
@@ -255,8 +255,8 @@ export function PagosClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {payment.business ? (
-                        <span className="text-sm">{payment.business.name}</span>
+                      {payment.profile ? (
+                        <span className="text-sm">{payment.profile.name}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

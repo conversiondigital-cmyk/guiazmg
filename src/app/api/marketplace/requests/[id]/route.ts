@@ -22,7 +22,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const isAdmin = session.user.role === "ADMIN"
   const isEditor = session.user.role === "EDITOR"
-  const business = await prisma.business.findFirst({
+  const business = await prisma.profile.findFirst({
     where: { ownerId: session.user.id, deletedAt: null },
     select: { id: true },
   })

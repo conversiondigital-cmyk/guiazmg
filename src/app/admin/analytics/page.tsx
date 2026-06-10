@@ -70,12 +70,12 @@ export default async function AdminAnalyticsPage() {
     topMunicipalities,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
-    prisma.business.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.marketplaceListing.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.lead.count(),
     prisma.payment.findMany({ where: { status: "APPROVED" }, select: { amount: true } }),
     prisma.searchLog.count(),
-    prisma.businessAnalyticsDaily.aggregate({ _sum: { views: true } }),
+    prisma.profileAnalyticsDaily.aggregate({ _sum: { views: true } }),
     prisma.$queryRaw<{ date: Date; count: number }[]>`
       SELECT date, SUM(views)::int as count
       FROM business_analytics_daily

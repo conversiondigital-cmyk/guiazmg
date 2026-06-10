@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import type { PostWhereInput } from "@/generated/prisma/models/Post"
 import Link from "next/link"
 import { PlusCircle, Eye, Edit2, Calendar, Globe, FileText, Archive, Clock, XCircle } from "lucide-react"
 import { Metadata } from "next"
@@ -47,8 +48,8 @@ export default async function EditorBlogPage({
   const statusFilter = VALID_STATUSES.includes(sp.status as any) ? sp.status : undefined
 
   // ADMIN ve todos — EDITOR solo sus artículos
-  const whereBase = role === "ADMIN" ? {} : { authorId: userId }
-  const where = statusFilter ? { ...whereBase, status: statusFilter } : whereBase
+  const whereBase: PostWhereInput = role === "ADMIN" ? {} : { authorId: userId }
+  const where: PostWhereInput = statusFilter ? { ...whereBase, status: statusFilter as PostWhereInput["status"] } : whereBase
 
   const posts = await prisma.post.findMany({
     where,

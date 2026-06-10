@@ -33,7 +33,7 @@ export async function GET() {
       .filter((c) => c.status === "PAID" || c.status === "APPROVED")
       .reduce((sum, c) => sum + Number(c.amount), 0)
 
-    const businesses = await prisma.business.findMany({
+    const businesses = await prisma.profile.findMany({
       where: { salesAgentId: salesAgent.id, deletedAt: null },
       select: { id: true, status: true, createdAt: true },
     })

@@ -214,7 +214,6 @@ export function AuditoriaClient({ logs, users, pagination, filters: initialFilte
           </thead>
           <tbody>
             {logs.map((log) => (
-              // @ts-ignore Fragment with key
               <React.Fragment key={log.id}>
                 <tr
                   className="border-b transition-colors hover:bg-muted/50 cursor-pointer"

@@ -13,33 +13,53 @@ const ttlDefaults: Record<string, number> = {
   landing: 300,
 }
 
-async function getRedisClient() {
-  try {
-    const { createClient } = await import("redis")
-    const redisUrl = process.env.REDIS_URL
-    if (!redisUrl) {
-      if (process.env.NODE_ENV === "production") {
-        throw new Error("REDIS_URL must be configured in production")
-      }
-      return null
+type RedisClient = Awaited<ReturnType<typeof import("redis").createClient>>
+
+// Reuse a single Redis connection across operations instead of opening and
+// closing one per call. Cached on globalThis so dev hot-reloads don't leak
+// connections.
+const globalForRedis = globalThis as unknown as {
+  redisClientPromise: Promise<RedisClient | null> | null
+}
+
+function getRedisClient(): Promise<RedisClient | null> {
+  if (!process.env.REDIS_URL) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("REDIS_URL must be configured in production")
     }
-    const client = createClient({ url: redisUrl })
-    await client.connect()
-    return client
-  } catch {
-    return null
+    return Promise.resolve(null)
   }
+
+  if (!globalForRedis.redisClientPromise) {
+    globalForRedis.redisClientPromise = (async () => {
+      try {
+        const { createClient } = await import("redis")
+        const client = createClient({ url: process.env.REDIS_URL })
+        client.on("error", (err) => {
+          console.error("[cache] redis client error:", err)
+        })
+        await client.connect()
+        return client
+      } catch (error) {
+        console.error("[cache] redis connection failed, falling back to memory:", error)
+        // Reset so a later call can retry the connection.
+        globalForRedis.redisClientPromise = null
+        return null
+      }
+    })()
+  }
+
+  return globalForRedis.redisClientPromise
 }
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const redis = process.env.REDIS_URL ? await getRedisClient() : null
+  const redis = await getRedisClient()
   if (redis) {
     try {
       const raw = await redis.get(key)
-      await redis.quit().catch(() => {})
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      await redis.quit().catch(() => {})
+      return raw ? (JSON.parse(raw) as T) : null
+    } catch (error) {
+      console.error("[cache] get failed:", error)
     }
   }
   const entry = memoryStore.get(key)
@@ -52,28 +72,26 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 
 export async function cacheSet<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
   const ttl = ttlSeconds ?? ttlDefaults[key.split(":")[0]] ?? 60
-  const redis = process.env.REDIS_URL ? await getRedisClient() : null
+  const redis = await getRedisClient()
   if (redis) {
     try {
       await redis.set(key, JSON.stringify(value), { EX: ttl })
-      await redis.quit().catch(() => {})
       return
-    } catch {
-      await redis.quit().catch(() => {})
+    } catch (error) {
+      console.error("[cache] set failed:", error)
     }
   }
   memoryStore.set(key, { value, expiresAt: Date.now() + ttl * 1000 })
 }
 
 export async function cacheDelete(pattern: string): Promise<void> {
-  const redis = process.env.REDIS_URL ? await getRedisClient() : null
+  const redis = await getRedisClient()
   if (redis) {
     try {
       const keys = await redis.keys(pattern)
       if (keys.length > 0) await redis.del(keys)
-      await redis.quit().catch(() => {})
-    } catch {
-      await redis.quit().catch(() => {})
+    } catch (error) {
+      console.error("[cache] delete failed:", error)
     }
   }
   for (const key of memoryStore.keys()) {

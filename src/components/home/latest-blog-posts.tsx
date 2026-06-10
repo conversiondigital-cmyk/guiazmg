@@ -17,11 +17,6 @@ interface LatestBlogPostsProps {
   posts: Post[]
 }
 
-function formatDate(date: Date | null) {
-  if (!date) return ""
-  return new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short", year: "numeric" }).format(date)
-}
-
 export function LatestBlogPosts({ posts }: LatestBlogPostsProps) {
   if (posts.length === 0) return null
 

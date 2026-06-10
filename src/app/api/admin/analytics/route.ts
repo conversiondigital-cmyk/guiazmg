@@ -31,7 +31,7 @@ export async function GET() {
       neighborhoodStats,
     ] = await Promise.all([
       prisma.user.count({ where: { deletedAt: null } }),
-      prisma.business.count({ where: { status: "ACTIVE", deletedAt: null } }),
+      prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
       prisma.marketplaceListing.count({ where: { status: "ACTIVE", deletedAt: null } }),
       prisma.lead.count(),
       prisma.payment.count({ where: { status: "APPROVED" } }),

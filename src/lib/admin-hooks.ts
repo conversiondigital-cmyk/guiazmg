@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import type { AdminFilter, TableState } from "./admin-types"
+import type { TableState } from "./admin-types"
 import { PAGINATION_DEFAULTS } from "./admin-constants"
 
 // ============================================================================
@@ -276,6 +276,7 @@ export function useAdminAsync<T>(
 
   useEffect(() => {
     refetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetch, ...dependencies])
 
   return { data, loading, error, refetch }
@@ -367,6 +368,7 @@ export function useAdminToast() {
     }
 
     return id
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const remove = useCallback((id: string) => {

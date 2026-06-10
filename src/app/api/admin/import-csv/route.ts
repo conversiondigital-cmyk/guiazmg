@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const existingWebsites = new Set<string>()
     const existingNames = new Set<string>()
     const existingLocations = new Set<string>()
-    const existingBizs: any[] = await prisma.business.findMany({
+    const existingBizs: any[] = await prisma.profile.findMany({
       where: { deletedAt: null },
       select: { name: true, phone: true, whatsapp: true, websiteUrl: true, municipalityId: true, neighborhoodId: true },
     })
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
         const addressText = row["address"] || row["direccion"] || ""
         const googleMapsUrl = row["google_maps_url"] || row["google_maps"] || ""
 
-        await prisma.business.create({
+        await prisma.profile.create({
           data: {
             ownerId: session.user.id,
             name,

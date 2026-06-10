@@ -56,10 +56,10 @@ async function main() {
   ]
 
   for (const biz of demoBusinesses) {
-    const existing = await prisma.business.findUnique({ where: { slug: biz.slug } })
+    const existing = await prisma.profile.findUnique({ where: { slug: biz.slug } })
     if (existing) continue
 
-    const business = await prisma.business.create({
+    const business = await prisma.profile.create({
       data: {
         ...biz,
         ownerId: admin.id,

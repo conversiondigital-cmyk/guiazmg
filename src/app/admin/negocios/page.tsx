@@ -31,7 +31,7 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
   }
 
   const [businesses, total] = await Promise.all([
-    prisma.business.findMany({
+    prisma.profile.findMany({
       where,
       include: {
         owner: { select: { id: true, name: true, email: true, image: true } },
@@ -48,16 +48,16 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.business.count({ where }),
+    prisma.profile.count({ where }),
   ])
 
   const [pendingCount, activeCount, suspendedCount] = await Promise.all([
-    prisma.business.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
-    prisma.business.count({ where: { deletedAt: null, status: "ACTIVE" } }),
-    prisma.business.count({ where: { deletedAt: null, status: "SUSPENDED" } }),
+    prisma.profile.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
+    prisma.profile.count({ where: { deletedAt: null, status: "ACTIVE" } }),
+    prisma.profile.count({ where: { deletedAt: null, status: "SUSPENDED" } }),
   ])
 
-  const totalCount = await prisma.business.count({ where: { deletedAt: null } })
+  const totalCount = await prisma.profile.count({ where: { deletedAt: null } })
 
   return {
     businesses: JSON.parse(JSON.stringify(businesses)),

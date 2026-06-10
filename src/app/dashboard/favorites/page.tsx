@@ -13,7 +13,7 @@ export default async function FavoritesPage() {
   const favorites = await prisma.favorite.findMany({
     where: { userId: session.user.id },
     include: {
-      business: {
+      profile: {
         include: { municipality: true, category: true },
       },
     },
@@ -40,8 +40,8 @@ export default async function FavoritesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {favorites.map((fav) => {
-            if (!fav.business) return null
-            const biz = fav.business
+            if (!fav.profile) return null
+            const biz = fav.profile
             return (
               <Link key={fav.id} href={`/perfil/${biz.slug}`}>
                 <Card className="group h-full transition-all hover:shadow-md cursor-pointer">

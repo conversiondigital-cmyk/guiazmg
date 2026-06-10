@@ -6,7 +6,7 @@ import { UserNav } from "@/components/layout/user-nav"
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { MapPin, ChevronDown, User } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
@@ -19,6 +19,21 @@ const NAV_LINKS = [
 export function Header() {
   const { data: session } = useSession()
   const [activeNav, setActiveNav] = useState("Inicio")
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [showCategories, setShowCategories] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    fetch("/api/categories")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (active && Array.isArray(data)) setCategories(data)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white shadow-sm">
@@ -37,24 +52,60 @@ export function Header() {
 
         {/* Nav desktop */}
         <nav className="hidden lg:flex items-center gap-1 flex-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              onClick={() => setActiveNav(link.label)}
-              className={`flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative
-                ${activeNav === link.label
-                  ? "text-green-800"
-                  : "text-gray-600 hover:text-green-800"
-                }`}
-            >
-              {link.label}
-              {link.hasDropdown && <ChevronDown className="h-3.5 w-3.5" />}
-              {activeNav === link.label && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-500" />
-              )}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) =>
+            link.hasDropdown ? (
+              <div
+                key={link.label}
+                className="relative"
+                onMouseEnter={() => setShowCategories(true)}
+                onMouseLeave={() => setShowCategories(false)}
+              >
+                <Link
+                  href={link.href}
+                  onClick={() => setActiveNav(link.label)}
+                  className={`flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative
+                    ${activeNav === link.label ? "text-green-800" : "text-gray-600 hover:text-green-800"}`}
+                >
+                  {link.label}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCategories ? "rotate-180" : ""}`} />
+                </Link>
+                {showCategories && categories.length > 0 && (
+                  <div className="absolute left-0 top-full z-50 w-72 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
+                    <div className="grid grid-cols-2 gap-0.5">
+                      {categories.slice(0, 12).map((cat) => (
+                        <Link
+                          key={cat.id}
+                          href={`/categoria/${cat.slug}`}
+                          className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-green-50 hover:text-green-800 transition-colors"
+                        >
+                          {cat.name}
+                        </Link>
+                      ))}
+                    </div>
+                    <Link
+                      href="/search"
+                      className="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-50 transition-colors"
+                    >
+                      Ver todas las categorías →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setActiveNav(link.label)}
+                className={`flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative
+                  ${activeNav === link.label ? "text-green-800" : "text-gray-600 hover:text-green-800"}`}
+              >
+                {link.label}
+                {activeNav === link.label && (
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-500" />
+                )}
+              </Link>
+            )
+          )}
         </nav>
 
         {/* Actions */}

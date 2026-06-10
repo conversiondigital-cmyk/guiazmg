@@ -7,7 +7,7 @@ import { MEMBERSHIP_PLANS } from "@/lib/constants"
 async function assertBusinessOwnership(userId: string, businessId: string, isAdmin: boolean) {
   if (isAdmin) return true
 
-  const business = await prisma.business.findUnique({
+  const business = await prisma.profile.findUnique({
     where: { id: businessId },
     select: { id: true, ownerId: true, deletedAt: true },
   })

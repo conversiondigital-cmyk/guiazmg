@@ -20,7 +20,7 @@ export default async function AdminPromocionesPage() {
 
   const coupons = await prisma.coupon.findMany({
     include: {
-      business: { select: { id: true, name: true, slug: true } },
+      profile: { select: { id: true, name: true, slug: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -86,7 +86,7 @@ export default async function AdminPromocionesPage() {
                   return (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{c.business.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.profile.name}</TableCell>
                       <TableCell>
                         {c.code ? (
                           <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{c.code}</code>

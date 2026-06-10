@@ -43,7 +43,7 @@ export default async function AdminFinancialPage() {
       _sum: { amount: true },
     }),
     prisma.boost.count({ where: { createdAt: { gte: startOfMonth } } }),
-    prisma.business.count({ where: { status: "ACTIVE" } }),
+    prisma.profile.count({ where: { status: "ACTIVE" } }),
     prisma.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*)::int as count
       FROM payments
@@ -56,7 +56,7 @@ export default async function AdminFinancialPage() {
       FROM business_memberships
       WHERE status = 'CANCELLED' AND "updatedAt" >= ${startOfMonth}
     `,
-    prisma.businessMembership.count({
+    prisma.profileMembership.count({
       where: { status: "ACTIVE", createdAt: { lt: startOfMonth } },
     }),
     prisma.payment.groupBy({
@@ -79,7 +79,7 @@ export default async function AdminFinancialPage() {
       take: 20,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        business: { select: { id: true, name: true } },
+        profile: { select: { id: true, name: true } },
       },
     }),
     prisma.payment.count({ where: { status: "APPROVED" } }),

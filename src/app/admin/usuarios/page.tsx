@@ -3,20 +3,13 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Users, Shield, Eye, Edit3, MoreHorizontal, Search, UserCheck, UserX } from "@/lib/icons"
+import { Users, Search, UserCheck, UserX } from "@/lib/icons"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-// no select controls on this screen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { UserActions } from "@/components/admin/user-actions"
 
 const ROLE_LABELS: Record<string, string> = {
   ALL: "Todos",
@@ -42,63 +35,73 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ rol?: string; status?: string; q?: string; page?: string }>
 }) {
-  try {
-    const session = await auth()
-    if (!session?.user || session.user.role !== "ADMIN") {
-      redirect("/dashboard")
-    }
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/dashboard")
+  }
 
-    const params = await searchParams
-    const currentRol = params.rol ?? "ALL"
-    const currentStatus = params.status ?? "active"
-    const currentQ = params.q ?? ""
-    const currentPage = Math.max(1, parseInt(params.page ?? "1", 10))
-    const limit = 20
+  const params = await searchParams
+  const currentRol = params.rol ?? "ALL"
+  const currentStatus = params.status ?? "active"
+  const currentQ = params.q ?? ""
+  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10))
+  const limit = 20
 
-    const where: Record<string, unknown> = { deletedAt: null }
+  const where: Record<string, unknown> = { deletedAt: null }
 
-    if (currentRol !== "ALL") {
-      where.role = currentRol
-    }
+  if (currentRol !== "ALL") {
+    where.role = currentRol
+  }
 
-    if (currentStatus === "suspended") {
-      where.isActive = false
-    } else if (currentStatus !== "all") {
-      where.isActive = true
-    }
+  if (currentStatus === "suspended") {
+    where.isActive = false
+  } else if (currentStatus !== "all") {
+    where.isActive = true
+  }
 
-    if (currentQ) {
-      where.OR = [
-        { name: { contains: currentQ, mode: "insensitive" } },
-        { email: { contains: currentQ, mode: "insensitive" } },
-      ]
-    }
+  if (currentQ) {
+    where.OR = [
+      { name: { contains: currentQ, mode: "insensitive" } },
+      { email: { contains: currentQ, mode: "insensitive" } },
+    ]
+  }
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isActive: true,
-          createdAt: true,
-          image: true,
-          _count: {
-            select: {
-              businesses: true,
-              reviews: true,
-              marketplaceListings: true,
+  // Wrap only the data fetch (not the JSX) so errors are logged without
+  // constructing JSX inside a try/catch (react-hooks/error-boundaries).
+  async function loadUsers() {
+    try {
+      return await Promise.all([
+        prisma.user.findMany({
+          where,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            isActive: true,
+            createdAt: true,
+            image: true,
+            _count: {
+              select: {
+                businesses: true,
+                reviews: true,
+                marketplaceListings: true,
+              },
             },
           },
-        },
-        orderBy: { createdAt: "desc" },
-        skip: (currentPage - 1) * limit,
-        take: limit,
-      }),
-      prisma.user.count({ where }),
-    ])
+          orderBy: { createdAt: "desc" },
+          skip: (currentPage - 1) * limit,
+          take: limit,
+        }),
+        prisma.user.count({ where }),
+      ])
+    } catch (error) {
+      console.error("[ADMIN_USUARIOS_ERROR]", error)
+      throw error
+    }
+  }
+
+  const [users, total] = await loadUsers()
 
   const totalPages = Math.ceil(total / limit)
 
@@ -228,38 +231,15 @@ export default async function AdminUsersPage({
                       {user.createdAt.toLocaleDateString("es-MX")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            render={<Link href={`/admin/usuarios/${user.id}`} />}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit3 className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          {user.isActive ? (
-                            <DropdownMenuItem variant="destructive">
-                              <UserX className="mr-2 h-4 w-4" />
-                              Suspender
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem>
-                              <UserCheck className="mr-2 h-4 w-4" />
-                              Reactivar
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem>
-                            <Shield className="mr-2 h-4 w-4" />
-                            Cambiar Rol
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <UserActions
+                        user={{
+                          id: user.id,
+                          name: user.name,
+                          email: user.email,
+                          role: user.role,
+                          isActive: user.isActive,
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -295,8 +275,5 @@ export default async function AdminUsersPage({
         </div>
       )}
     </div>
-  ) } catch (error) {
-    console.error("[ADMIN_USUARIOS_ERROR]", error)
-    throw error
-  }
+  )
 }

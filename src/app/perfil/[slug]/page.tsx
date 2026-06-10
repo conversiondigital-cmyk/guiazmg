@@ -63,14 +63,14 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
   const breadcrumbLd = breadcrumbSchema(breadcrumbItems)
 
   const images = business.id
-    ? await prisma.businessImage.findMany({
+    ? await prisma.profileImage.findMany({
         where: { businessId: business.id },
         orderBy: { sortOrder: "asc" },
       })
     : []
 
   const similarBusinesses = business.categoryId
-    ? await prisma.business.findMany({
+    ? await prisma.profile.findMany({
         where: {
           categoryId: business.categoryId,
           id: { not: business.id },

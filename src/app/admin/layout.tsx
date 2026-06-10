@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
-import { AdminHeader } from "@/components/admin/admin-header"
 import { AdminLayoutClient } from "./layout-client"
 
 export default async function AdminLayout({

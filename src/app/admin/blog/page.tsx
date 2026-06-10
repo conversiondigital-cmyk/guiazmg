@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import {
   FileText, Globe, Clock, Archive, XCircle,
-  Eye, Edit2, CheckCircle, PlusCircle, Star,
-  TrendingUp, Users, Calendar, BarChart3, Search,
+  PlusCircle,
+  TrendingUp, Calendar, BarChart3, Search,
 } from "lucide-react"
 import { BlogModerationClient } from "./blog-moderation-client"
 import { Metadata } from "next"

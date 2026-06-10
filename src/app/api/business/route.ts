@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const data = validation.data
     const slug = slugify(data.name)
 
-    const existing = await prisma.business.findUnique({ where: { slug } })
+    const existing = await prisma.profile.findUnique({ where: { slug } })
     if (existing) {
       return NextResponse.json(
         { error: "Ya existe un negocio con ese nombre" },
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const business = await prisma.business.create({
+    const business = await prisma.profile.create({
       data: {
         name: data.name,
         shortDescription: data.shortDescription,
@@ -83,7 +83,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const businesses = await prisma.business.findMany({
+    const businesses = await prisma.profile.findMany({
       where: { ownerId: session.user.id },
       include: {
         municipality: true,

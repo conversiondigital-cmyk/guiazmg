@@ -18,7 +18,7 @@ export default async function MisResenasPage() {
     where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
-      business: { select: { id: true, name: true, slug: true, logoUrl: true } },
+      profile: { select: { id: true, name: true, slug: true, logoUrl: true } },
     },
   })
 
@@ -52,16 +52,16 @@ export default async function MisResenasPage() {
           {reviews.map((review) => (
             <div key={review.id} className="rounded-2xl bg-white border border-gray-100 p-5">
               <div className="flex items-start gap-4">
-                <Link href={`/negocio/${review.business.slug}`} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 overflow-hidden hover:opacity-80 transition-opacity">
-                  {review.business.logoUrl
-                    ? <img src={review.business.logoUrl} alt={review.business.name} className="h-full w-full object-cover" />
-                    : <span className="text-lg font-black text-gray-300">{review.business.name.charAt(0)}</span>
+                <Link href={`/negocio/${review.profile.slug}`} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 overflow-hidden hover:opacity-80 transition-opacity">
+                  {review.profile.logoUrl
+                    ? <img src={review.profile.logoUrl} alt={review.profile.name} className="h-full w-full object-cover" />
+                    : <span className="text-lg font-black text-gray-300">{review.profile.name.charAt(0)}</span>
                   }
                 </Link>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3">
-                    <Link href={`/negocio/${review.business.slug}`} className="font-bold text-gray-900 hover:text-green-800 line-clamp-1">
-                      {review.business.name}
+                    <Link href={`/negocio/${review.profile.slug}`} className="font-bold text-gray-900 hover:text-green-800 line-clamp-1">
+                      {review.profile.name}
                     </Link>
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${STATUS_BADGE[review.status] ?? ""}`}>
                       {review.status === "PENDING" ? "Pendiente" : review.status === "APPROVED" ? "Aprobada" : "Rechazada"}

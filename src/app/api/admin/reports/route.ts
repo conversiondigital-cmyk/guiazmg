@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       where,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         listing: { select: { id: true, title: true, slug: true } },
       },
       orderBy: { createdAt: "desc" },

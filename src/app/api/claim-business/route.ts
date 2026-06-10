@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nombre del negocio requerido" }, { status: 400 })
     }
 
-    await prisma.businessClaimRequest.create({
+    await prisma.profileClaimRequest.create({
       data: {
         userId: session.user.id,
         businessId: businessId || null,
@@ -39,8 +39,8 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const claims = await prisma.businessClaimRequest.findMany({
-    include: { user: { select: { id: true, name: true, email: true } }, business: { select: { id: true, name: true, slug: true } } },
+  const claims = await prisma.profileClaimRequest.findMany({
+    include: { user: { select: { id: true, name: true, email: true } }, profile: { select: { id: true, name: true, slug: true } } },
     orderBy: { createdAt: "desc" },
   })
 

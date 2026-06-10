@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
-        { business: { name: { contains: search, mode: "insensitive" } } },
+        { profile: { name: { contains: search, mode: "insensitive" } } },
       ]
     }
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       prisma.listing.findMany({
         where,
         include: {
-          business: { select: { id: true, name: true, slug: true } },
+          profile: { select: { id: true, name: true, slug: true } },
           category: { select: { id: true, name: true } },
           subcategory: { select: { id: true, name: true } },
           images: { select: { id: true, imageUrl: true }, take: 1 },

@@ -6,7 +6,7 @@ import { ClaimForm } from "./claim-form"
 
 export default async function ClaimBusinessPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const business = await prisma.business.findUnique({
+  const business = await prisma.profile.findUnique({
     where: { slug },
     select: { id: true, name: true, slug: true, status: true },
   })

@@ -42,7 +42,7 @@ type ListingRow = {
   visibilityScore: number
   createdAt: string
   deletedAt: string | null
-  business: ListingBusiness
+  profile: ListingBusiness
   category: ListingCategory | null
   subcategory: ListingSubcategory | null
   images: ListingImage[]
@@ -276,7 +276,7 @@ export function ListingsListClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-sm">{listing.business.name}</span>
+                      <span className="font-medium text-sm">{listing.profile.name}</span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">{listing.category?.name || "—"}</span>
@@ -304,7 +304,7 @@ export function ListingsListClient({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           {listing.status === "ACTIVE" && (
-                            <DropdownMenuItem onClick={() => window.open(`/perfil/${listing.business.slug}`, "_blank")}>
+                            <DropdownMenuItem onClick={() => window.open(`/perfil/${listing.profile.slug}`, "_blank")}>
                               <Eye className="h-4 w-4" />
                               Ver
                             </DropdownMenuItem>

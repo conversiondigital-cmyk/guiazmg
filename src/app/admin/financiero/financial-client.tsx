@@ -19,7 +19,7 @@ import { formatCurrency } from "@/lib/utils"
 type RecentPayment = {
   id: string
   user: { id: string; name: string | null; email: string }
-  business: { id: string; name: string } | null
+  profile: { id: string; name: string } | null
   provider: string
   type: string
   amount: number
@@ -234,7 +234,7 @@ export function FinancialClient(props: Props) {
                         <span className="ml-1.5 text-xs text-muted-foreground">{p.user?.email}</span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {p.business?.name || "—"}
+                        {p.profile?.name || "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">

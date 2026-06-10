@@ -20,7 +20,7 @@ export default async function CuentaMarketplacePage() {
     select: {
       id: true, title: true, price: true, status: true,
       type: true, createdAt: true, municipalityId: true,
-      images: { select: { imageUrl: true }, take: 1 },
+      images: { select: { url: true }, take: 1 },
     },
   })
 
@@ -69,7 +69,7 @@ export default async function CuentaMarketplacePage() {
             <div key={item.id} className="rounded-2xl bg-white border border-gray-100 p-4 flex gap-4">
               <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100 overflow-hidden">
                 {item.images[0]
-                  ? <img src={item.images[0].imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                  ? <img src={item.images[0].url} alt={item.title} className="h-full w-full object-cover" />
                   : <div className="h-full w-full flex items-center justify-center"><Tag className="h-6 w-6 text-gray-300" /></div>
                 }
               </div>

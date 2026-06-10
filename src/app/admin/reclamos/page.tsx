@@ -66,7 +66,7 @@ export default async function AdminReclamosPage({
   }
 
   const [claims, total] = await Promise.all([
-    prisma.businessClaimRequest.findMany({
+    prisma.profileClaimRequest.findMany({
       where,
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
@@ -75,13 +75,13 @@ export default async function AdminReclamosPage({
       skip: (currentPage - 1) * limit,
       take: limit,
     }),
-    prisma.businessClaimRequest.count({ where }),
+    prisma.profileClaimRequest.count({ where }),
   ])
 
   const [pendingCount, approvedCount, rejectedCount] = await Promise.all([
-    prisma.businessClaimRequest.count({ where: { status: "PENDING" } }),
-    prisma.businessClaimRequest.count({ where: { status: "APPROVED" } }),
-    prisma.businessClaimRequest.count({ where: { status: "REJECTED" } }),
+    prisma.profileClaimRequest.count({ where: { status: "PENDING" } }),
+    prisma.profileClaimRequest.count({ where: { status: "APPROVED" } }),
+    prisma.profileClaimRequest.count({ where: { status: "REJECTED" } }),
   ])
 
   const totalPages = Math.ceil(total / limit)
@@ -105,13 +105,13 @@ export default async function AdminReclamosPage({
     if (!id || !action) return
 
     if (action === "APPROVED") {
-      const claim = await prisma.businessClaimRequest.findUnique({ where: { id } })
+      const claim = await prisma.profileClaimRequest.findUnique({ where: { id } })
       if (claim) {
-        const business = await prisma.business.findFirst({
+        const business = await prisma.profile.findFirst({
           where: { name: claim.businessName, slug: claim.businessUrl ?? undefined },
         })
         if (business) {
-          await prisma.business.update({
+          await prisma.profile.update({
             where: { id: business.id },
             data: { ownerId: claim.userId },
           })
@@ -119,7 +119,7 @@ export default async function AdminReclamosPage({
       }
     }
 
-    await prisma.businessClaimRequest.update({ where: { id }, data: { status: action } })
+    await prisma.profileClaimRequest.update({ where: { id }, data: { status: action } })
   }
 
   const filterTabs = ["ALL", "PENDING", "APPROVED", "REJECTED"]

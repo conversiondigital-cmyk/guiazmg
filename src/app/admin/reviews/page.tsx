@@ -84,7 +84,7 @@ export default async function AdminReviewsPage({
       { comment: { contains: currentQ, mode: "insensitive" } },
       { title: { contains: currentQ, mode: "insensitive" } },
       { user: { name: { contains: currentQ, mode: "insensitive" } } },
-      { business: { name: { contains: currentQ, mode: "insensitive" } } },
+      { profile: { name: { contains: currentQ, mode: "insensitive" } } },
     ]
   }
 
@@ -93,7 +93,7 @@ export default async function AdminReviewsPage({
       where,
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         response: true,
       },
       orderBy: { createdAt: "desc" },
@@ -220,10 +220,10 @@ export default async function AdminReviewsPage({
                     <TableRow key={review.id} className={flagged ? "bg-red-50 dark:bg-red-950/10" : ""}>
                       <TableCell>
                         <Link
-                          href={`/perfil/${review.business.slug}`}
+                          href={`/perfil/${review.profile.slug}`}
                           className="font-medium hover:underline"
                         >
-                          {review.business.name}
+                          {review.profile.name}
                         </Link>
                       </TableCell>
                       <TableCell>

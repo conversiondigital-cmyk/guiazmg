@@ -34,7 +34,7 @@ export default async function MembresiaPage() {
     orderBy: { monthlyPrice: "asc" },
   })
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     include: {
       memberships: {

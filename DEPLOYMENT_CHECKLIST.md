@@ -57,13 +57,13 @@ docker compose logs -f app
 ### Database backup
 
 ```bash
-docker exec guiazmg-db pg_dump -U guiazmg guiazmg > backup_$(date +%Y%m%d).sql
+docker exec guiazmg-postgres pg_dump -U root guiazmg > backup_$(date +%Y%m%d).sql
 ```
 
 ### Database restore
 
 ```bash
-cat backup.sql | docker exec -i guiazmg-db psql -U guiazmg guiazmg
+cat backup.sql | docker exec -i guiazmg-postgres psql -U root guiazmg
 ```
 
 ### Updating

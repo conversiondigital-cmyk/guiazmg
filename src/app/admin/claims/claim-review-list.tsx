@@ -47,7 +47,7 @@ export function ClaimReviewList({ claims }: { claims: any[] }) {
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{claim.business?.name || claim.businessName}</span>
+                  <span className="font-medium">{claim.profile?.name || claim.businessName}</span>
                   <Badge className={statusColors[claim.status] || ""}>{claim.status}</Badge>
                 </div>
                 <p className="text-sm text-gray-500">
@@ -66,8 +66,8 @@ export function ClaimReviewList({ claims }: { claims: any[] }) {
                   </Button>
                 </div>
               )}
-              {claim.business && (
-                <a href={`/perfil/${claim.business.slug}`} target="_blank" className="text-blue-600 text-xs flex items-center gap-1">
+              {claim.profile && (
+                <a href={`/perfil/${claim.profile.slug}`} target="_blank" className="text-blue-600 text-xs flex items-center gap-1">
                   Ver perfil <ExternalLink className="h-3 w-3" />
                 </a>
               )}

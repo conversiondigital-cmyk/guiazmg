@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { buildPreferencePayload, createPreference } from "@/lib/mercadopago"
 
 async function assertBusinessOwnership(userId: string, businessId: string) {
-  const business = await prisma.business.findUnique({
+  const business = await prisma.profile.findUnique({
     where: { id: businessId },
     select: { id: true, ownerId: true, deletedAt: true },
   })

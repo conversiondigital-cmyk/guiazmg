@@ -2,6 +2,7 @@ import "dotenv/config"
 import { PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
+import { randomBytes } from "node:crypto"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
@@ -48,7 +49,8 @@ async function main() {
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } })
 
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash("admin123", 12)
+    const password = process.env.ADMIN_PASSWORD ?? randomBytes(12).toString("base64url")
+    const passwordHash = await bcrypt.hash(password, 12)
     await prisma.user.create({
       data: {
         name: "Administrador",
@@ -58,7 +60,11 @@ async function main() {
         isActive: true,
       },
     })
-    console.log("Administrador creado:", adminEmail)
+    console.log(
+      "Administrador creado:",
+      adminEmail,
+      process.env.ADMIN_PASSWORD ? "(password vía ADMIN_PASSWORD)" : `(password temporal: ${password})`
+    )
   }
 
   for (const m of MUNICIPALITIES) {
@@ -118,7 +124,8 @@ async function main() {
   const admin2Email = "admin@guiazmg.com"
   const existingAdmin2 = await prisma.user.findUnique({ where: { email: admin2Email } })
   if (!existingAdmin2) {
-    const passwordHash = await bcrypt.hash("Admin123!", 12)
+    const password = process.env.ADMIN2_PASSWORD ?? process.env.ADMIN_PASSWORD ?? randomBytes(12).toString("base64url")
+    const passwordHash = await bcrypt.hash(password, 12)
     await prisma.user.create({
       data: {
         name: "Admin Guía ZMG",
@@ -128,7 +135,11 @@ async function main() {
         isActive: true,
       },
     })
-    console.log("Administrador creado:", admin2Email)
+    console.log(
+      "Administrador creado:",
+      admin2Email,
+      (process.env.ADMIN2_PASSWORD || process.env.ADMIN_PASSWORD) ? "(password vía env)" : `(password temporal: ${password})`
+    )
   }
 
   // Planes de membresía oficiales — economía local ZMG

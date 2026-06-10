@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [businesses, total] = await Promise.all([
-      prisma.business.findMany({
+      prisma.profile.findMany({
         where,
         include: {
           owner: { select: { id: true, name: true, email: true, image: true } },
@@ -52,21 +52,21 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.business.count({ where }),
+      prisma.profile.count({ where }),
     ])
 
-    const stats = await prisma.business.aggregate({
+    const stats = await prisma.profile.aggregate({
       where: { deletedAt: null },
       _count: true,
     })
 
-    const pendingCount = await prisma.business.count({
+    const pendingCount = await prisma.profile.count({
       where: { deletedAt: null, status: "PENDING_REVIEW" },
     })
-    const activeCount = await prisma.business.count({
+    const activeCount = await prisma.profile.count({
       where: { deletedAt: null, status: "ACTIVE" },
     })
-    const suspendedCount = await prisma.business.count({
+    const suspendedCount = await prisma.profile.count({
       where: { deletedAt: null, status: "SUSPENDED" },
     })
 
@@ -130,7 +130,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: "Acción no válida" }, { status: 400 })
     }
 
-    await prisma.business.updateMany({
+    await prisma.profile.updateMany({
       where: { id: { in: ids } },
       data: updateData,
     })

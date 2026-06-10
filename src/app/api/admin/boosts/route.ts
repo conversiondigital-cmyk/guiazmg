@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { createdAt: "desc" },
       include: {
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         listing: { select: { id: true, title: true } },
       },
     })

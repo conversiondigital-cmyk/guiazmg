@@ -30,7 +30,7 @@ export default async function LeadsPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true, name: true },
   })
@@ -42,7 +42,7 @@ export default async function LeadsPage() {
         orderBy: { createdAt: "desc" },
         take: 100,
         include: {
-          business: { select: { name: true } },
+          profile: { select: { name: true } },
           listing: { select: { title: true } },
         },
       })
@@ -141,7 +141,7 @@ export default async function LeadsPage() {
                             {lead.source}
                           </span>
                         </td>
-                        <td className="py-3 pr-4 font-medium text-gray-900">{lead.business.name}</td>
+                        <td className="py-3 pr-4 font-medium text-gray-900">{lead.profile.name}</td>
                         <td className="py-3 text-gray-500">{lead.listing?.title || "—"}</td>
                       </tr>
                     )

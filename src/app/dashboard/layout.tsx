@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   if (!role || role === "USER") redirect("/cuenta")
 
   // Fetch profileType for BUSINESS_OWNER
-  const profile = await prisma.business.findFirst({
+  const profile = await prisma.profile.findFirst({
     where: { ownerId: session.user.id },
     select: { profileType: true },
   })

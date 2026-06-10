@@ -152,6 +152,7 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
         memberships: { include: { plan: true } },
         tags: { include: { tag: true } },
         hours: true,
+        reviews: { where: { status: "APPROVED" }, select: { rating: true } },
         _count: { select: { reviews: true, favorites: true } },
       },
       skip,
@@ -198,8 +199,9 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
       (now.getTime() - b.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     )
 
-    const avgRating = b._count.reviews > 0
-      ? 0
+    const approvedRatings = b.reviews?.map((r) => r.rating) ?? []
+    const avgRating = approvedRatings.length > 0
+      ? approvedRatings.reduce((sum, r) => sum + r, 0) / approvedRatings.length
       : 0
 
     const score = calculateScore({
@@ -214,7 +216,7 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
       daysSinceCreated,
     })
 
-    return { ...b, score, distance }
+    return { ...b, score, distance, avgRating }
   })
 
   if (sort === "distance" && lat && lng) {

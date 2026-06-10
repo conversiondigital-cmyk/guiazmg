@@ -106,6 +106,7 @@ const sections: SidebarSection[] = [
     items: [
       { label: "Importaciones", href: "/admin/importar", icon: Upload },
       { label: "Webhooks", href: "/admin/webhooks", icon: Webhook },
+      { label: "Datos demo", href: "/admin/demo", icon: Database },
     ],
   },
   {

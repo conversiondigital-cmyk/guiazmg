@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -80,7 +78,6 @@ export function AdminCRUDClient({
   formFields,
   statCards,
 }: AdminCRUDClientProps) {
-  const router = useRouter()
   const [items, setItems] = useState(initialItems)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)

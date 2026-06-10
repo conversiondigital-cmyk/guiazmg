@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma"
 
 export async function getSimilarBusinesses(businessId: string, limit = 4) {
-  const business = await prisma.business.findUnique({
+  const business = await prisma.profile.findUnique({
     where: { id: businessId },
     select: { categoryId: true, municipalityId: true, neighborhoodId: true, id: true },
   })
   if (!business) return []
 
-  const similar = await prisma.business.findMany({
+  const similar = await prisma.profile.findMany({
     where: {
       id: { not: business.id },
       status: "ACTIVE",
@@ -34,7 +34,7 @@ export async function getSimilarBusinesses(businessId: string, limit = 4) {
 }
 
 export async function getPopularInCategory(categorySlug: string, limit = 6) {
-  return prisma.business.findMany({
+  return prisma.profile.findMany({
     where: {
       status: "ACTIVE",
       deletedAt: null,

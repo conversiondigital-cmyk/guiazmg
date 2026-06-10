@@ -19,7 +19,7 @@ export default async function ConfiguracionPage() {
     include: { userSettings: true },
   })
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true, name: true },
   })

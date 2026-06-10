@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
 
       await db.$transaction(async (tx: any) => {
-        await tx.business.update({
+        await tx.profile.update({
           where: { id: businessId },
           data: { ownerId: claim.userId },
         })

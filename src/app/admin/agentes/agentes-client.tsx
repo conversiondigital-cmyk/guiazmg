@@ -239,7 +239,6 @@ export function AgentesClient({ agents, stats }: AgentsClientProps) {
           </thead>
           <tbody>
             {filtered.map((agent) => (
-              // @ts-ignore Fragment with key
               <React.Fragment key={agent.id}>
                 <tr
                   className="border-b transition-colors hover:bg-muted/50 cursor-pointer"

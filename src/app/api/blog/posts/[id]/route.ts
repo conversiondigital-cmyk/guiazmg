@@ -18,7 +18,7 @@ const updateSchema = z.object({
   isFeatured:      z.boolean().optional(),
 })
 
-async function getSessionAndRole(req: NextRequest) {
+async function getSessionAndRole() {
   const session = await auth()
   const role = (session?.user as any)?.role as string | undefined
   return { session, role }
@@ -38,7 +38,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { session, role } = await getSessionAndRole(req)
+  const { session, role } = await getSessionAndRole()
   if (role !== "EDITOR" && role !== "ADMIN") {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   }
@@ -84,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { session, role } = await getSessionAndRole(req)
+  const { session, role } = await getSessionAndRole()
   if (role !== "EDITOR" && role !== "ADMIN") {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   }

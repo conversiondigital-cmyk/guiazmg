@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const query = q.toLowerCase()
 
     const [nameResults, categoryResults, tagResults] = await Promise.all([
-      prisma.business.findMany({
+      prisma.profile.findMany({
         where: {
           status: "ACTIVE",
           name: { contains: query, mode: "insensitive" },

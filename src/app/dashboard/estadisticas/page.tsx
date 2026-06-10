@@ -11,7 +11,7 @@ export default async function EstadisticasPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true, name: true },
   })
@@ -21,7 +21,7 @@ export default async function EstadisticasPage() {
 
   const analytics =
     businessIds.length > 0
-      ? await prisma.businessAnalyticsDaily.findMany({
+      ? await prisma.profileAnalyticsDaily.findMany({
           where: { businessId: { in: businessIds }, date: { gte: thirtyDaysAgo } },
         })
       : []

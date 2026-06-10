@@ -29,6 +29,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updateData.isActive = body.isActive
     }
 
+    if (typeof body.name === "string" && body.name.trim().length >= 2) {
+      updateData.name = body.name.trim()
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: "Sin cambios válidos" }, { status: 400 })
     }

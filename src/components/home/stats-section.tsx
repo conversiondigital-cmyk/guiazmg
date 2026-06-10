@@ -1,18 +1,31 @@
 import { Store, Users, Star, MapPin } from "lucide-react"
+import { prisma } from "@/lib/prisma"
 
-const STATS = [
-  { icon: Store,  value: "+15,000",   label: "Negocios registrados" },
-  { icon: Users,  value: "+250,000",  label: "Usuarios en la plataforma" },
-  { icon: Star,   value: "+50,000",   label: "Reseñas reales" },
-  { icon: MapPin, value: "+30",       label: "Municipios en la ZMG" },
-]
+function formatCount(n: number): string {
+  if (n >= 1000) return `+${Math.floor(n / 1000)}k`
+  return `+${n}`
+}
 
-export function StatsSection() {
+export async function StatsSection() {
+  const [businesses, users, reviews, municipalities] = await Promise.all([
+    prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
+    prisma.user.count({ where: { deletedAt: null } }),
+    prisma.review.count(),
+    prisma.municipality.count(),
+  ])
+
+  const stats = [
+    { icon: Store,  value: formatCount(businesses),     label: "Negocios activos" },
+    { icon: Users,  value: formatCount(users),          label: "Usuarios en la plataforma" },
+    { icon: Star,   value: formatCount(reviews),        label: "Reseñas reales" },
+    { icon: MapPin, value: municipalities.toString(),   label: "Municipios en la ZMG" },
+  ]
+
   return (
     <section className="bg-gray-50 border-y border-gray-100">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-          {STATS.map((s) => {
+          {stats.map((s) => {
             const Icon = s.icon
             return (
               <div key={s.label} className="flex items-center gap-4">

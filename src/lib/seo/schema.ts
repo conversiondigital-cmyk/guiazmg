@@ -96,7 +96,11 @@ export function profileSchema(profile: Profile) {
     })).filter(Boolean) || undefined,
     aggregateRating: profile._count && profile._count.reviews > 0 ? {
       "@type": "AggregateRating",
-      ratingValue: "0",
+      ratingValue: (
+        Array.isArray(profile.reviews) && profile.reviews.length > 0
+          ? profile.reviews.reduce((sum: number, r: any) => sum + (r.rating ?? 0), 0) / profile.reviews.length
+          : 0
+      ).toFixed(1),
       reviewCount: profile._count.reviews,
     } : undefined,
     sameAs: [
@@ -182,7 +186,7 @@ export function reviewSchema(review: any) {
     datePublished: review.createdAt ? new Date(review.createdAt).toISOString() : undefined,
     itemReviewed: {
       "@type": "LocalBusiness",
-      name: review.business?.name || undefined,
+      name: review.profile?.name || undefined,
     },
   })
 }

@@ -41,7 +41,7 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
-    const business = await prisma.business.findUnique({
+    const business = await prisma.profile.findUnique({
       where: { id },
     })
 
@@ -91,7 +91,7 @@ export async function PUT(
           return NextResponse.json({ error: "Acción no válida" }, { status: 400 })
       }
 
-      const updated = await prisma.business.update({
+      const updated = await prisma.profile.update({
         where: { id },
         data: updateData,
       })
@@ -135,7 +135,7 @@ export async function PUT(
       return NextResponse.json(business)
     }
 
-    const updated = await prisma.business.update({
+    const updated = await prisma.profile.update({
       where: { id },
       data: changedFields,
     })

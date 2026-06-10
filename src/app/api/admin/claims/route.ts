@@ -8,9 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const claims = await prisma.businessClaimRequest.findMany({
+  const claims = await prisma.profileClaimRequest.findMany({
     include: {
       user: { select: { id: true, name: true, email: true, image: true } },
+      profile: { select: { id: true, name: true, slug: true } },
     },
     orderBy: { createdAt: "desc" },
   })
@@ -30,7 +31,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 })
   }
 
-  const claim = await prisma.businessClaimRequest.findUnique({
+  const claim = await prisma.profileClaimRequest.findUnique({
     where: { id: claimId },
   })
   if (!claim) {
@@ -38,18 +39,18 @@ export async function PATCH(req: Request) {
   }
 
   if (status === "APPROVED") {
-    const business = await prisma.business.findFirst({
+    const business = await prisma.profile.findFirst({
       where: { name: claim.businessName, slug: claim.businessUrl ?? undefined },
     })
     if (business) {
-      await prisma.business.update({
+      await prisma.profile.update({
         where: { id: business.id },
         data: { ownerId: claim.userId },
       })
     }
   }
 
-  const updated = await prisma.businessClaimRequest.update({
+  const updated = await prisma.profileClaimRequest.update({
     where: { id: claimId },
     data: { status },
   })

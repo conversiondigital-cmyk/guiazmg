@@ -5,8 +5,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, FileText, FilePlus, BookOpen,
-  FolderOpen, Tags, Image, Search,
+  LayoutDashboard, FilePlus, BookOpen,
+  Search,
   User, Bell, LogOut, Menu, X, ChevronRight,
   Pencil,
 } from "lucide-react"

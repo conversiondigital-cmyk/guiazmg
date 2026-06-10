@@ -11,7 +11,11 @@ async function main() {
   const adminEmail = "admin@guiazmg.com"
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
   if (!existing) {
-    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "Admin123!", 12)
+    const adminPassword = process.env.ADMIN_PASSWORD
+    if (!adminPassword) {
+      throw new Error("ADMIN_PASSWORD env var is required for the production seed (no fallback password is allowed)")
+    }
+    const passwordHash = await bcrypt.hash(adminPassword, 12)
     await prisma.user.create({
       data: { name: "Admin Guía ZMG", email: adminEmail, passwordHash, role: "ADMIN", isActive: true },
     })

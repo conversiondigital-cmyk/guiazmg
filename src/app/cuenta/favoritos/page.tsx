@@ -18,7 +18,7 @@ export default async function FavoritosPage() {
     where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
-      business: {
+      profile: {
         select: {
           id: true, name: true, slug: true, shortDescription: true,
           logoUrl: true, municipalityId: true,
@@ -50,7 +50,7 @@ export default async function FavoritosPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {favorites.map(({ business: b, id }) => (
+          {favorites.map(({ profile: b, id }) => b == null ? null : (
             <Link key={id} href={`/negocio/${b.slug}`} className="group rounded-2xl bg-white border border-gray-100 p-5 hover:border-green-200 hover:shadow-md transition-all flex gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gray-100 overflow-hidden">
                 {b.logoUrl

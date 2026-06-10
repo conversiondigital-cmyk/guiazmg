@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import {
   Table,
   TableHeader,
@@ -29,7 +30,7 @@ export default async function BoostsPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true, name: true },
   })
@@ -40,7 +41,7 @@ export default async function BoostsPage() {
       ? await prisma.boost.findMany({
           where: { businessId: { in: businessIds } },
           include: {
-            business: { select: { name: true } },
+            profile: { select: { name: true } },
             listing: { select: { title: true } },
           },
           orderBy: { createdAt: "desc" },
@@ -59,7 +60,7 @@ export default async function BoostsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Boosts</h1>
           <p className="text-gray-500">Impulsa tus anuncios para llegar a más clientes</p>
         </div>
-        <Button disabled>
+        <Button render={<Link href="/dashboard/boosts/nuevo" />}>
           <Plus className="mr-2 h-4 w-4" />
           Crear Boost
         </Button>
@@ -103,7 +104,7 @@ export default async function BoostsPage() {
             <p className="mt-2 text-sm text-gray-500">
               Impulsa tus anuncios para llegar a más clientes.
             </p>
-            <Button className="mt-4" disabled>
+            <Button className="mt-4" render={<Link href="/dashboard/boosts/nuevo" />}>
               <Plus className="mr-2 h-4 w-4" />
               Crear Boost
             </Button>
@@ -140,7 +141,7 @@ export default async function BoostsPage() {
                   )
                   return (
                     <TableRow key={boost.id}>
-                      <TableCell className="font-medium">{boost.business.name}</TableCell>
+                      <TableCell className="font-medium">{boost.profile.name}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {boost.listing?.title || "—"}
                       </TableCell>

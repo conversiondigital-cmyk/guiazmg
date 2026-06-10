@@ -57,7 +57,7 @@ interface Props {
 
 export function BlogModerationClient({ posts, total, page, limit, statusFilter }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [rejectModal, setRejectModal] = useState<{ postId: string; title: string } | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { apiLimiter } from "@/lib/security/rate-limit"
 import { z } from "zod"
 
 const paginationSchema = z.object({
@@ -8,6 +9,14 @@ const paginationSchema = z.object({
 })
 
 export async function GET(req: NextRequest) {
+  const rl = await apiLimiter(req)
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta más tarde." },
+      { status: 429, headers: { "Retry-After": String(Math.max(1, Math.ceil((rl.resetTime - Date.now()) / 1000))) } }
+    )
+  }
+
   const { searchParams } = new URL(req.url)
   const parsed = paginationSchema.safeParse(Object.fromEntries(searchParams.entries()))
   if (!parsed.success) {
@@ -21,7 +30,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Paginación demasiado profunda" }, { status: 400 })
   }
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { status: "ACTIVE", deletedAt: null },
     select: {
       id: true,

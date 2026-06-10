@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ error: "Agente no encontrado" }, { status: 404 })
     }
 
-    const businesses = await prisma.business.findMany({
+    const businesses = await prisma.profile.findMany({
       where: { salesAgentId: salesAgent.id, deletedAt: null },
       select: {
         id: true,
@@ -146,10 +146,10 @@ export async function PATCH(request: NextRequest) {
 
     if (id.startsWith("prospect-")) {
       const businessId = id.replace("prospect-", "")
-      const business = await prisma.business.findUnique({ where: { id: businessId } })
+      const business = await prisma.profile.findUnique({ where: { id: businessId } })
       if (business && business.salesAgentId === salesAgent.id) {
         if (status === "CLIENTE" && business.status !== "ACTIVE") {
-          await prisma.business.update({
+          await prisma.profile.update({
             where: { id: businessId },
             data: { status: "ACTIVE" },
           })

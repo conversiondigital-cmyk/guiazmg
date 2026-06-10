@@ -11,9 +11,15 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unused-vars": "error",
-      "@next/next/no-img-element": "error",
+      // Imágenes dinámicas de usuario (avatares/thumbnails con URL remota): se
+      // permite <img>. Convertir a next/Image queda pendiente como mejora de perf.
+      "@next/next/no-img-element": "off",
       "react-hooks/immutability": "off",
-      "react-hooks/incompatible-library": "error",
+      // React Compiler optimization hints (no afectan correctitud): se permite
+      // usar librerías no optimizables (p.ej. @tanstack/react-table) y memoización
+      // manual que el compilador no puede preservar.
+      "react-hooks/incompatible-library": "off",
+      "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
       "react/no-unescaped-entities": "off",

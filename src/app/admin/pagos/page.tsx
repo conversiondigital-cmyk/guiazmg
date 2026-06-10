@@ -16,7 +16,7 @@ export default async function AdminPagosPage() {
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { id: true, name: true, email: true } },
-      business: { select: { id: true, name: true } },
+      profile: { select: { id: true, name: true } },
     },
   })
 

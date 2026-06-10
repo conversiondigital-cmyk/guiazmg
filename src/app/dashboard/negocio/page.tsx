@@ -8,7 +8,7 @@ export default async function MiNegocioPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const business = await prisma.business.findFirst({
+  const business = await prisma.profile.findFirst({
     where: { ownerId: session.user.id, deletedAt: null },
     include: {
       municipality: true,

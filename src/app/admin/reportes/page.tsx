@@ -51,7 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const TYPE_LABELS: Record<string, { label: string; icon: any }> = {
-  business: { label: "Negocio", icon: Store },
+  profile: { label: "Negocio", icon: Store },
   listing: { label: "Anuncio", icon: ShoppingBag },
 }
 
@@ -84,7 +84,7 @@ export default async function AdminReportesPage({
       { description: { contains: currentQ, mode: "insensitive" } },
       { reason: { contains: currentQ, mode: "insensitive" } },
       { user: { name: { contains: currentQ, mode: "insensitive" } } },
-      { business: { name: { contains: currentQ, mode: "insensitive" } } },
+      { profile: { name: { contains: currentQ, mode: "insensitive" } } },
     ]
   }
 
@@ -93,7 +93,7 @@ export default async function AdminReportesPage({
       where,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         listing: { select: { id: true, title: true, slug: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -238,7 +238,7 @@ export default async function AdminReportesPage({
                 </TableRow>
               ) : (
                 reports.map((report) => {
-                  const type = report.business ? "business" : report.listing ? "listing" : null
+                  const type = report.profile ? "business" : report.listing ? "listing" : null
                   const TypeIcon = type ? TYPE_LABELS[type]?.icon : null
                   return (
                     <TableRow key={report.id}>
@@ -255,10 +255,10 @@ export default async function AdminReportesPage({
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
-                        {report.business && (
+                        {report.profile && (
                           <div className="mt-0.5 text-xs text-muted-foreground">
-                            <Link href={`/perfil/${report.business.slug}`} className="hover:underline">
-                              {report.business.name}
+                            <Link href={`/perfil/${report.profile.slug}`} className="hover:underline">
+                              {report.profile.name}
                             </Link>
                           </div>
                         )}

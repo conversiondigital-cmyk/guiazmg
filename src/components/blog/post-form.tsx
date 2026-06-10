@@ -169,7 +169,7 @@ export function PostForm({ initialData, isAdmin = false }: PostFormProps) {
 
       router.push("/editor/blog")
       router.refresh()
-    } catch (e) {
+    } catch {
       setError("Error de conexión")
     } finally {
       setSaving(null)

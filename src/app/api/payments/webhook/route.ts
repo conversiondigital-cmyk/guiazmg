@@ -18,6 +18,7 @@ function mapMpStatus(mpStatus: string): "PENDING" | "APPROVED" | "AUTHORIZED" | 
 }
 
 export async function POST(request: Request) {
+  let webhookEventId: string | null = null
   try {
     const rawBody = await request.text()
     const signature = request.headers.get("x-signature") || ""
@@ -60,6 +61,23 @@ export async function POST(request: Request) {
 
     const { type, action, data } = body
 
+    // Registro del evento para el log de webhooks del admin.
+    const loggedEvent = await prisma.webhookEvent
+      .create({
+        data: {
+          provider: "MERCADO_PAGO",
+          eventType: [type, action].filter(Boolean).join(".") || null,
+          eventId: data?.id ? String(data.id) : null,
+          payload: rawBody.slice(0, 10000),
+          status: "RECEIVED",
+        },
+      })
+      .catch((e) => {
+        console.error("[mp-webhook] failed to log event:", e)
+        return null
+      })
+    webhookEventId = loggedEvent?.id ?? null
+
     const isPaymentUpdate = type === "payment" && (action === "payment.updated" || action === "payment.status_updated")
 
     if (isPaymentUpdate) {
@@ -85,8 +103,25 @@ export async function POST(request: Request) {
       await processPaymentUpdate(payment, mappedStatus)
     }
 
+    if (webhookEventId) {
+      await prisma.webhookEvent
+        .update({ where: { id: webhookEventId }, data: { status: "PROCESSED" } })
+        .catch(() => {})
+    }
+
     return NextResponse.json({ received: true })
-  } catch {
+  } catch (error) {
+    // Log but still ack with 200 so Mercado Pago does not retry-storm;
+    // a persisted payment that failed to apply is now traceable in logs.
+    console.error("[mp-webhook] processing failed:", error)
+    if (webhookEventId) {
+      await prisma.webhookEvent
+        .update({
+          where: { id: webhookEventId },
+          data: { status: "ERROR", error: error instanceof Error ? error.message : String(error) },
+        })
+        .catch(() => {})
+    }
     return NextResponse.json({ received: true })
   }
 }
@@ -113,7 +148,7 @@ async function processPaymentUpdate(paymentData: any, status: "PENDING" | "APPRO
     })
 
     if (existingPayment?.type === "MEMBERSHIP" && existingPayment.businessId) {
-      await prisma.businessMembership.updateMany({
+      await prisma.profileMembership.updateMany({
         where: { businessId: existingPayment.businessId },
         data: { status: "INACTIVE" },
       })

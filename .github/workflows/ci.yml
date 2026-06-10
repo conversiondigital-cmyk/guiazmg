@@ -49,6 +49,18 @@ jobs:
 
       - run: npx prisma migrate deploy
 
+      # Guard against a missing/incomplete baseline migration: a fresh DB must
+      # end up with the full schema, not just indexes. Fails fast with a clear
+      # message instead of a confusing downstream seed error.
+      - name: Verify schema was created
+        run: |
+          COUNT=$(psql "$DATABASE_URL" -t -A -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")
+          echo "Tablas creadas en BD vacía: $COUNT"
+          if [ "$COUNT" -lt 50 ]; then
+            echo "ERROR: se esperaban >=50 tablas (56 modelos); solo hay $COUNT. ¿Falta la migración baseline?"
+            exit 1
+          fi
+
       - run: npx prisma db seed
 
       - run: npm run lint -- --max-warnings 0

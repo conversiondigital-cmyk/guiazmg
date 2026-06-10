@@ -11,7 +11,7 @@ export const POST = withApiMiddleware(
       return NextResponse.json({ error: "Título y código son requeridos" }, { status: 400 })
     }
 
-    const business = await prisma.business.findFirst({
+    const business = await prisma.profile.findFirst({
       where: { ownerId: (session.user as any).id, deletedAt: null },
     })
 
@@ -41,14 +41,14 @@ export const GET = withApiMiddleware(
     const isAdmin = session.user.role === "ADMIN"
     const business = isAdmin
       ? null
-      : await prisma.business.findFirst({
+      : await prisma.profile.findFirst({
           where: { ownerId: session.user.id, deletedAt: null },
           select: { id: true },
         })
 
     const coupons = await prisma.coupon.findMany({
       where: isAdmin ? undefined : { businessId: business?.id || "__none__" },
-      include: { business: { select: { name: true } } },
+      include: { profile: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: 50,
     })

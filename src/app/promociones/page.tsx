@@ -4,7 +4,7 @@ import { Metadata } from "next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, AlertCircle, TrendingUp } from "lucide-react"
+import { Clock } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Promociones | Guía ZMG",
@@ -15,7 +15,7 @@ export default function PromocionesPage() {
   const promotions = [
     {
       id: 1,
-      business: "Restaurante El Paraíso",
+      profile: "Restaurante El Paraíso",
       title: "20% de descuento en cenas",
       description: "Aprovecha 20% de descuento en todas las cenas de lunes a jueves.",
       discount: "20%",
@@ -25,7 +25,7 @@ export default function PromocionesPage() {
     },
     {
       id: 2,
-      business: "Salón de Belleza Prestige",
+      profile: "Salón de Belleza Prestige",
       title: "Paquete facial + masaje",
       description: "Paquete completo de tratamiento facial con masaje relajante por solo $499.",
       discount: "35%",
@@ -35,7 +35,7 @@ export default function PromocionesPage() {
     },
     {
       id: 3,
-      business: "Clínica Dental Sonrisa",
+      profile: "Clínica Dental Sonrisa",
       title: "Limpieza dental preventiva",
       description: "Sesión de limpieza con revisión completa. Primera sesión con 40% de descuento.",
       discount: "40%",
@@ -45,7 +45,7 @@ export default function PromocionesPage() {
     },
     {
       id: 4,
-      business: "Gimnasio FitZone",
+      profile: "Gimnasio FitZone",
       title: "Membresía anual con 2 meses gratis",
       description: "Inscríbete ahora y obtén 2 meses adicionales gratuitos en tu membresía anual.",
       discount: "Gratis",
@@ -55,7 +55,7 @@ export default function PromocionesPage() {
     },
     {
       id: 5,
-      business: "Tienda de Electrónica TechHub",
+      profile: "Tienda de Electrónica TechHub",
       title: "Oferta especial en accesorios",
       description: "Compra 2 accesorios y obtén el tercero con 50% de descuento.",
       discount: "50%",
@@ -65,7 +65,7 @@ export default function PromocionesPage() {
     },
     {
       id: 6,
-      business: "Academia de Inglés Smart English",
+      profile: "Academia de Inglés Smart English",
       title: "Clase de prueba gratuita",
       description: "Toma una clase de prueba sin costo y obtén 15% en tu inscripción si te registras esta semana.",
       discount: "15%",
@@ -121,7 +121,7 @@ export default function PromocionesPage() {
                       <Badge className="mb-2 bg-blue-600">{promo.category}</Badge>
                       <CardTitle className="text-lg">{promo.title}</CardTitle>
                       <CardDescription className="mt-1 text-sm font-semibold text-gray-700">
-                        {promo.business}
+                        {promo.profile}
                       </CardDescription>
                     </div>
                     <div className="text-right">
@@ -170,7 +170,7 @@ export default function PromocionesPage() {
                           {promo.category}
                         </Badge>
                         <CardTitle className="text-base">{promo.title}</CardTitle>
-                        <CardDescription className="text-xs">{promo.business}</CardDescription>
+                        <CardDescription className="text-xs">{promo.profile}</CardDescription>
                       </div>
                       <div className="text-2xl font-bold text-blue-600">{promo.discount}</div>
                     </div>

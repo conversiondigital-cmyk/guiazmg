@@ -11,7 +11,7 @@ export default async function ResenasPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true, name: true },
   })
@@ -23,7 +23,7 @@ export default async function ResenasPage() {
         orderBy: { createdAt: "desc" },
         include: {
           user: { select: { name: true, image: true } },
-          business: { select: { name: true } },
+          profile: { select: { name: true } },
           response: { include: { user: { select: { name: true } } } },
         },
       })
@@ -117,7 +117,7 @@ export default async function ResenasPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{review.user.name || "Anónimo"}</p>
-                        <p className="text-xs text-gray-400">{review.business.name}</p>
+                        <p className="text-xs text-gray-400">{review.profile.name}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">

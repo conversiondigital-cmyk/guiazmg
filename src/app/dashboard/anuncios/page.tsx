@@ -54,7 +54,7 @@ export default async function AnunciosPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     select: { id: true },
   })

@@ -11,7 +11,7 @@ export default async function AdminClaimsPage() {
 
   // Evita include { business } — falla por mismatch de columna FK en DB.
   // El `user` include sí funciona ya que no usa el Proxy.
-  const claims = await prisma.businessClaimRequest.findMany({
+  const claims = await prisma.profileClaimRequest.findMany({
     include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: "desc" },
   })

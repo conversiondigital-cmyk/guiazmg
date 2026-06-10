@@ -7,7 +7,7 @@ import { BusinessDetailClient } from "./business-detail-client"
 export const dynamic = "force-dynamic"
 
 async function getBusiness(id: string) {
-  const business = await prisma.business.findUnique({
+  const business = await prisma.profile.findUnique({
     where: { id },
     include: {
       owner: { select: { id: true, name: true, email: true, image: true } },

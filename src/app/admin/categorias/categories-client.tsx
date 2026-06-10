@@ -314,7 +314,6 @@ function ExpandableCategoryRow({
   onSortChange: (val: number) => void
 }) {
   return (
-    // @ts-ignore Fragment with key
     <React.Fragment key={cat.id}>
       <TableRow className="cursor-pointer" onClick={onToggle}>
         <TableCell>

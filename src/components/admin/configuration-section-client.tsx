@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ADMIN_CONFIG_SECTIONS, ConfigField } from "@/lib/admin-config-fields"
+import { ADMIN_CONFIG_SECTIONS } from "@/lib/admin-config-fields"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 
 interface ConfigValue {
@@ -19,11 +18,13 @@ export function ConfigurationSectionClient({
   initialValues: ConfigValue
 }) {
   const config = ADMIN_CONFIG_SECTIONS[section as keyof typeof ADMIN_CONFIG_SECTIONS]
-  if (!config) return <div>Sección no válida</div>
 
+  // Hooks must run unconditionally and before any early return.
   const [values, setValues] = useState<ConfigValue>(initialValues)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  if (!config) return <div>Sección no válida</div>
 
   const handleChange = (key: string, value: string) => {
     setValues((prev) => ({ ...prev, [key]: value }))

@@ -20,7 +20,7 @@ export default async function sitemap() {
     const [categories, municipalities, businesses, listings, posts] = await Promise.all([
       prisma.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
       prisma.municipality.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
-      prisma.business.findMany({
+      prisma.profile.findMany({
         where: { status: "ACTIVE", deletedAt: null },
         select: { slug: true, updatedAt: true },
       }),

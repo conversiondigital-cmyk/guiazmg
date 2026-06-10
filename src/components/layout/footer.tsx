@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
 import { MapPin, MessageCircle, Share2, Tv } from "lucide-react"
 
 // Alias para redes sociales usando íconos genéricos disponibles en lucide-react v0.x
@@ -32,14 +33,39 @@ const SUPPORT = [
   { label: "Contacto", href: "/contacto" },
 ]
 
+// TODO: reemplazar con los handles/teléfono reales de Guía ZMG cuando estén definidos.
 const SOCIALS = [
-  { icon: Facebook,       href: "#", label: "Facebook" },
-  { icon: Instagram,      href: "#", label: "Instagram" },
-  { icon: MessageCircle,  href: "#", label: "WhatsApp" },
-  { icon: Youtube,        href: "#", label: "YouTube" },
+  { icon: Facebook,       href: "https://www.facebook.com/guiazmg",  label: "Facebook" },
+  { icon: Instagram,      href: "https://www.instagram.com/guiazmg", label: "Instagram" },
+  { icon: MessageCircle,  href: "https://wa.me/523300000000",        label: "WhatsApp" },
+  { icon: Youtube,        href: "https://www.youtube.com/@guiazmg",  label: "YouTube" },
 ]
 
 export function Footer() {
+  const [email, setEmail] = useState("")
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle")
+
+  async function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setStatus("loading")
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      if (res.ok) {
+        setStatus("ok")
+        setEmail("")
+      } else {
+        setStatus("error")
+      }
+    } catch {
+      setStatus("error")
+    }
+  }
+
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
@@ -64,6 +90,8 @@ export function Footer() {
                   <a
                     key={s.label}
                     href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label={s.label}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-400 hover:bg-green-700 hover:text-white transition-colors"
                   >
@@ -130,18 +158,31 @@ export function Footer() {
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               Recibe promociones y noticias de negocios locales.
             </p>
-            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
               <input
                 type="email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (status !== "idle") setStatus("idle")
+                }}
                 placeholder="Tu correo electrónico"
                 className="rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:border-green-600 transition-colors"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-green-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-600 transition-colors"
+                disabled={status === "loading"}
+                className="rounded-lg bg-green-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-600 transition-colors disabled:opacity-60"
               >
-                Suscribirme
+                {status === "loading" ? "Enviando..." : "Suscribirme"}
               </button>
+              {status === "ok" && (
+                <p className="text-xs text-green-400">¡Listo! Te suscribiste correctamente.</p>
+              )}
+              {status === "error" && (
+                <p className="text-xs text-red-400">No se pudo completar. Revisa tu correo e inténtalo de nuevo.</p>
+              )}
             </form>
           </div>
         </div>

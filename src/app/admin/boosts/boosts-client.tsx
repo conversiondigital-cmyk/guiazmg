@@ -49,7 +49,7 @@ type BoostListing = { id: string; title: string }
 
 type Boost = {
   id: string
-  business: BoostBusiness
+  profile: BoostBusiness
   listing: BoostListing | null
   pricePaid: number
   priorityScore: number
@@ -236,7 +236,7 @@ export function BoostsClient({ boosts, stats }: { boosts: Boost[]; stats: Stats 
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <Rocket className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate max-w-[180px]">{boost.business.name}</span>
+                      <span className="truncate max-w-[180px]">{boost.profile.name}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
@@ -265,7 +265,7 @@ export function BoostsClient({ boosts, stats }: { boosts: Boost[]; stats: Stats 
                       <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuItem
                           onClick={() =>
-                            router.push(`/admin/negocios/${boost.business.id}`)
+                            router.push(`/admin/negocios/${boost.profile.id}`)
                           }
                         >
                           <Eye className="size-4" />
@@ -310,7 +310,7 @@ export function BoostsClient({ boosts, stats }: { boosts: Boost[]; stats: Stats 
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
-              Extender boost de <strong>{extending?.business.name}</strong>
+              Extender boost de <strong>{extending?.profile.name}</strong>
             </p>
             <div className="space-y-1.5">
               <Label>Días adicionales</Label>

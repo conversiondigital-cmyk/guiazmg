@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.business.findMany({
+  const businesses = await prisma.profile.findMany({
     where: { ownerId: session.user.id },
     include: {
       memberships: { include: { plan: true } },
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
   const businessIds = businesses.map((b) => b.id)
   const analyticsRows = businessIds.length > 0
-    ? await prisma.businessAnalyticsDaily.findMany({
+    ? await prisma.profileAnalyticsDaily.findMany({
         where: { businessId: { in: businessIds } },
       })
     : []

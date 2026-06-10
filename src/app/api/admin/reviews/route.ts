@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       where,
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
-        business: { select: { id: true, name: true, slug: true } },
+        profile: { select: { id: true, name: true, slug: true } },
         response: true,
       },
       orderBy: { createdAt: "desc" },
@@ -129,7 +129,7 @@ export async function PUT(request: Request) {
       where: { id },
       include: {
         user: { select: { id: true, name: true, email: true } },
-        business: { select: { id: true, name: true } },
+        profile: { select: { id: true, name: true } },
         response: true,
       },
     })

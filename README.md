@@ -9,9 +9,19 @@ Hyperlocal business directory and search engine for the Guadalajara Metropolitan
 - **Styling**: TailwindCSS v4 + ShadCN v4
 - **Database**: PostgreSQL 17 + Prisma 7
 - **Auth**: Auth.js v5 beta (NextAuth)
-- **Payments**: Mercado Pago (primary), Stripe (optional)
+- **Payments**: Mercado Pago (única pasarela activa)
+- **Search**: PostgreSQL full-text (motor principal) + Meilisearch (opcional)
 - **Testing**: Vitest + Playwright
 - **CI/CD**: GitHub Actions
+
+### Integraciones opcionales / desactivadas
+
+- **Stripe** — declarado en `package.json` pero **no integrado**: no se importa en ningún
+  handler y los pagos usan exclusivamente Mercado Pago. Se mantiene como dependencia para
+  una posible integración futura; puede desinstalarse si no se planea usar.
+- **Meilisearch** — el cliente existe (`src/lib/search/meilisearch.ts`) y `/api/search` lo
+  usa como pre-filtro **solo si** `MEILISEARCH_HOST` está definido; de lo contrario el motor
+  cae a PostgreSQL full-text (configuración por defecto). No requiere setup para funcionar.
 
 ## Requirements
 
