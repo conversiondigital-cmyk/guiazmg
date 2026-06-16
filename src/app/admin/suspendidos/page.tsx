@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default async function AdminRedirect() {
-  redirect("/admin/usuarios?status=INACTIVE")
+  redirect("/admin/usuarios?status=suspended")
 }

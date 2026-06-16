@@ -211,7 +211,7 @@ export default async function EstadisticasPage() {
                 {topByViews.map((listing, i) => (
                   <Link
                     key={listing.id}
-                    href="/dashboard/estadisticas"
+                    href="/dashboard/anuncios"
                     className="flex items-center justify-between rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-3">

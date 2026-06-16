@@ -12,7 +12,7 @@ const Youtube = Tv
 const NAV = [
   { label: "Inicio", href: "/" },
   { label: "Categorías", href: "/search" },
-  { label: "Promociones", href: "/search?tipo=promocion" },
+  { label: "Promociones", href: "/promociones" },
   { label: "Blog", href: "/blog" },
   { label: "Contacto", href: "/contacto" },
 ]

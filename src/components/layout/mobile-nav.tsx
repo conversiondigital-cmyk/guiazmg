@@ -8,9 +8,9 @@ import { Menu, X, MapPin, User } from "lucide-react"
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/search", label: "Categorías" },
-  { href: "/search?tipo=promocion", label: "Promociones" },
-  { href: "/preguntas", label: "Blog" },
-  { href: "/preguntas", label: "Contacto" },
+  { href: "/promociones", label: "Promociones" },
+  { href: "/blog", label: "Blog" },
+  { href: "/contacto", label: "Contacto" },
 ]
 
 export function MobileNav() {

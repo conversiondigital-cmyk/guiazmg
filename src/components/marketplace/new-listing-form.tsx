@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +51,11 @@ const LISTING_TYPES: { value: ListingType; label: string }[] = [
 
 export function NewListingForm({ categories, municipalities }: NewListingFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const typeParam = searchParams.get("type")
+  const initialType: ListingType = LISTING_TYPES.some((t) => t.value === typeParam)
+    ? (typeParam as ListingType)
+    : "SALE"
   const [loading, setLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
@@ -61,7 +66,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
     title: "",
     description: "",
     price: "",
-    type: "SALE" as ListingType,
+    type: initialType,
     neighborhood: "",
     phone: "",
     whatsapp: "",

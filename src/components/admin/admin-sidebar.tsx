@@ -98,7 +98,7 @@ const sections: SidebarSection[] = [
     items: [
       { label: "SEO y landing pages", href: "/admin/seo", icon: Search },
       { label: "Búsquedas populares", href: "/admin/busquedas", icon: TrendingUp },
-      { label: "Reclamos de perfil", href: "/admin/reclamos", icon: ClipboardList },
+      { label: "Reclamos de negocios", href: "/admin/reclamos", icon: ClipboardList },
     ],
   },
   {
