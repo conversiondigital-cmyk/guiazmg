@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -118,42 +119,50 @@ export default async function EstadisticasPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Vistas totales</CardTitle>
-            <Eye className="h-4 w-4 text-green-700" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalViews}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Leads totales</CardTitle>
-            <Users className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalLeads}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">CTR</CardTitle>
-            <Target className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{ctr}%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Conversión</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{conversionRate}%</div>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/estadisticas" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Vistas totales</CardTitle>
+              <Eye className="h-4 w-4 text-green-700" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalViews}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/leads" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Leads totales</CardTitle>
+              <Users className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalLeads}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/estadisticas" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">CTR</CardTitle>
+              <Target className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{ctr}%</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/estadisticas" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Conversión</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{conversionRate}%</div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -200,7 +209,11 @@ export default async function EstadisticasPage() {
             ) : (
               <div className="space-y-3">
                 {topByViews.map((listing, i) => (
-                  <div key={listing.id} className="flex items-center justify-between">
+                  <Link
+                    key={listing.id}
+                    href="/dashboard/estadisticas"
+                    className="flex items-center justify-between rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-gray-50"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
                       <div>
@@ -209,7 +222,7 @@ export default async function EstadisticasPage() {
                       </div>
                     </div>
                     <Badge variant="outline">{listing._count.leadEvents} vistas</Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -229,7 +242,11 @@ export default async function EstadisticasPage() {
             ) : (
               <div className="space-y-3">
                 {topByLeads.map((listing, i) => (
-                  <div key={listing.id} className="flex items-center justify-between">
+                  <Link
+                    key={listing.id}
+                    href="/dashboard/leads"
+                    className="flex items-center justify-between rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-gray-50"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
                       <div>
@@ -238,7 +255,7 @@ export default async function EstadisticasPage() {
                       </div>
                     </div>
                     <Badge variant="outline">{listing._count.leads} leads</Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -261,14 +278,18 @@ export default async function EstadisticasPage() {
             ) : (
               <div className="space-y-3">
                 {activeCoupons.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <Link
+                    key={c.id}
+                    href="/dashboard/promociones"
+                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-gray-50"
+                  >
                     <div>
                       <p className="text-sm font-medium text-gray-900">{c.title}</p>
                       <p className="text-xs text-gray-500">{bizMap[c.businessId]?.name ?? ""}</p>
                       {c.description && <p className="text-xs text-gray-400 mt-1">{c.description}</p>}
                     </div>
                     <Badge className="bg-green-100 text-green-700">Activa</Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -288,13 +309,17 @@ export default async function EstadisticasPage() {
             ) : (
               <div className="space-y-3">
                 {topKeywords.map((kw, i) => (
-                  <div key={kw.query} className="flex items-center justify-between">
+                  <Link
+                    key={kw.query}
+                    href={`/search?q=${encodeURIComponent(kw.query)}`}
+                    className="flex items-center justify-between rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-gray-50"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-400 w-5">{i + 1}</span>
                       <span className="text-sm text-gray-900">{kw.query}</span>
                     </div>
                     <Badge variant="outline">{kw._count.query} veces</Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

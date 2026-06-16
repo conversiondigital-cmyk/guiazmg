@@ -138,7 +138,7 @@ export default async function MembresiaPage() {
 
                 <div className="flex items-center gap-2 shrink-0">
                   <Button variant="outline" size="sm" asChild>
-                    <a href="#planes">Cambiar plan</a>
+                    <Link href="/planes">Cambiar plan</Link>
                   </Button>
                 </div>
               </div>
@@ -203,9 +203,9 @@ export default async function MembresiaPage() {
               todos los beneficios exclusivos de Guía ZMG.
             </p>
             <Button className="mt-4" asChild>
-              <a href="#planes">
+              <Link href="/planes">
                 Adquirir membresía <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
+              </Link>
             </Button>
           </CardContent>
         </Card>

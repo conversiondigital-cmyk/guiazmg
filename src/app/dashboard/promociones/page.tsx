@@ -46,24 +46,30 @@ export default async function PromocionesPage() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-2xl font-bold">{coupons.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Activas</p>
-            <p className="text-2xl font-bold text-green-600">{active.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Expiradas</p>
-            <p className="text-2xl font-bold text-red-600">{expired.length}</p>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/promociones" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Total</p>
+              <p className="text-2xl font-bold">{coupons.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/promociones" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Activas</p>
+              <p className="text-2xl font-bold text-green-600">{active.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/promociones" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Expiradas</p>
+              <p className="text-2xl font-bold text-red-600">{expired.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Active Promotions */}

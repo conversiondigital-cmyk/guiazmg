@@ -203,7 +203,10 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card p-5">
+        <Link
+          href="/admin/financiero"
+          className="block rounded-xl border bg-card p-5 transition-all hover:border-blue-300 hover:shadow-md"
+        >
           <h3 className="mb-4 font-heading text-sm font-medium">Ingresos del mes</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">{formatCurrency(revenue)}</span>
@@ -218,7 +221,7 @@ export default async function AdminDashboard() {
           <p className="mt-2 text-xs text-muted-foreground">
             Objetivo: {formatCurrency(100000)}
           </p>
-        </div>
+        </Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
@@ -332,7 +335,11 @@ function ActivityCard({
           <p className="text-xs text-muted-foreground">Sin datos</p>
         )}
         {items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between">
+          <Link
+            key={i}
+            href={href}
+            className="-mx-2 flex items-center justify-between rounded-lg px-2 py-1 transition-colors hover:bg-slate-50"
+          >
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{item.label}</p>
               <p className="truncate text-xs text-muted-foreground">{item.meta}</p>
@@ -340,7 +347,7 @@ function ActivityCard({
             <span className="shrink-0 text-xs text-muted-foreground">
               {item.date.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

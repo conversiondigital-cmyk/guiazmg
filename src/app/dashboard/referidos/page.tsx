@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -64,47 +65,53 @@ export default async function ReferidosPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Enviados
-                </p>
-                <p className="text-2xl font-bold text-green-700 mt-1">{sentCount}</p>
+        <Link href="/dashboard/referidos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                    Enviados
+                  </p>
+                  <p className="text-2xl font-bold text-green-700 mt-1">{sentCount}</p>
+                </div>
+                <Users className="h-5 w-5 text-green-600" />
               </div>
-              <Users className="h-5 w-5 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Convertidos
-                </p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{convertedCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/referidos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                    Convertidos
+                  </p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{convertedCount}</p>
+                </div>
+                <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
-              <TrendingUp className="h-5 w-5 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Recompensas
-                </p>
-                <p className="text-2xl font-bold text-amber-600 mt-1">
-                  {rewardsEarned > 0 ? `${rewardsEarned}` : "—"}
-                </p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/referidos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                    Recompensas
+                  </p>
+                  <p className="text-2xl font-bold text-amber-600 mt-1">
+                    {rewardsEarned > 0 ? `${rewardsEarned}` : "—"}
+                  </p>
+                </div>
+                <TrendingUp className="h-5 w-5 text-amber-500" />
               </div>
-              <TrendingUp className="h-5 w-5 text-amber-500" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <Card>

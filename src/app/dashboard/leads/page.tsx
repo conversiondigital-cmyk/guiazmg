@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,15 +85,17 @@ export default async function LeadsPage() {
         {Object.entries(typeCounts).map(([type, count]) => {
           const Icon = LEAD_SOURCE_ICONS[type] || Users
           return (
-            <Card key={type}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <Icon className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-500">{type}</p>
-                  <p className="text-lg font-bold">{Number(count)}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <Link key={type} href="/dashboard/leads" className="block">
+              <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Icon className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-xs text-gray-500">{type}</p>
+                    <p className="text-lg font-bold">{Number(count)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           )
         })}
       </div>

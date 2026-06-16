@@ -67,33 +67,39 @@ export default async function BoostsPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-green-500" />
-              Activos
-            </p>
-            <p className="text-2xl font-bold text-green-600">{active.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              Programados
-            </p>
-            <p className="text-2xl font-bold text-yellow-600">{scheduled.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-red-500" />
-              Vencidos / Cancelados
-            </p>
-            <p className="text-2xl font-bold text-red-600">{other.length}</p>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/boosts" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500 flex items-center gap-2">
+                <Zap className="h-4 w-4 text-green-500" />
+                Activos
+              </p>
+              <p className="text-2xl font-bold text-green-600">{active.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/boosts" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-yellow-500" />
+                Programados
+              </p>
+              <p className="text-2xl font-bold text-yellow-600">{scheduled.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/boosts" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500 flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-red-500" />
+                Vencidos / Cancelados
+              </p>
+              <p className="text-2xl font-bold text-red-600">{other.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {boosts.length === 0 ? (

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { auth } from "@/lib/auth"
+import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -47,28 +48,32 @@ export default async function ResenasPage() {
 
       {/* Summary */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
-              <Star className="h-7 w-7 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Calificación promedio</p>
-              <p className="text-3xl font-bold text-gray-900">{avgRating}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-              <MessageCircle className="h-7 w-7 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Número de reseñas</p>
-              <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/resenas" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
+                <Star className="h-7 w-7 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Calificación promedio</p>
+                <p className="text-3xl font-bold text-gray-900">{avgRating}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/resenas" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+                <MessageCircle className="h-7 w-7 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Número de reseñas</p>
+                <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Rating Distribution */}

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { BusinessEditForm } from "@/components/dashboard/business-edit-form"
+import Link from "next/link"
 
 export default async function MiNegocioPage() {
   const session = await auth()
@@ -39,6 +40,12 @@ export default async function MiNegocioPage() {
           <h1 className="text-2xl font-bold text-gray-900">Mi Negocio</h1>
           <p className="text-gray-500">Administra la información de tu negocio</p>
         </div>
+        <Link
+          href={`/perfil/${business.slug}`}
+          className="text-sm font-medium text-green-700 transition-colors hover:text-green-800 hover:underline"
+        >
+          Ver perfil público
+        </Link>
       </div>
       <BusinessEditForm business={business} />
     </div>

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,6 +85,22 @@ export default async function DashboardPage() {
     return acc
   }, []).sort((a: any, b: any) => a.date.localeCompare(b.date))
 
+  const kpis = [
+    { label: "Vistas este mes", value: totalViews, icon: Eye, color: "text-green-700", href: "/dashboard/estadisticas" },
+    { label: "Clics WhatsApp", value: totalWhatsAppClicks, icon: MessageCircle, color: "text-green-600", href: "/dashboard/leads" },
+    { label: "Llamadas", value: totalPhoneClicks, icon: Phone, color: "text-orange-600", href: "/dashboard/leads" },
+    { label: "Solicitudes de ruta", value: totalMapClicks, icon: MapPin, color: "text-red-600", href: "/dashboard/estadisticas" },
+    { label: "Visitas al sitio web", value: totalWebsiteClicks, icon: Globe, color: "text-purple-600", href: "/dashboard/estadisticas" },
+    { label: "Nuevos leads", value: totalLeads, icon: Users, color: "text-indigo-600", href: "/dashboard/leads" },
+  ]
+
+  const metrics = [
+    { label: "Total visitas", value: String(totalViews), color: "text-green-700" },
+    { label: "Total contactos", value: String(totalClicks), color: "text-green-600" },
+    { label: "CTR", value: `${ctr}%`, color: "text-purple-600" },
+    { label: "Conversión estimada", value: `${conversionRate}%`, color: "text-orange-600" },
+  ]
+
   return (
     <div className="space-y-6">
       <div>
@@ -93,88 +110,36 @@ export default async function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Vistas este mes</CardTitle>
-            <Eye className="h-4 w-4 text-green-700" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalViews}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Clics WhatsApp</CardTitle>
-            <MessageCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalWhatsAppClicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Llamadas</CardTitle>
-            <Phone className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalPhoneClicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Solicitudes de ruta</CardTitle>
-            <MapPin className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalMapClicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Visitas al sitio web</CardTitle>
-            <Globe className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalWebsiteClicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Nuevos leads</CardTitle>
-            <Users className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalLeads}</div>
-          </CardContent>
-        </Card>
+        {kpis.map((k) => {
+          const Icon = k.icon
+          return (
+            <Link key={k.label} href={k.href} className="block">
+              <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-500">{k.label}</CardTitle>
+                  <Icon className={`h-4 w-4 ${k.color}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{k.value}</div>
+                </CardContent>
+              </Card>
+            </Link>
+          )
+        })}
       </div>
 
       {/* Monthly Metrics */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Total visitas</p>
-            <p className="text-2xl font-bold text-green-700">{totalViews}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Total contactos</p>
-            <p className="text-2xl font-bold text-green-600">{totalClicks}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">CTR</p>
-            <p className="text-2xl font-bold text-purple-600">{ctr}%</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Conversión estimada</p>
-            <p className="text-2xl font-bold text-orange-600">{conversionRate}%</p>
-          </CardContent>
-        </Card>
+        {metrics.map((m) => (
+          <Link key={m.label} href="/dashboard/estadisticas" className="block">
+            <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+              <CardContent className="p-5">
+                <p className="text-sm text-gray-500">{m.label}</p>
+                <p className={`text-2xl font-bold ${m.color}`}>{m.value}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
       {/* Charts & Notifications */}
@@ -192,13 +157,20 @@ export default async function DashboardPage() {
       {/* Recent Leads */}
       {leadsRecent.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Leads recientes</CardTitle>
+            <Link href="/dashboard/leads" className="text-sm font-medium text-green-700 hover:text-green-900">
+              Ver todos →
+            </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-1">
               {leadsRecent.map((lead) => (
-                <div key={lead.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                <Link
+                  key={lead.id}
+                  href="/dashboard/leads"
+                  className="flex items-center justify-between rounded-lg border-b px-2 py-2 transition-colors last:border-0 hover:bg-gray-50"
+                >
                   <div>
                     <p className="text-sm font-medium text-gray-900">{bizMap[lead.businessId]?.name ?? lead.businessId}</p>
                     <p className="text-xs text-gray-500">{lead.type} · {lead.source}</p>
@@ -206,7 +178,7 @@ export default async function DashboardPage() {
                   <span className="text-xs text-gray-400">
                     {new Date(lead.createdAt).toLocaleDateString("es-MX")}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>
@@ -222,6 +194,12 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm text-gray-500">
               Registra tu negocio en Guía ZMG y comienza a recibir clientes.
             </p>
+            <Link
+              href="/registrar-negocio"
+              className="mt-4 inline-flex rounded-xl bg-green-800 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-green-900"
+            >
+              Registrar mi negocio
+            </Link>
           </CardContent>
         </Card>
       )}

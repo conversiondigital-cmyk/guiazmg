@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -89,10 +90,14 @@ export default async function ConfiguracionPage() {
           ) : (
             <div className="space-y-2">
               {businesses.map((b) => (
-                <div key={b.id} className="flex items-center justify-between rounded-lg border p-3">
+                <Link
+                  key={b.id}
+                  href="/dashboard/negocio"
+                  className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-gray-50"
+                >
                   <span className="text-sm font-medium text-gray-900">{b.name}</span>
                   <span className="text-xs text-gray-400">ID: {b.id.slice(0, 8)}...</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

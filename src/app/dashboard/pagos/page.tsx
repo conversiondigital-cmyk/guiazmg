@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { auth } from "@/lib/auth"
+import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -60,26 +61,32 @@ export default async function PagosPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Total transacciones</p>
-            <p className="text-2xl font-bold">{payments.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Total gastado</p>
-            <p className="text-2xl font-bold text-green-700">{formatCurrency(totalSpent)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-gray-500">Pagos completados</p>
-            <p className="text-2xl font-bold text-green-600">
-              {payments.filter((p) => p.status === "APPROVED").length}
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/pagos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Total transacciones</p>
+              <p className="text-2xl font-bold">{payments.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/pagos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Total gastado</p>
+              <p className="text-2xl font-bold text-green-700">{formatCurrency(totalSpent)}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/pagos" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-500">Pagos completados</p>
+              <p className="text-2xl font-bold text-green-600">
+                {payments.filter((p) => p.status === "APPROVED").length}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <Card>
