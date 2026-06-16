@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createNotification } from "@/lib/notifications/create"
 import crypto from "node:crypto"
 
 function mapMpStatus(mpStatus: string): "PENDING" | "APPROVED" | "AUTHORIZED" | "REJECTED" | "REFUNDED" | "CANCELLED" {
@@ -254,7 +255,7 @@ async function processApprovedPayment(
 
       if (claimResult.count === 0) return claimed
 
-      await tx.businessMembership.upsert({
+      await tx.profileMembership.upsert({
         where: { businessId },
         create: {
           businessId,
@@ -288,6 +289,13 @@ async function processApprovedPayment(
           data: { usedCount: { increment: 1 } },
         })
       }
+    })
+
+    await createNotification({
+      userId,
+      type: "PAYMENT",
+      title: "Pago de membresía aprobado",
+      message: "Tu membresía quedó activa. ¡Gracias por tu compra!",
     })
   }
 
@@ -360,6 +368,13 @@ async function processApprovedPayment(
           data: { usedCount: { increment: 1 } },
         })
       }
+    })
+
+    await createNotification({
+      userId,
+      type: "PAYMENT",
+      title: "Boost activado",
+      message: `Tu boost "${boostDef.name}" quedó activo por ${boostDef.durationDays} días.`,
     })
   }
 }

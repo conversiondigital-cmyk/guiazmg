@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createNotification } from "@/lib/notifications/create"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -10,44 +11,51 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params
   try {
-    const db = prisma as any
     const { status, businessId } = await req.json()
     if (!["APPROVED", "REJECTED"].includes(status)) {
       return NextResponse.json({ error: "Estado inválido" }, { status: 400 })
     }
 
+    const claim = await prisma.profileClaimRequest.findUnique({
+      where: { id },
+      select: { businessId: true, userId: true },
+    })
+    if (!claim) return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 })
+
     if (status === "APPROVED") {
       if (!businessId) {
         return NextResponse.json({ error: "Business ID requerido" }, { status: 400 })
       }
-
-      const claim = await db.businessClaimRequest.findUnique({
-        where: { id },
-        select: { businessId: true, userId: true },
-      })
-      if (!claim) return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 })
       if (!claim.businessId || claim.businessId !== businessId) {
         return NextResponse.json({ error: "El negocio no coincide con la solicitud" }, { status: 400 })
       }
 
-      await db.$transaction(async (tx: any) => {
+      await prisma.$transaction(async (tx) => {
         await tx.profile.update({
           where: { id: businessId },
           data: { ownerId: claim.userId },
         })
-
-        await tx.businessClaimRequest.update({
+        await tx.profileClaimRequest.update({
           where: { id },
           data: { status },
         })
       })
-
-      return NextResponse.json({ success: true })
+    } else {
+      await prisma.profileClaimRequest.update({
+        where: { id },
+        data: { status },
+      })
     }
 
-      await db.businessClaimRequest.update({
-      where: { id },
-      data: { status },
+    // Notifica al usuario que hizo el reclamo.
+    await createNotification({
+      userId: claim.userId,
+      type: "SYSTEM",
+      title: status === "APPROVED" ? "Reclamo de negocio aprobado" : "Reclamo de negocio rechazado",
+      message:
+        status === "APPROVED"
+          ? "Tu solicitud para administrar el negocio fue aprobada. Ya puedes gestionarlo desde tu panel."
+          : "Tu solicitud para administrar el negocio fue rechazada.",
     })
 
     return NextResponse.json({ success: true })

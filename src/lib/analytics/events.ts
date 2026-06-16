@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@/generated/prisma/client"
+import { createNotification } from "@/lib/notifications/create"
 
 export type AnalyticsEventType =
   | "BUSINESS_VIEW"
@@ -96,6 +97,19 @@ export async function logAnalyticsEvent(params: {
             ipAddress: metadata?.ipAddress ?? null,
           },
         })
+
+        const profile = await prisma.profile.findUnique({
+          where: { id: businessId },
+          select: { ownerId: true, name: true },
+        })
+        if (profile && profile.ownerId !== userId) {
+          await createNotification({
+            userId: profile.ownerId,
+            type: "MESSAGE",
+            title: `Nuevo lead en ${profile.name}`,
+            message: "Un cliente mostró interés en tu negocio.",
+          })
+        }
       } catch (error) {
         console.error("[analytics] LEAD_GENERATED persistence failed:", error)
       }

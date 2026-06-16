@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createNotification } from "@/lib/notifications/create"
 import { z } from "zod"
 
 const reviewSchema = z.object({
@@ -37,6 +38,20 @@ export async function POST(request: NextRequest) {
         comment: comment || null,
       },
     })
+
+    // Notifica al dueño del negocio (si no es el propio autor).
+    const profile = await prisma.profile.findUnique({
+      where: { id: businessId },
+      select: { ownerId: true, name: true },
+    })
+    if (profile && profile.ownerId !== session.user.id) {
+      await createNotification({
+        userId: profile.ownerId,
+        type: "REVIEW",
+        title: `Nueva reseña de ${rating}★ en ${profile.name}`,
+        message: comment ? comment.slice(0, 140) : "Recibiste una nueva reseña.",
+      })
+    }
 
     return NextResponse.json(review, { status: 201 })
   } catch (error) {
