@@ -17,6 +17,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:set-admin-password": "npx tsx prisma/set-admin-password.ts",
     "seed": "prisma db seed",
     "seed:base": "npx tsx prisma/seed.ts",
     "seed:demo": "npx tsx prisma/seeds/demo.ts",
