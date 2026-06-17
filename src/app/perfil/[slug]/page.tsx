@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: el perfil se cachea y se regenera cada 5 min; las ediciones del negocio
+// lo revalidan al instante (revalidatePath en la API de negocios).
+export const revalidate = 300
 
 import { notFound } from "next/navigation"
 import Link from "next/link"

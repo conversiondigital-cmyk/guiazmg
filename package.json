@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "prisma generate && next dev -p 3100",
+    "dev": "prisma generate && node scripts/serve.mjs dev",
     "build": "prisma generate && next build",
-    "start": "next start -p 3100",
+    "start": "node scripts/serve.mjs start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

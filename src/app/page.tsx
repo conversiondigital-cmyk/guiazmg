@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: se sirve desde caché y se regenera cada 5 min (las ediciones del hero la
+// revalidan al instante vía revalidatePath en /api/admin/hero).
+export const revalidate = 300
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"

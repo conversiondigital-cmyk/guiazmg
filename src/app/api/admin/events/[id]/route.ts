@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
@@ -47,6 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const event = await prisma.event.update({ where: { id }, data })
+    revalidatePath(`/eventos/${event.slug}`)
     return NextResponse.json({ event })
   } catch {
     return NextResponse.json({ error: "No se pudo actualizar el evento" }, { status: 404 })
@@ -57,7 +59,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!(await requireAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const { id } = await params
   try {
-    await prisma.event.update({ where: { id }, data: { deletedAt: new Date(), isPublished: false } })
+    const ev = await prisma.event.update({ where: { id }, data: { deletedAt: new Date(), isPublished: false }, select: { slug: true } })
+    revalidatePath(`/eventos/${ev.slug}`)
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: "No se pudo eliminar" }, { status: 404 })

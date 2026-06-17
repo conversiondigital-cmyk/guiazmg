@@ -19,22 +19,26 @@ interface ListingDetailProps {
 
 export async function generateMetadata({ params }: ListingDetailProps) {
   const { category, slug } = await params
-  const listing = await prisma.marketplaceListing.findUnique({
-    where: { slug },
-    include: { category: true },
-  })
-  if (!listing) return { title: "No encontrado" }
-  if (listing.category.slug !== category) {
-    return {
-      title: listing.title,
-      alternates: { canonical: `${getPublicAppUrl()}/marketplace/${listing.category.slug}/${listing.slug}` },
-      robots: { index: false, follow: false },
+  try {
+    const listing = await prisma.marketplaceListing.findUnique({
+      where: { slug },
+      include: { category: true },
+    })
+    if (!listing) return { title: "No encontrado" }
+    if (listing.category.slug !== category) {
+      return {
+        title: listing.title,
+        alternates: { canonical: `${getPublicAppUrl()}/marketplace/${listing.category.slug}/${listing.slug}` },
+        robots: { index: false, follow: false },
+      }
     }
-  }
-  return {
-    title: `${listing.title} | Guía ZMG Marketplace`,
-    description: listing.description?.slice(0, 160) || `${listing.title} en Guadalajara. Precio: ${listing.price ? formatCurrency(Number(listing.price)) : "Contactar"}`,
-    alternates: { canonical: `${getPublicAppUrl()}/marketplace/${listing.category.slug}/${listing.slug}` },
+    return {
+      title: `${listing.title} | Guía ZMG Marketplace`,
+      description: listing.description?.slice(0, 160) || `${listing.title} en Guadalajara. Precio: ${listing.price ? formatCurrency(Number(listing.price)) : "Contactar"}`,
+      alternates: { canonical: `${getPublicAppUrl()}/marketplace/${listing.category.slug}/${listing.slug}` },
+    }
+  } catch {
+    return { title: "Guía ZMG Marketplace" }
   }
 }
 

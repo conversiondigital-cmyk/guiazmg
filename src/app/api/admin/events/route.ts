@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { uniqueEventSlug } from "@/lib/events"
@@ -68,5 +69,6 @@ export async function POST(req: NextRequest) {
       createdById: session.user.id,
     },
   })
+  revalidatePath(`/eventos/${event.slug}`)
   return NextResponse.json({ event })
 }

@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: detalle de evento cacheado, regenerado cada 5 min; las ediciones del
+// evento lo revalidan al instante (revalidatePath en la API de eventos).
+export const revalidate = 300
 
 import { notFound } from "next/navigation"
 import Link from "next/link"

@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic"
+// ISR: landing SEO municipio+categoría cacheada, regenerada cada 5 min.
+export const revalidate = 300
 
 import { notFound } from "next/navigation"
 import Link from "next/link"

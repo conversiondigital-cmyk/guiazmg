@@ -2,7 +2,13 @@
 
 import { useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { RichEditor } from "./rich-editor"
+import dynamic from "next/dynamic"
+// El editor enriquecido es pesado y solo-cliente: se carga diferido para aligerar
+// la carga inicial del formulario.
+const RichEditor = dynamic(() => import("./rich-editor").then((m) => m.RichEditor), {
+  ssr: false,
+  loading: () => <div className="min-h-[300px] animate-pulse rounded-lg bg-gray-100" />,
+})
 import { Save, Eye, Globe, Archive, Loader2, Trash2, Send, ImageUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

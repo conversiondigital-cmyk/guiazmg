@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
+
+// Revalida las páginas ISR afectadas por un cambio de negocio (perfil + home).
+function revalidateProfile(oldSlug: string, newSlug: string) {
+  revalidatePath("/")
+  revalidatePath(`/perfil/${newSlug}`)
+  if (oldSlug !== newSlug) revalidatePath(`/perfil/${oldSlug}`)
+}
 
 const editableFields = new Set([
   "name",
@@ -103,6 +111,8 @@ export async function PUT(
         data: updateData,
       })
 
+      revalidateProfile(business.slug, updated.slug)
+
       await prisma.auditLog.create({
         data: {
           actorUserId: session.user.id,
@@ -159,6 +169,8 @@ export async function PUT(
       where: { id },
       data: changedFields,
     })
+
+    revalidateProfile(business.slug, updated.slug)
 
     await prisma.auditLog.create({
       data: {

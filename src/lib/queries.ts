@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { unstable_cache } from "next/cache"
 
 export async function getCurrentUser() {
   const session = await auth()
@@ -40,7 +41,8 @@ export async function getProfileById(id: string) {
 }
 
 export async function getProfileBySlug(slug: string) {
-  return prisma.profile.findUnique({
+  try {
+    return await prisma.profile.findUnique({
     where: { slug },
     include: {
       municipality: true,
@@ -60,41 +62,57 @@ export async function getProfileBySlug(slug: string) {
       tags: { include: { tag: true } },
       hours: { orderBy: { dayOfWeek: "asc" } },
     },
-  })
+    })
+  } catch {
+    return null
+  }
 }
 
-export async function getCategories() {
-  return prisma.category.findMany({
-    where: { isActive: true },
-    include: {
-      subcategories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
-    },
-    orderBy: { sortOrder: "asc" },
-  })
-}
+// Consultas "calientes" (corren en home, búsqueda y landings SEO): se cachean
+// con etiquetas para no pegarle a la BD en cada request. Se revalidan al instante
+// cuando el admin edita esas entidades (revalidateTag) y, como red de seguridad,
+// por tiempo. Categorías/municipios cambian poco → 1h; destacados → 10min.
+export const getCategories = unstable_cache(
+  async () =>
+    prisma.category.findMany({
+      where: { isActive: true },
+      include: {
+        subcategories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ["categories"],
+  { revalidate: 600, tags: ["categories"] }
+)
 
-export async function getMunicipalities() {
-  return prisma.municipality.findMany({
-    where: { isActive: true },
-    include: {
-      neighborhoods: { where: { isActive: true }, orderBy: { name: "asc" } },
-    },
-    orderBy: { name: "asc" },
-  })
-}
+export const getMunicipalities = unstable_cache(
+  async () =>
+    prisma.municipality.findMany({
+      where: { isActive: true },
+      include: {
+        neighborhoods: { where: { isActive: true }, orderBy: { name: "asc" } },
+      },
+      orderBy: { name: "asc" },
+    }),
+  ["municipalities"],
+  { revalidate: 600, tags: ["municipalities"] }
+)
 
-export async function getFeaturedProfiles(limit = 12) {
-  return prisma.profile.findMany({
-    where: { status: "ACTIVE" },
-    include: {
-      municipality: true,
-      category: true,
-      memberships: { include: { plan: true } },
-    },
-    orderBy: [{ isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
-    take: limit,
-  })
-}
+export const getFeaturedProfiles = unstable_cache(
+  async (limit = 12) =>
+    prisma.profile.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        municipality: true,
+        category: true,
+        memberships: { include: { plan: true } },
+      },
+      orderBy: [{ isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+      take: limit,
+    }),
+  ["featured-profiles"],
+  { revalidate: 300, tags: ["profiles"] }
+)
 
 export async function searchProfiles(params: {
   q?: string

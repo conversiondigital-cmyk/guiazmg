@@ -49,7 +49,15 @@ async function getRedisClient() {
   if (!redisClientPromise) {
     redisClientPromise = (async () => {
       const { createClient } = await import("redis")
-      const client = createClient({ url: redisUrl })
+      const client = createClient({
+        url: redisUrl,
+        socket: {
+          // Falla rápido si Redis no responde en vez de colgar las peticiones
+          // (p. ej. el primer login). Si no conecta, caemos al rate-limit en memoria.
+          connectTimeout: 1500,
+          reconnectStrategy: () => false,
+        },
+      })
       client.on("error", () => {})
       await client.connect()
       return client

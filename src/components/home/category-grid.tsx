@@ -23,8 +23,18 @@ const ICON_MAP: Record<string, React.ElementType> = {
   educacion: GraduationCap, mascotas: PawPrint, hogar: Sofa, construccion: HardHat,
   tecnologia: Laptop, inmobiliaria: Building2, entretenimiento: PartyPopper,
   profesionales: Briefcase, moda: Shirt, eventos: PartyPopper, turismo: Hotel,
-  servicios: Wrench, compras: ShoppingBasket, florerias: Flower2,
+  servicios: Wrench, compras: ShoppingBasket, florerias: Flower2, bienestar: Flower2,
 }
+
+// Tintes pastel del recuadro del ícono, alternados como en el diseño.
+const PALETTE = [
+  { bg: "bg-[#d8f0e6]", fg: "text-[#0f7a52]" }, // verde menta
+  { bg: "bg-[#fde4de]", fg: "text-[#e76f51]" }, // coral
+  { bg: "bg-[#d8f0e6]", fg: "text-[#0b3d2e]" }, // verde oscuro
+  { bg: "bg-[#dcefe6]", fg: "text-[#0f7a52]" }, // verde
+  { bg: "bg-[#dce8fb]", fg: "text-[#3b6fd4]" }, // azul
+  { bg: "bg-[#fde4de]", fg: "text-[#e76f51]" }, // coral
+]
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
   const shown = categories.slice(0, 6)
@@ -44,15 +54,20 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
-        {shown.map((cat) => {
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-6">
+        {shown.map((cat, i) => {
           const Icon = ICON_MAP[cat.slug] ?? LayoutGrid
+          const c = PALETTE[i % PALETTE.length]
           return (
-            <Link key={cat.id} href={`/categoria/${cat.slug}`} className="group text-center">
-              <div className="mb-4 flex aspect-square w-full items-center justify-center rounded-3xl border border-[#bfc9c3]/20 bg-[#064e3b] p-8 shadow-sm transition-all group-hover:opacity-90 group-hover:shadow-md">
-                <Icon className="h-12 w-12 text-[#80bea6]" strokeWidth={1.5} />
+            <Link
+              key={cat.id}
+              href={`/categoria/${cat.slug}`}
+              className="group flex flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-[0_6px_24px_rgba(11,28,48,0.05)] ring-1 ring-black/[0.02] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)]"
+            >
+              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${c.bg}`}>
+                <Icon className={`h-7 w-7 ${c.fg}`} strokeWidth={1.8} />
               </div>
-              <span className="text-lg font-semibold text-[#0b1c30]">{cat.name}</span>
+              <span className="text-[15px] font-medium text-[#1a6453]">{cat.name}</span>
             </Link>
           )
         })}

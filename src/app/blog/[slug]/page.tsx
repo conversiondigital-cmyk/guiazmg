@@ -15,21 +15,25 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = await prisma.post.findUnique({
-    where: { slug, status: "PUBLISHED" },
-    select: { title: true, metaTitle: true, excerpt: true, metaDescription: true, coverImageUrl: true },
-  })
-  if (!post) return { title: "Artículo no encontrado | Blog Guía ZMG" }
+  try {
+    const post = await prisma.post.findUnique({
+      where: { slug, status: "PUBLISHED" },
+      select: { title: true, metaTitle: true, excerpt: true, metaDescription: true, coverImageUrl: true },
+    })
+    if (!post) return { title: "Artículo no encontrado | Blog Guía ZMG" }
 
-  return {
-    title: `${post.metaTitle ?? post.title} | Blog Guía ZMG`,
-    description: post.metaDescription ?? post.excerpt ?? undefined,
-    openGraph: {
-      title: post.metaTitle ?? post.title,
+    return {
+      title: `${post.metaTitle ?? post.title} | Blog Guía ZMG`,
       description: post.metaDescription ?? post.excerpt ?? undefined,
-      images: post.coverImageUrl ? [post.coverImageUrl] : [],
-      type: "article",
-    },
+      openGraph: {
+        title: post.metaTitle ?? post.title,
+        description: post.metaDescription ?? post.excerpt ?? undefined,
+        images: post.coverImageUrl ? [post.coverImageUrl] : [],
+        type: "article",
+      },
+    }
+  } catch {
+    return { title: "Blog Guía ZMG" }
   }
 }
 

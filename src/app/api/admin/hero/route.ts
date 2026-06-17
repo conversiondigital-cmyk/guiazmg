@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { uploadFile, deleteFile } from "@/lib/storage"
 import { getHeroImages, setHeroImages } from "@/lib/hero-images"
@@ -24,6 +25,7 @@ export async function PATCH(req: NextRequest) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   const body = await req.json().catch(() => ({}))
   const config = await setHeroConfig(body?.config ?? body)
+  revalidatePath("/")
   return NextResponse.json({ config })
 }
 
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
     const images = await getHeroImages()
     images.push(rel)
     await setHeroImages(images)
+    revalidatePath("/")
     return NextResponse.json({ images })
   } catch (error) {
     console.error("[ADMIN_HERO_POST]", error)
@@ -66,6 +69,7 @@ export async function PUT(req: NextRequest) {
   }
   const images = body.images.filter((x: unknown): x is string => typeof x === "string")
   await setHeroImages(images)
+  revalidatePath("/")
   return NextResponse.json({ images })
 }
 
@@ -78,5 +82,6 @@ export async function DELETE(req: NextRequest) {
   const images = (await getHeroImages()).filter((x) => x !== url)
   await setHeroImages(images)
   await deleteFile(url).catch(() => {})
+  revalidatePath("/")
   return NextResponse.json({ images })
 }

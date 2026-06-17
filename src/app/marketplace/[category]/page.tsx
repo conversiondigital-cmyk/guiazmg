@@ -17,11 +17,15 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps) {
   const { category } = await params
-  const cat = await prisma.marketplaceCategory.findUnique({ where: { slug: category } })
-  if (!cat) return { title: "No encontrado" }
-  return {
-    title: `${cat.name} en Guadalajara | Guía ZMG Marketplace`,
-    description: `Encuentra ${cat.name.toLowerCase()} en la Zona Metropolitana de Guadalajara. Compra, vende y contacta vendedores locales.`,
+  try {
+    const cat = await prisma.marketplaceCategory.findUnique({ where: { slug: category } })
+    if (!cat) return { title: "No encontrado" }
+    return {
+      title: `${cat.name} en Guadalajara | Guía ZMG Marketplace`,
+      description: `Encuentra ${cat.name.toLowerCase()} en la Zona Metropolitana de Guadalajara. Compra, vende y contacta vendedores locales.`,
+    }
+  } catch {
+    return { title: "Guía ZMG Marketplace" }
   }
 }
 
