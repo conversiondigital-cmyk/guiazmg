@@ -15,10 +15,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
     }
 
+    // Solo persistimos columnas que existen en UserSettings; así enviar campos
+    // extra (p.ej. del formulario) no rompe el upsert con un 500.
+    const ALLOWED = new Set([
+      "theme",
+      "language",
+      "emailNotifications",
+      "pushNotifications",
+      "marketingEmails",
+    ])
+    const data = Object.fromEntries(
+      Object.entries(preferences ?? {}).filter(([key]) => ALLOWED.has(key))
+    )
+
     await prisma.userSettings.upsert({
       where: { userId },
-      create: { userId, ...preferences },
-      update: preferences,
+      create: { userId, ...data },
+      update: data,
     })
 
     return NextResponse.json({ success: true })

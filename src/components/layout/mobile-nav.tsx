@@ -8,6 +8,8 @@ import { Menu, X, MapPin, User } from "lucide-react"
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/search", label: "Categorías" },
+  { href: "/marketplace", label: "Marketplace" },
+  { href: "/eventos", label: "Eventos" },
   { href: "/promociones", label: "Promociones" },
   { href: "/blog", label: "Blog" },
   { href: "/contacto", label: "Contacto" },

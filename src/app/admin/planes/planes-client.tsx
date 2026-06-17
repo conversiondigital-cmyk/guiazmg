@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import {
   Gem,
   Plus,
@@ -167,7 +168,11 @@ export function PlanesClient({ plans }: { plans: MembershipPlan[] }) {
   }
 
   const handleDelete = async (plan: MembershipPlan) => {
-    if (!confirm(`¿Eliminar el plan "${plan.name}"?`)) return
+    if (!(await confirmDialog({
+      title: "Eliminar plan",
+      description: `¿Eliminar el plan "${plan.name}"?`,
+      destructive: true,
+    }))) return
     try {
       await fetch(`/api/admin/plans?id=${plan.id}`, { method: "DELETE" })
       router.refresh()

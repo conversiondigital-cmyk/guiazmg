@@ -38,7 +38,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     subcategory: params.subcategory,
     lat: params.lat ? parseFloat(params.lat) : undefined,
     lng: params.lng ? parseFloat(params.lng) : undefined,
-    sort: (params.sort as any) || "relevance",
+    // Si hay coordenadas y no se pidió otro orden, ordena por cercanía.
+    sort: (params.sort as any) || (params.lat && params.lng ? "distance" : "relevance"),
     isOpenNow: params.openNow === "true",
     isVerified: params.verified === "true",
     isPremium: params.premium === "true",

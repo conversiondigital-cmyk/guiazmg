@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import {
   Store,
   Eye,
@@ -349,8 +350,13 @@ export function BusinessDetailClient({ business }: { business: BusinessDetail })
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => {
-                  if (confirm("¿Archivar este negocio?")) handleAction("ARCHIVE")
+                onClick={async () => {
+                  if (await confirmDialog({
+                    title: "Archivar negocio",
+                    description: "¿Archivar este negocio?",
+                    confirmText: "Archivar",
+                    destructive: true,
+                  })) handleAction("ARCHIVE")
                 }}
               >
                 <Trash2 className="h-4 w-4" />

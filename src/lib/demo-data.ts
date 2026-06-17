@@ -1,82 +1,49 @@
 import { prisma } from "@/lib/prisma"
+import { slugify } from "@/lib/utils"
+import { DEMO_CATEGORIES } from "@/lib/demo/demo-categories"
+import demoData from "@/lib/demo/demo-businesses.json"
 
-type DemoBiz = {
+// Negocios demo. Las IMÁGENES viven en public/demo/<slug>/ (no en la BD); la
+// BD solo guarda las rutas /demo/<slug>/*.svg. Se marcan con isDemo=true y se
+// eliminan por completo al deshabilitar; nunca se mezclan con los reales.
+
+type DemoBusiness = {
   name: string
   slug: string
   shortDescription: string
   description: string
   phone: string
   whatsapp: string
+  email: string
+  websiteUrl: string
+  facebookUrl: string
+  instagramUrl: string
+  tiktokUrl: string | null
+  googleMapsUrl: string
+  wazeUrl: string
   addressText: string
-  status: "ACTIVE" | "PENDING_REVIEW"
+  postalCode: string
+  latitude: number
+  longitude: number
+  municipality: string
+  neighborhood: string
+  profileType: "NEGOCIO" | "EMPRENDEDOR"
+  isVerified: boolean
+  isFeatured: boolean
+  promoTitle: string | null
+  promoCode: string | null
+  categorySlug: string
 }
 
-// Negocios de demostración. Se marcan con isDemo=true y se eliminan por completo
-// al deshabilitar; nunca se mezclan con los negocios reales.
-const DEMO_BUSINESSES: DemoBiz[] = [
-  {
-    name: "Taquería El Primo",
-    slug: "demo-taqueria-el-primo",
-    shortDescription: "Tacos y tortas ahogadas al carbón",
-    description: "Las mejores tortas ahogadas y tacos al pastor de la zona metropolitana, con más de 20 años de tradición.",
-    phone: "+523312345678",
-    whatsapp: "+523312345678",
-    addressText: "Av. Vallarta 1234, Guadalajara",
-    status: "ACTIVE",
-  },
-  {
-    name: "DentalCare Zapopan",
-    slug: "demo-dentalcare-zapopan",
-    shortDescription: "Consultorio dental integral",
-    description: "Consultorio dental con más de 10 años de experiencia: ortodoncia, implantes y odontología general.",
-    phone: "+523398765432",
-    whatsapp: "+523398765432",
-    addressText: "Av. Patria 567, Zapopan",
-    status: "ACTIVE",
-  },
-  {
-    name: "Taller Mecánico El Bueno",
-    slug: "demo-taller-mecanico-el-bueno",
-    shortDescription: "Mecánica especializada europea",
-    description: "Taller mecánico especializado en motores europeos, diagnóstico computarizado y servicio a domicilio.",
-    phone: "+523355566677",
-    whatsapp: "+523355566677",
-    addressText: "Periférico Norte 890, Tlaquepaque",
-    status: "ACTIVE",
-  },
-  {
-    name: "Florería Las Rosas",
-    slug: "demo-floreria-las-rosas",
-    shortDescription: "Arreglos florales a domicilio",
-    description: "Arreglos florales para toda ocasión con entrega a domicilio en toda la ZMG. Bodas, eventos y suscripciones.",
-    phone: "+523311122233",
-    whatsapp: "+523311122233",
-    addressText: "Calle Hidalgo 45, Tonalá",
-    status: "ACTIVE",
-  },
-  {
-    name: "Café de la Esquina",
-    slug: "demo-cafe-de-la-esquina",
-    shortDescription: "Café de especialidad y repostería",
-    description: "Café de especialidad tostado localmente, repostería artesanal y espacio para trabajar con wifi.",
-    phone: "+523344455566",
-    whatsapp: "+523344455566",
-    addressText: "Av. México 2300, Guadalajara",
-    status: "ACTIVE",
-  },
-  {
-    name: "Gimnasio FuerzaTotal",
-    slug: "demo-gimnasio-fuerzatotal",
-    shortDescription: "Gimnasio y entrenamiento funcional",
-    description: "Gimnasio con equipo de última generación, clases grupales y entrenadores certificados.",
-    phone: "+523377788899",
-    whatsapp: "+523377788899",
-    addressText: "Av. López Mateos 1500, Zapopan",
-    status: "PENDING_REVIEW",
-  },
-]
+const DEMO_BUSINESSES = demoData as unknown as DemoBusiness[]
 
-const DEMO_COORDS = { latitude: 20.6767, longitude: -103.3463 }
+// Lun-Sáb 9-19, Dom cerrado. (dayOfWeek: 0=Dom ... 6=Sáb)
+const DEMO_HOURS = [0, 1, 2, 3, 4, 5, 6].map((d) => ({
+  dayOfWeek: d,
+  isClosed: d === 0,
+  opensAt: d === 0 ? null : "09:00",
+  closesAt: d === 0 ? null : d === 6 ? "15:00" : "19:00",
+}))
 
 export async function getDemoDataStatus(): Promise<{ enabled: boolean; count: number }> {
   const count = await prisma.profile.count({ where: { isDemo: true } })
@@ -84,29 +51,65 @@ export async function getDemoDataStatus(): Promise<{ enabled: boolean; count: nu
 }
 
 export async function enableDemoData(): Promise<number> {
-  const [categories, municipalities, admin] = await Promise.all([
-    prisma.category.findMany({ where: { isActive: true }, take: 10 }),
-    prisma.municipality.findMany({ take: 10 }),
-    prisma.user.findFirst({ where: { role: "ADMIN" } }),
-  ])
-
-  if (categories.length === 0 || municipalities.length === 0 || !admin) {
-    throw new Error(
-      "Faltan datos base (categorías, municipios o un usuario admin). Corre el seed base antes de habilitar los datos demo."
-    )
+  const admin = await prisma.user.findFirst({
+    where: { role: "ADMIN" },
+    orderBy: { createdAt: "asc" },
+  })
+  if (!admin) {
+    throw new Error("No hay un usuario admin. Corre el seed base antes de habilitar los datos demo.")
   }
 
-  let created = 0
-  for (let i = 0; i < DEMO_BUSINESSES.length; i++) {
-    const biz = DEMO_BUSINESSES[i]
-    const existing = await prisma.profile.findUnique({ where: { slug: biz.slug } })
-    if (existing) continue
+  // Empezamos limpio para garantizar exactamente el set demo actual.
+  await prisma.profile.deleteMany({ where: { isDemo: true } })
 
-    const category = categories[i % categories.length]
-    const municipality = municipalities[i % municipalities.length]
-    const neighborhood = await prisma.neighborhood.findFirst({
-      where: { municipalityId: municipality.id },
+  // 1) Asegurar las 20 categorías (idempotente).
+  const catIdBySlug = new Map<string, string>()
+  for (let i = 0; i < DEMO_CATEGORIES.length; i++) {
+    const c = DEMO_CATEGORIES[i]
+    const cat = await prisma.category.upsert({
+      where: { slug: c.slug },
+      update: { name: c.name, icon: c.emoji, isActive: true },
+      create: { slug: c.slug, name: c.name, icon: c.emoji, isActive: true, sortOrder: i },
     })
+    catIdBySlug.set(c.slug, cat.id)
+  }
+
+  // 2) Mapa de municipios por nombre.
+  const munis = await prisma.municipality.findMany({ select: { id: true, name: true } })
+  const muniIdByName = new Map(munis.map((m) => [m.name, m.id]))
+
+  const now = new Date()
+  const in90 = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+
+  let created = 0
+  for (const biz of DEMO_BUSINESSES) {
+    const categoryId = catIdBySlug.get(biz.categorySlug) ?? null
+    const municipalityId = muniIdByName.get(biz.municipality) ?? null
+
+    // Colonia: buscar; si no existe en ese municipio, crearla.
+    let neighborhoodId: string | null = null
+    if (municipalityId) {
+      let nb = await prisma.neighborhood.findFirst({
+        where: { municipalityId, name: biz.neighborhood },
+        select: { id: true },
+      })
+      if (!nb) {
+        nb = await prisma.neighborhood
+          .create({
+            data: {
+              name: biz.neighborhood,
+              slug: slugify(`${biz.neighborhood}-${biz.municipality}`),
+              municipalityId,
+              isActive: true,
+            },
+            select: { id: true },
+          })
+          .catch(() => null)
+      }
+      neighborhoodId = nb?.id ?? null
+    }
+
+    const base = `/demo/${biz.slug}`
 
     await prisma.profile.create({
       data: {
@@ -116,17 +119,47 @@ export async function enableDemoData(): Promise<number> {
         description: biz.description,
         phone: biz.phone,
         whatsapp: biz.whatsapp,
+        email: biz.email,
+        websiteUrl: biz.websiteUrl,
+        facebookUrl: biz.facebookUrl,
+        instagramUrl: biz.instagramUrl,
+        tiktokUrl: biz.tiktokUrl,
+        googleMapsUrl: biz.googleMapsUrl,
+        wazeUrl: biz.wazeUrl,
         addressText: biz.addressText,
-        status: biz.status,
+        postalCode: biz.postalCode,
+        latitude: biz.latitude,
+        longitude: biz.longitude,
+        logoUrl: `${base}/logo.svg`,
+        coverImageUrl: `${base}/cover.svg`,
+        profileType: biz.profileType,
+        status: "ACTIVE",
+        isActive: true,
         isDemo: true,
-        isVerified: true,
-        verificationStatus: "VERIFIED",
+        isVerified: biz.isVerified,
+        verificationStatus: biz.isVerified ? "VERIFIED" : "UNVERIFIED",
+        isFeatured: biz.isFeatured,
         ownerId: admin.id,
-        categoryId: category.id,
-        municipalityId: municipality.id,
-        neighborhoodId: neighborhood?.id ?? null,
-        latitude: DEMO_COORDS.latitude,
-        longitude: DEMO_COORDS.longitude,
+        categoryId,
+        municipalityId,
+        neighborhoodId,
+        images: {
+          create: [1, 2, 3].map((n) => ({ imageUrl: `${base}/g${n}.svg`, sortOrder: n - 1 })),
+        },
+        hours: { create: DEMO_HOURS },
+        coupons: biz.promoTitle
+          ? {
+              create: [
+                {
+                  title: biz.promoTitle,
+                  code: biz.promoCode,
+                  isActive: true,
+                  startDate: now,
+                  endDate: in90,
+                },
+              ],
+            }
+          : undefined,
       },
     })
     created++
@@ -136,6 +169,7 @@ export async function enableDemoData(): Promise<number> {
 }
 
 export async function disableDemoData(): Promise<number> {
+  // El borrado en cascada elimina imágenes, horarios y cupones demo.
   const result = await prisma.profile.deleteMany({ where: { isDemo: true } })
   return result.count
 }

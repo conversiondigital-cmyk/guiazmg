@@ -37,10 +37,41 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, description, icon, sortOrder, isActive } = body
+    const { name, slug, description, icon, sortOrder, isActive, isSubcategory, categoryId } = body
 
     if (!name || !slug) {
       return NextResponse.json({ error: "Nombre y slug requeridos" }, { status: 400 })
+    }
+
+    // Crear subcategoría (el árbol de categorías comparte este endpoint vía el
+    // botón "+" de cada categoría, que envía isSubcategory + categoryId).
+    if (isSubcategory && categoryId) {
+      const existingSub = await prisma.subcategory.findUnique({
+        where: { categoryId_slug: { categoryId, slug } },
+      })
+      if (existingSub) {
+        return NextResponse.json({ error: "El slug ya existe en esta categoría" }, { status: 409 })
+      }
+      const subcategory = await prisma.subcategory.create({
+        data: {
+          categoryId,
+          name,
+          slug,
+          description: description || null,
+          sortOrder: sortOrder ?? 0,
+          isActive: isActive ?? true,
+        },
+      })
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: session.user.id,
+          action: "CREATE_SUBCATEGORY",
+          entityType: "Subcategory",
+          entityId: subcategory.id,
+          newValue: JSON.stringify({ name, slug, categoryId }),
+        },
+      })
+      return NextResponse.json({ subcategory }, { status: 201 })
     }
 
     const existing = await prisma.category.findUnique({ where: { slug } })

@@ -46,7 +46,9 @@ export function MunicipalitiesClient({
   stats: { total: number; active: number }
 }) {
   const router = useRouter()
-  const [municipalities] = useState(initial)
+  // Render directo desde la prop (tras guardar, router.refresh() reinyecta la
+  // lista). Antes se congelaba en useState(initial) y la tabla no se refrescaba.
+  const municipalities = initial
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<MunicipalityRow | null>(null)
   const [form, setForm] = useState<FormData>(emptyForm)

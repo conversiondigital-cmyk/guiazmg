@@ -5,9 +5,9 @@ import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limi
 import { z } from "zod"
 
 const registerSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  email: z.string().email().transform((v) => v.toLowerCase()),
-  password: z.string().min(8).max(200),
+  name: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres").max(120),
+  email: z.string().email("Correo electrónico inválido").transform((v) => v.toLowerCase()),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(200),
   acceptedTermsAt: z.coerce.date(),
   acceptedPrivacyAt: z.coerce.date(),
   acceptedCommunityAt: z.coerce.date(),
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Datos inválidos" }, { status: 400 })
+      return NextResponse.json({ error: error.issues[0]?.message ?? "Datos inválidos" }, { status: 400 })
     }
     return NextResponse.json({ error: "Error al registrar usuario" }, { status: 500 })
   }

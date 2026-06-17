@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -130,7 +132,11 @@ export function SeoClient({ landingPages, defaultMeta, seoSettings }: SeoClientP
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar esta landing page?")) return
+    if (!(await confirmDialog({
+      title: "Eliminar landing page",
+      description: "¿Estás seguro de eliminar esta landing page?",
+      destructive: true,
+    }))) return
     try {
       await fetch("/api/admin/seo", {
         method: "PATCH",
@@ -144,7 +150,11 @@ export function SeoClient({ landingPages, defaultMeta, seoSettings }: SeoClientP
   }
 
   const handleGenerate = async () => {
-    if (!confirm("¿Generar landing pages para todas las combinaciones de municipio + categoría?")) return
+    if (!(await confirmDialog({
+      title: "Generar landing pages",
+      description: "¿Generar landing pages para todas las combinaciones de municipio + categoría?",
+      confirmText: "Generar",
+    }))) return
     setGenerating(true)
     try {
       const res = await fetch("/api/admin/seo", {
@@ -154,7 +164,7 @@ export function SeoClient({ landingPages, defaultMeta, seoSettings }: SeoClientP
       })
       const data = await res.json()
       if (data.success) {
-        alert(`Se crearon ${data.created} landing pages`)
+        toast.success(`Se crearon ${data.created} landing pages`)
         router.refresh()
       }
     } catch {

@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   DialogFooter, DialogClose,
@@ -99,7 +100,7 @@ export function AgentesClient({ agents, stats }: AgentsClientProps) {
         router.refresh()
       } else {
         const data = await res.json()
-        alert(data.error || "Error al crear agente")
+        toast.error(data.error || "Error al crear agente")
       }
     } finally {
       setCreating(false)

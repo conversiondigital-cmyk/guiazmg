@@ -50,7 +50,9 @@ export function NeighborhoodsClient({
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [neighborhoods] = useState(initial)
+  // Render directo desde la prop (tras guardar, router.refresh() reinyecta la
+  // lista). Antes se congelaba en useState(initial) y la tabla no se refrescaba.
+  const neighborhoods = initial
   const [searchValue, setSearchValue] = useState(searchParams.get("search") || "")
   const filterMunId = searchParams.get("municipalityId") || "ALL"
   const [dialogOpen, setDialogOpen] = useState(false)

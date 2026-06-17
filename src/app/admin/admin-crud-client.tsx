@@ -57,6 +57,19 @@ interface FormFieldDef {
   label: string
   type?: string
   required?: boolean
+  options?: { value: string; label: string }[]
+}
+
+// Resuelve claves anidadas tipo "category.name" sobre un objeto.
+function getValue(obj: any, key: string): any {
+  return key.split(".").reduce((acc, part) => (acc == null ? acc : acc[part]), obj)
+}
+
+// Formatea un valor de celda (los booleanos no se renderizan solos en React).
+function formatCell(value: any): React.ReactNode {
+  if (typeof value === "boolean") return value ? "Sí" : "No"
+  if (value == null) return "—"
+  return value
 }
 
 interface AdminCRUDClientProps {
@@ -248,8 +261,8 @@ export function AdminCRUDClient({
                         {columns.map((col) => (
                           <td key={col.key} className="px-4 py-3 text-slate-900">
                             {col.render
-                              ? col.render(item[col.key])
-                              : item[col.key]}
+                              ? col.render(getValue(item, col.key))
+                              : formatCell(getValue(item, col.key))}
                           </td>
                         ))}
                         <td className="px-4 py-3">
@@ -301,17 +314,35 @@ export function AdminCRUDClient({
                 <label className="text-sm font-medium text-slate-900">
                   {field.label}
                 </label>
-                <Input
-                  type={field.type || "text"}
-                  value={formData[field.name] || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      [field.name]: e.target.value,
-                    })
-                  }
-                  required={field.required}
-                />
+                {field.type === "select" ? (
+                  <select
+                    value={formData[field.name] || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field.name]: e.target.value })
+                    }
+                    required={field.required}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  >
+                    <option value="">Seleccionar...</option>
+                    {field.options?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    type={field.type || "text"}
+                    value={formData[field.name] || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        [field.name]: e.target.value,
+                      })
+                    }
+                    required={field.required}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -348,16 +379,33 @@ export function AdminCRUDClient({
                 <label className="text-sm font-medium text-slate-900">
                   {field.label}
                 </label>
-                <Input
-                  type={field.type || "text"}
-                  value={formData[field.name] || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      [field.name]: e.target.value,
-                    })
-                  }
-                />
+                {field.type === "select" ? (
+                  <select
+                    value={formData[field.name] || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field.name]: e.target.value })
+                    }
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  >
+                    <option value="">Seleccionar...</option>
+                    {field.options?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    type={field.type || "text"}
+                    value={formData[field.name] || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        [field.name]: e.target.value,
+                      })
+                    }
+                  />
+                )}
               </div>
             ))}
           </div>

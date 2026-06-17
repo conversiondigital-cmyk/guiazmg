@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import { Loader2 } from "lucide-react"
 
 export default function SettingsPage() {
@@ -49,7 +50,12 @@ export default function SettingsPage() {
   }
 
   const deleteAccount = async () => {
-    if (!confirm("¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")) return
+    if (!(await confirmDialog({
+      title: "Eliminar cuenta",
+      description: "¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar cuenta",
+      destructive: true,
+    }))) return
     setPrivacyLoading(true)
     try {
       const res = await fetch("/api/user/delete-account", { method: "DELETE" })

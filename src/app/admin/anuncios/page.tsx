@@ -2,9 +2,9 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@/generated/prisma/client"
 import { redirect } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Edit2, Eye } from "lucide-react"
+import { Trash2, Edit2, Eye } from "lucide-react"
+import { AdminListingCreate } from "@/components/admin/admin-listing-create"
 
 export const dynamic = "force-dynamic"
 
@@ -83,6 +83,11 @@ export default async function AdminAnunciosPage({
   const params = await searchParams
   const { listings, stats } = await getListings(params)
 
+  const [profiles, categories] = await Promise.all([
+    prisma.profile.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -92,10 +97,12 @@ export default async function AdminAnunciosPage({
             Gestiona los anuncios y productos publicados
           </p>
         </div>
-        <Button className="gap-2 bg-green-600 hover:bg-green-700">
-          <Plus className="h-4 w-4" />
-          Nuevo Anuncio
-        </Button>
+        <AdminListingCreate
+          profiles={profiles}
+          categories={categories}
+          buttonLabel="Nuevo Producto"
+          dialogTitle="Nuevo producto"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-4">

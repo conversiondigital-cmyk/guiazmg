@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createNotification } from "@/lib/notifications/create"
 
 const editableFields = new Set([
   "name",
@@ -83,6 +84,12 @@ export async function PUT(
             verificationStatus: "UNVERIFIED",
           }
           break
+        case "VERIFY_REJECT":
+          updateData = {
+            isVerified: false,
+            verificationStatus: "REJECTED",
+          }
+          break
         case "FEATURE":
           updateData = { isFeatured: !business.isFeatured }
           actionLabel = business.isFeatured ? "UNFEATURE" : "FEATURE"
@@ -116,6 +123,19 @@ export async function PUT(
           }),
         },
       })
+
+      // Avisa al dueño el resultado de su verificación.
+      if (action === "VERIFY" || action === "VERIFY_REJECT") {
+        await createNotification({
+          userId: business.ownerId,
+          type: "SYSTEM",
+          title: action === "VERIFY" ? "Tu negocio fue verificado" : "Verificación rechazada",
+          message:
+            action === "VERIFY"
+              ? `${business.name} ya aparece como Verificado en Guía ZMG.`
+              : `La solicitud de verificación de ${business.name} fue rechazada. Revisa tus datos e inténtalo de nuevo.`,
+        })
+      }
 
       return NextResponse.json(updated)
     }

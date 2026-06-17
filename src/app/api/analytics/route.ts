@@ -74,7 +74,10 @@ export async function POST(request: NextRequest) {
     }
 
     const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown"
-    const rateKey = `${ip}:${resolvedEventType}`
+    // Incluye la entidad: así una vista al negocio A no bloquea la del negocio B
+    // dentro de la misma ventana, pero sí deduplica doble-disparos al mismo.
+    const entityId = businessId ?? listingId ?? marketplaceListingId ?? ""
+    const rateKey = `${ip}:${resolvedEventType}:${entityId}`
     const now = Date.now()
     const last = rateLimitMap.get(rateKey)
     if (last && now - last < 5000) {

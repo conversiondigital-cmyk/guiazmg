@@ -83,6 +83,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                autoComplete="name"
               />
             </div>
             <div className="space-y-2">
@@ -94,6 +95,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -104,6 +106,7 @@ export default function RegisterPage() {
                 placeholder="3312345678"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
               />
             </div>
             <div className="space-y-2">
@@ -111,11 +114,12 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
+                autoComplete="new-password"
               />
             </div>
             <div className="space-y-3 rounded-lg border bg-muted/20 p-4 text-sm">

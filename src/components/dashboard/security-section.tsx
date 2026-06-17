@@ -42,7 +42,13 @@ export function SecuritySection({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="space-y-4">
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleChangePassword()
+      }}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="current-password">Contraseña actual</Label>
@@ -50,6 +56,7 @@ export function SecuritySection({ userId }: { userId: string }) {
             id="current-password"
             type="password"
             placeholder="••••••••"
+            autoComplete="current-password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
           />
@@ -60,12 +67,13 @@ export function SecuritySection({ userId }: { userId: string }) {
             id="new-password"
             type="password"
             placeholder="••••••••"
+            autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
         </div>
       </div>
-      <Button onClick={handleChangePassword} disabled={saving || !currentPassword || !newPassword}>
+      <Button type="submit" disabled={saving || !currentPassword || !newPassword}>
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
         Cambiar contraseña
       </Button>
@@ -74,6 +82,6 @@ export function SecuritySection({ userId }: { userId: string }) {
           {message}
         </p>
       )}
-    </div>
+    </form>
   )
 }

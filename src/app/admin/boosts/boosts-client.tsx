@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import {
   Rocket,
   Calendar,
@@ -118,7 +119,13 @@ export function BoostsClient({ boosts, stats }: { boosts: Boost[]; stats: Stats 
   ).length
 
   const handleCancel = async (boost: Boost) => {
-    if (!confirm("¿Cancelar este boost?")) return
+    if (!(await confirmDialog({
+      title: "Cancelar boost",
+      description: "¿Cancelar este boost?",
+      confirmText: "Cancelar boost",
+      cancelText: "No",
+      destructive: true,
+    }))) return
     try {
       await fetch("/api/admin/boosts", {
         method: "PATCH",

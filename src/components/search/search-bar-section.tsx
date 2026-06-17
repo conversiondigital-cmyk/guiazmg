@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { SearchAutocomplete } from "@/components/search/search-autocomplete"
 import { Button } from "@/components/ui/button"
+import { NearMeButton } from "@/components/search/near-me-button"
 
 interface SearchBarSectionProps {
   initialQuery?: string
@@ -46,6 +47,9 @@ export function SearchBarSection({ initialQuery = "" }: SearchBarSectionProps) {
             >
               Buscar
             </Button>
+          </div>
+          <div className="mt-2 flex justify-center sm:justify-end">
+            <NearMeButton query={query} />
           </div>
         </form>
       </div>

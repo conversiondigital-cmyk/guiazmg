@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Check, ArrowRight } from "@/lib/icons"
 import { MEMBERSHIP_PLANS } from "@/lib/constants"
 import { formatCurrency } from "@/lib/utils"
+import { toast } from "sonner"
 
 function CheckoutContent() {
   const router = useRouter()
@@ -50,7 +51,7 @@ function CheckoutContent() {
 
       if (!res.ok) {
         const err = await res.json()
-        alert(err.error || "Error al procesar el pago")
+        toast.error(err.error || "Error al procesar el pago")
         return
       }
 
@@ -59,7 +60,7 @@ function CheckoutContent() {
         window.location.href = data.initPoint
       }
     } catch {
-      alert("Error al procesar el pago")
+      toast.error("Error al procesar el pago")
     } finally {
       setLoading(false)
     }

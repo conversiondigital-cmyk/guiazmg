@@ -1331,3 +1331,40 @@ model NewsletterSubscriber {
 
   @@map("newsletter_subscribers")
 }
+
+// Eventos locales (culturales, etc.). Alta manual desde el admin; preparado para
+// ingesta futura por RSS/iCal (campos source/sourceUrl para deduplicar).
+// Sin relación Prisma a Municipality: municipalityId es un id suelto (se resuelve
+// el nombre por consulta), para que db push agregue solo esta tabla.
+model Event {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  description    String?
+  startAt        DateTime
+  endAt          DateTime?
+  venueName      String?
+  addressText    String?
+  municipalityId String?
+  latitude       Float?
+  longitude      Float?
+  category       String?
+  isFree         Boolean   @default(true)
+  priceText      String?
+  ticketUrl      String?
+  sourceUrl      String?
+  source         String    @default("manual")
+  organizer      String?
+  coverImageUrl  String?
+  isPublished    Boolean   @default(true)
+  isFeatured     Boolean   @default(false)
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@index([startAt])
+  @@index([municipalityId])
+  @@index([isPublished])
+  @@map("events")
+}

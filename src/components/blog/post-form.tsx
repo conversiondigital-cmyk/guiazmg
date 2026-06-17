@@ -6,6 +6,7 @@ import { RichEditor } from "./rich-editor"
 import { Save, Eye, Globe, Archive, Loader2, Trash2, Send, ImageUp, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { confirmDialog } from "@/components/ui/system-dialog"
 
 const CATEGORIES = [
   "Marketing Digital", "Restaurantes", "Servicio al Cliente",
@@ -177,7 +178,12 @@ export function PostForm({ initialData, isAdmin = false }: PostFormProps) {
   }
 
   const handleDelete = async () => {
-    if (!isEdit || !confirm("¿Eliminar este artículo?")) return
+    if (!isEdit) return
+    if (!(await confirmDialog({
+      title: "Eliminar artículo",
+      description: "¿Eliminar este artículo?",
+      destructive: true,
+    }))) return
     await fetch(`/api/blog/posts/${initialData!.id}`, { method: "DELETE" })
     router.push("/editor/blog")
     router.refresh()

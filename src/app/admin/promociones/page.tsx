@@ -7,6 +7,7 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table"
 import { Tag } from "lucide-react"
+import { AdminCouponCreate } from "@/components/admin/admin-coupon-create"
 
 export const dynamic = "force-dynamic"
 
@@ -32,14 +33,22 @@ export default async function AdminPromocionesPage() {
     expired: coupons.filter((c) => c.endDate && new Date(c.endDate) < now).length,
   }
 
+  const profiles = await prisma.profile.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Promociones comerciales</h1>
-        <p className="text-sm text-muted-foreground">
-          Ofertas y promociones publicadas por perfiles comerciales en la plataforma.
-          No confundir con cupones de descuento administrativos (/admin/cupones).
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Promociones comerciales</h1>
+          <p className="text-sm text-muted-foreground">
+            Ofertas y promociones publicadas por perfiles comerciales en la plataforma.
+            No confundir con cupones de descuento administrativos (/admin/cupones).
+          </p>
+        </div>
+        <AdminCouponCreate profiles={profiles} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

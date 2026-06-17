@@ -18,6 +18,8 @@ import {
   Undo, Redo, Minus, Loader2,
 } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+import { promptDialog } from "@/components/ui/system-dialog"
 
 interface RichEditorProps {
   content: string
@@ -107,7 +109,7 @@ export function RichEditor({ content, onChange, placeholder = "Escribe el conten
       // Insert image with R2 URL — never base64
       editor.chain().focus().setImage({ src: data.url, alt: file.name }).run()
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al subir imagen")
+      toast.error(err instanceof Error ? err.message : "Error al subir imagen")
     } finally {
       setUploading(false)
     }
@@ -134,10 +136,15 @@ export function RichEditor({ content, onChange, placeholder = "Escribe el conten
     }
   }, [handleImageUpload])
 
-  const setLink = useCallback(() => {
+  const setLink = useCallback(async () => {
     if (!editor) return
     const prev = editor.getAttributes("link").href
-    const url = window.prompt("URL del enlace:", prev || "https://")
+    const url = await promptDialog({
+      title: "Insertar enlace",
+      label: "URL del enlace",
+      defaultValue: prev || "https://",
+      placeholder: "https://...",
+    })
     if (url === null) return
     if (url === "") { editor.chain().focus().extendMarkRange("link").unsetLink().run(); return }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()

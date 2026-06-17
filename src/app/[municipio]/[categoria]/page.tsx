@@ -25,23 +25,28 @@ export async function generateMetadata({ params }: Props) {
   const { municipio: munSlug, categoria: catSlug } = await params
   const slug = `${munSlug}/${catSlug}`
 
-  const [seoPage, municipio, category] = await Promise.all([
-    prisma.seoLandingPage.findUnique({ where: { slug } }),
-    prisma.municipality.findUnique({ where: { slug: munSlug } }),
-    prisma.category.findUnique({ where: { slug: catSlug } }),
-  ])
+  try {
+    const [seoPage, municipio, category] = await Promise.all([
+      prisma.seoLandingPage.findUnique({ where: { slug } }),
+      prisma.municipality.findUnique({ where: { slug: munSlug } }),
+      prisma.category.findUnique({ where: { slug: catSlug } }),
+    ])
 
-  if (!municipio || !category) return { title: "No encontrado" }
+    if (!municipio || !category) return { title: "No encontrado" }
 
-  const title = seoPage?.title || `${category.name} en ${municipio.name} | Guía ZMG`
-  const description = seoPage?.metaDescription || `Encuentra los mejores ${category.name.toLowerCase()} en ${municipio.name}. Consulta teléfonos, WhatsApp, horarios, ubicación y reseñas.`
+    const title = seoPage?.title || `${category.name} en ${municipio.name} | Guía ZMG`
+    const description = seoPage?.metaDescription || `Encuentra los mejores ${category.name.toLowerCase()} en ${municipio.name}. Consulta teléfonos, WhatsApp, horarios, ubicación y reseñas.`
 
-  return generateMeta({
-    title,
-    description,
-    url: `${BASE_URL}/${munSlug}/${catSlug}`,
-    canonical: `${BASE_URL}/${munSlug}/${catSlug}`,
-  })
+    return generateMeta({
+      title,
+      description,
+      url: `${BASE_URL}/${munSlug}/${catSlug}`,
+      canonical: `${BASE_URL}/${munSlug}/${catSlug}`,
+    })
+  } catch {
+    // BD no disponible (p. ej. durante el build): no rompas.
+    return { title: "Guía ZMG" }
+  }
 }
 
 export default async function SeoCityCategoryPage({ params }: Props) {

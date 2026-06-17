@@ -2,6 +2,72 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@/generated/prisma/client"
+import { slugify } from "@/lib/utils"
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id || !["ADMIN", "EDITOR"].includes(session.user.role ?? "")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { businessId, categoryId, subcategoryId, title, description, price, status } = body
+
+    if (!businessId || !categoryId || !title?.trim()) {
+      return NextResponse.json({ error: "Negocio, categoría y título son requeridos" }, { status: 400 })
+    }
+
+    // slug único por negocio
+    const base = slugify(title)
+    let slug = base
+    for (let i = 1; ; i++) {
+      const clash = await prisma.listing.findUnique({
+        where: { businessId_slug: { businessId, slug } },
+      })
+      if (!clash) break
+      slug = `${base}-${i}`
+    }
+
+    const STATUSES = ["ACTIVE", "PENDING_REVIEW", "DRAFT", "ARCHIVED", "EXPIRED"] as const
+    const finalStatus = (STATUSES as readonly string[]).includes(status)
+      ? (status as (typeof STATUSES)[number])
+      : "ACTIVE"
+
+    const listing = await prisma.listing.create({
+      data: {
+        businessId,
+        categoryId,
+        subcategoryId: subcategoryId || null,
+        title: title.trim(),
+        slug,
+        description: description || null,
+        price: price !== undefined && price !== "" && price !== null ? String(price) : null,
+        status: finalStatus,
+      },
+      include: {
+        profile: { select: { id: true, name: true, slug: true } },
+        category: { select: { id: true, name: true } },
+        _count: { select: { leads: true } },
+      },
+    })
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: session.user.id,
+        action: "CREATE_LISTING",
+        entityType: "Listing",
+        entityId: listing.id,
+        newValue: JSON.stringify({ title: listing.title, businessId, categoryId }),
+      },
+    })
+
+    return NextResponse.json({ listing }, { status: 201 })
+  } catch (error) {
+    console.error("[ADMIN_LISTINGS_POST]", error)
+    return NextResponse.json({ error: "Error al crear el anuncio" }, { status: 500 })
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {

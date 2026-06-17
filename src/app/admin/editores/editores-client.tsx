@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Mail, Search, UserPlus, Shield, ShieldOff, LogIn, BookOpen, Loader2, X, CheckCircle } from "lucide-react"
+import { confirmDialog } from "@/components/ui/system-dialog"
 
 interface Editor {
   id: string
@@ -78,7 +79,12 @@ export function EditoresClient({ editors: initial }: EditoresClientProps) {
   }
 
   const revokeEditor = async (editorId: string, editorName: string) => {
-    if (!confirm(`¿Revocar rol de Editor a ${editorName ?? editorId}?`)) return
+    if (!(await confirmDialog({
+      title: "Revocar rol de Editor",
+      description: `¿Revocar rol de Editor a ${editorName ?? editorId}?`,
+      confirmText: "Revocar",
+      destructive: true,
+    }))) return
     setActionLoading(editorId + "_revoke")
     try {
       const res = await fetch(`/api/admin/users/${editorId}`, {

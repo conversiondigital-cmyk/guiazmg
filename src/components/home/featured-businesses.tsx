@@ -1,120 +1,132 @@
-"use client"
-
 import Link from "next/link"
-import { MapPin, Star, BadgeCheck, Clock } from "lucide-react"
+import { MapPin, Star } from "lucide-react"
 import type { Business } from "@/types"
 
 interface FeaturedBusinessesProps {
   businesses: Business[]
 }
 
-const BADGE_STYLE: Record<string, string> = {
-  VERIFIED: "bg-blue-600 text-white",
-  FEATURED: "bg-amber-500 text-white",
-  PREMIUM: "bg-green-700 text-white",
+// Rating decorativo DETERMINISTA (derivado del id) → sin Math.random ni mismatch.
+function ratingFor(id: string) {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return (4.4 + (h % 6) / 10).toFixed(1)
 }
 
-function randomRating() {
-  return (4.5 + Math.random() * 0.5).toFixed(1)
+const CARD =
+  "business-card group block overflow-hidden rounded-2xl border border-[#bfc9c3]/20 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_-10px_rgba(0,53,39,0.18)]"
+
+function Cover({ biz, className }: { biz: Business; className: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {biz.coverImageUrl ? (
+        <img src={biz.coverImageUrl} alt={biz.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#064e3b] to-[#006c49]">
+          <span className="text-5xl font-black text-white/30">{biz.name.charAt(0)}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RatingPill({ id }: { id: string }) {
+  return (
+    <span className="flex items-center gap-1 rounded-lg bg-[#6cf8bb]/20 px-2 py-1">
+      <Star className="h-3.5 w-3.5 fill-[#006c49] text-[#006c49]" />
+      <span className="text-sm font-bold text-[#006c49]">{ratingFor(id)}</span>
+    </span>
+  )
 }
 
 export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
   if (!businesses.length) return null
+  const [hero, ...rest] = businesses
+  const smalls = rest.slice(0, 4)
 
   return (
-    <section className="py-16 bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-[#eff4ff] py-20">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-3xl font-bold text-[#003527] sm:text-[32px]">Negocios Destacados</h2>
+          <p className="mx-auto max-w-2xl text-[#404944]">
+            Los establecimientos más recomendados por la comunidad tapatía por su calidad y servicio.
+          </p>
+        </div>
 
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">
-              Negocios destacados
-            </p>
-            <h2 className="text-3xl font-black text-gray-900">Recomendados para ti</h2>
-          </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+          {/* Hero card */}
+          <Link href={`/perfil/${hero.slug}`} className={`${CARD} md:col-span-7`}>
+            <div className="relative">
+              <Cover biz={hero} className="h-72" />
+              <span className="absolute left-4 top-4 rounded-full bg-[#003527]/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+                Top Destacado
+              </span>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  {hero.category && (
+                    <span className="text-xs font-bold uppercase text-[#006c49]">{hero.category.name}</span>
+                  )}
+                  <h3 className="text-2xl font-semibold text-[#003527]">{hero.name}</h3>
+                </div>
+                <RatingPill id={hero.id} />
+              </div>
+              {hero.shortDescription && (
+                <p className="mb-6 line-clamp-2 text-[#404944]">{hero.shortDescription}</p>
+              )}
+              {hero.municipality && (
+                <div className="flex items-center gap-1 text-sm font-medium text-[#404944]">
+                  <MapPin className="h-4 w-4" /> {hero.municipality.name}, Jalisco
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {/* Small wide card */}
+          {smalls[0] && (
+            <Link href={`/perfil/${smalls[0].slug}`} className={`${CARD} md:col-span-5`}>
+              <Cover biz={smalls[0]} className="h-48" />
+              <div className="p-6">
+                {smalls[0].category && (
+                  <span className="text-xs font-bold uppercase text-[#006c49]">{smalls[0].category.name}</span>
+                )}
+                <h3 className="mb-2 text-2xl font-semibold text-[#003527]">{smalls[0].name}</h3>
+                <div className="mb-4 flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-[#006c49] text-[#006c49]" />
+                  <span className="text-sm font-bold text-[#006c49]">{ratingFor(smalls[0].id)}</span>
+                </div>
+                <span className="block w-full rounded-xl border border-[#003527] py-2 text-center text-sm font-semibold text-[#003527] transition-colors group-hover:bg-[#003527]/5">
+                  Ver Detalles
+                </span>
+              </div>
+            </Link>
+          )}
+
+          {/* Three small cards */}
+          {smalls.slice(1).map((biz) => (
+            <Link key={biz.id} href={`/perfil/${biz.slug}`} className={`${CARD} md:col-span-4`}>
+              <Cover biz={biz} className="h-48" />
+              <div className="p-6">
+                {biz.category && (
+                  <span className="text-xs font-bold uppercase text-[#006c49]">{biz.category.name}</span>
+                )}
+                <h3 className="mb-2 text-2xl font-semibold text-[#003527]">{biz.name}</h3>
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-[#006c49] text-[#006c49]" />
+                  <span className="text-sm font-bold text-[#006c49]">{ratingFor(biz.id)}</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
           <Link
             href="/search"
-            className="hidden sm:flex items-center gap-1 text-sm font-semibold text-green-700 hover:text-green-900 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#003527] px-8 py-3 text-sm font-semibold text-white transition-all hover:opacity-95"
           >
-            Ver todos los negocios →
-          </Link>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {businesses.map((biz, i) => {
-            const badge = biz.isVerified ? "Verificado" : biz.isFeatured ? "Destacado" : i === 0 ? "Destacado" : null
-            const badgeStyle = biz.isVerified ? BADGE_STYLE.VERIFIED : BADGE_STYLE.FEATURED
-            const rating = randomRating()
-
-            return (
-              <Link key={biz.id} href={`/perfil/${biz.slug}`}>
-                <div className="group rounded-2xl overflow-hidden bg-white border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all h-full flex flex-col">
-                  {/* Image area */}
-                  <div className="relative h-44 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                    {biz.coverImageUrl ? (
-                      <img
-                        src={biz.coverImageUrl}
-                        alt={biz.name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-                        <span className="text-4xl font-black text-green-800/20">
-                          {biz.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Badge top-left */}
-                    {badge && (
-                      <span className={`absolute left-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${badgeStyle}`}>
-                        {biz.isVerified && <BadgeCheck className="h-3 w-3" />}
-                        {badge}
-                      </span>
-                    )}
-
-                    {/* Rating top-right */}
-                    <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white px-2 py-1 text-xs font-bold text-gray-800 shadow">
-                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                      {rating}
-                    </span>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex flex-col gap-2 p-4 flex-1">
-                    <h3 className="font-bold text-gray-900 group-hover:text-green-800 transition-colors leading-tight">
-                      {biz.name}
-                    </h3>
-                    {(biz.category || biz.shortDescription) && (
-                      <p className="text-xs text-gray-500">
-                        {biz.category?.name ?? biz.shortDescription}
-                        {biz.municipality && ` • ${biz.municipality.name}`}
-                      </p>
-                    )}
-                    {biz.municipality && (
-                      <div className="flex items-center gap-1 text-xs text-gray-400">
-                        <MapPin className="h-3 w-3" />
-                        {biz.municipality.name}, Jalisco
-                      </div>
-                    )}
-                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className="flex items-center gap-1 text-xs font-semibold text-green-700">
-                        <Clock className="h-3 w-3" />
-                        Abierto ahora
-                      </span>
-                      <span className="text-xs font-semibold text-green-700 group-hover:underline">
-                        Ver negocio →
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-
-        <div className="mt-8 text-center sm:hidden">
-          <Link href="/search" className="text-sm font-semibold text-green-700">
             Ver todos los negocios →
           </Link>
         </div>

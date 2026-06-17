@@ -7,6 +7,7 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table"
 import { Wrench } from "lucide-react"
+import { AdminListingCreate } from "@/components/admin/admin-listing-create"
 
 export const dynamic = "force-dynamic"
 
@@ -50,13 +51,29 @@ export default async function AdminServiciosPage() {
     pending: await prisma.listing.count({ where: { deletedAt: null, status: "PENDING_REVIEW", category: { slug: { contains: "servicio" } } } }),
   }
 
+  const [profiles, serviceCategories, allCategories] = await Promise.all([
+    prisma.profile.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ where: { slug: { contains: "servicio" } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ])
+  // Si no hay categorías de "servicio", ofrecemos todas para no bloquear la creación.
+  const categories = serviceCategories.length > 0 ? serviceCategories : allCategories
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Servicios</h1>
-        <p className="text-sm text-muted-foreground">
-          Servicios publicados por perfiles comerciales en la plataforma
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Servicios</h1>
+          <p className="text-sm text-muted-foreground">
+            Servicios publicados por perfiles comerciales en la plataforma
+          </p>
+        </div>
+        <AdminListingCreate
+          profiles={profiles}
+          categories={categories}
+          buttonLabel="Nuevo Servicio"
+          dialogTitle="Nuevo servicio"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

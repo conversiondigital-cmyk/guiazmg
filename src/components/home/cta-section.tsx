@@ -1,80 +1,55 @@
 import Link from "next/link"
-import { Rocket, BadgeCheck, Star } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 
 export function CTASection() {
   return (
-    <section className="py-20 bg-green-900">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-2 items-center">
+    <section className="px-4 py-20 sm:px-6 lg:px-10">
+      <div className="relative mx-auto flex max-w-[1280px] flex-col items-center gap-12 overflow-hidden rounded-[2rem] bg-[#064e3b] p-8 sm:p-12 md:flex-row">
+        <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#6cf8bb]/20 blur-3xl" />
 
-          {/* Left */}
-          <div>
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 mb-6">
-              <Rocket className="h-7 w-7 text-amber-400" />
+        {/* Left */}
+        <div className="relative z-10 md:w-3/5">
+          <h2 className="mb-6 text-4xl font-extrabold text-white md:text-5xl">¿Eres dueño de un negocio?</h2>
+          <p className="mb-8 max-w-xl text-lg text-[#80bea6]">
+            Aumenta tu visibilidad, llega a miles de clientes locales y haz crecer tu establecimiento
+            con las herramientas de Guía ZMG.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/registrar-negocio"
+              className="rounded-xl bg-[#6ffbbe] px-8 py-4 font-bold text-[#002113] transition-transform hover:scale-105 active:scale-95"
+            >
+              Registrar mi Negocio
+            </Link>
+            <Link
+              href="/planes"
+              className="rounded-xl border border-white/20 bg-white/10 px-8 py-4 font-bold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+            >
+              Ver Planes
+            </Link>
+          </div>
+        </div>
+
+        {/* Right — dashboard mockup */}
+        <div className="relative z-10 hidden md:block md:w-2/5">
+          <div className="rotate-3 rounded-3xl bg-white p-6 shadow-2xl transition-transform duration-500 hover:rotate-0">
+            <div className="mb-4 flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#b0f0d6]">
+                <BarChart3 className="h-6 w-6 text-[#003527]" />
+              </div>
+              <div>
+                <div className="mb-2 h-3 w-32 rounded-full bg-[#d3e4fe]" />
+                <div className="h-2 w-20 rounded-full bg-[#e5eeff]" />
+              </div>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
-              ¿Tienes un negocio?{" "}
-              <span className="text-amber-400">Hazlo crecer con Guía ZMG</span>
-            </h2>
-            <p className="mt-4 text-lg text-green-200 leading-relaxed">
-              Únete a nuestra plataforma y llega a miles de clientes
-              que buscan productos y servicios como los tuyos.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href="/registrar-negocio"
-                className="rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-white hover:bg-amber-400 transition-colors"
-              >
-                Agregar mi negocio
-              </Link>
-              <Link
-                href="/planes"
-                className="rounded-xl border border-white/30 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
-              >
-                Conocer planes
-              </Link>
+            <div className="space-y-3">
+              <div className="h-20 rounded-xl bg-[#eff4ff]" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-12 rounded-xl bg-[#eff4ff]" />
+                <div className="h-12 rounded-xl bg-[#eff4ff]" />
+              </div>
             </div>
           </div>
-
-          {/* Right — Example business card */}
-          <div className="hidden lg:block">
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-white">Tu negocio destacado</p>
-                <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">
-                  Patrocinado
-                </span>
-              </div>
-              <div className="rounded-xl bg-white p-4 flex gap-4 items-start">
-                <div className="h-16 w-16 shrink-0 rounded-xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
-                  <span className="text-2xl font-black text-amber-700">C</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">Café La Estación</h3>
-                  <div className="flex items-center gap-1 my-1">
-                    {[1,2,3,4,5].map(i => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                    <span className="text-xs text-gray-500 ml-1">4.9 (128)</span>
-                  </div>
-                  <p className="text-xs text-gray-500">Guadalajara, Jalisco</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <BadgeCheck className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-medium text-blue-600">Verificado</span>
-                    <span className="mx-1 text-gray-300">·</span>
-                    <span className="text-xs text-green-600 font-medium">Abierto ahora</span>
-                  </div>
-                </div>
-              </div>
-              <Link
-                href="/registrar-negocio"
-                className="mt-4 block w-full rounded-xl bg-green-700 py-3 text-center text-sm font-bold text-white hover:bg-green-600 transition-colors"
-              >
-                Ver perfil del negocio
-              </Link>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>

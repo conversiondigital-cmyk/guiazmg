@@ -7,21 +7,15 @@ import { useState } from "react"
 
 interface Settings {
   emailNotifications?: boolean
-  smsNotifications?: boolean
-  leadAlerts?: boolean
-  reviewAlerts?: boolean
-  renewalAlerts?: boolean
-  promotionalEmails?: boolean
+  pushNotifications?: boolean
+  marketingEmails?: boolean
 }
 
 export function NotificationPreferencesForm({ settings, userId }: { settings: Settings | null; userId: string }) {
   const [prefs, setPrefs] = useState({
     emailNotifications: settings?.emailNotifications ?? true,
-    smsNotifications: settings?.smsNotifications ?? false,
-    leadAlerts: settings?.leadAlerts ?? true,
-    reviewAlerts: settings?.reviewAlerts ?? true,
-    renewalAlerts: settings?.renewalAlerts ?? true,
-    promotionalEmails: settings?.promotionalEmails ?? false,
+    pushNotifications: settings?.pushNotifications ?? true,
+    marketingEmails: settings?.marketingEmails ?? false,
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -49,11 +43,8 @@ export function NotificationPreferencesForm({ settings, userId }: { settings: Se
 
   const items = [
     { key: "emailNotifications" as const, label: "Notificaciones por correo" },
-    { key: "smsNotifications" as const, label: "Notificaciones por SMS" },
-    { key: "leadAlerts" as const, label: "Alertas de nuevos leads" },
-    { key: "reviewAlerts" as const, label: "Alertas de nuevas reseñas" },
-    { key: "renewalAlerts" as const, label: "Alertas de renovación" },
-    { key: "promotionalEmails" as const, label: "Correos promocionales" },
+    { key: "pushNotifications" as const, label: "Notificaciones push" },
+    { key: "marketingEmails" as const, label: "Correos promocionales" },
   ]
 
   return (

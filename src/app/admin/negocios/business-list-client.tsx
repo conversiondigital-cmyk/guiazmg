@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import {
   Store,
   Eye,
@@ -144,7 +145,11 @@ export function BusinessListClient({
   }
 
   const handleDelete = async (businessId: string) => {
-    if (!confirm("¿Estás seguro de eliminar este negocio?")) return
+    if (!(await confirmDialog({
+      title: "Eliminar negocio",
+      description: "¿Estás seguro de eliminar este negocio?",
+      destructive: true,
+    }))) return
     try {
       const res = await fetch(`/api/admin/businesses/${businessId}`, {
         method: "PUT",

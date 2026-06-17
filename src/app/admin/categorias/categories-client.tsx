@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 // no select controls on this screen
 import { slugify } from "@/lib/utils"
+import { confirmDialog } from "@/components/ui/system-dialog"
 
 type SubcategoryRow = {
   id: string
@@ -51,9 +52,12 @@ type FormData = {
 
 const emptyForm: FormData = { name: "", slug: "", description: "", icon: "", sortOrder: 0, isActive: true }
 
-export function CategoriesClient({ categories: initial }: { categories: CategoryRow[] }) {
+export function CategoriesClient({ categories }: { categories: CategoryRow[] }) {
   const router = useRouter()
-  const [categories] = useState(initial)
+  // Render directamente desde la prop: tras guardar llamamos router.refresh()
+  // y el server component vuelve a inyectar la lista actualizada. (Antes se
+  // congelaba en useState(initial), por eso "no se guardaban" — sí se creaban
+  // en la BD pero la tabla nunca se actualizaba.)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [editDialog, setEditDialog] = useState<{ open: boolean; category?: CategoryRow; subcategory?: SubcategoryRow; parentId?: string }>({ open: false })
   const [form, setForm] = useState<FormData>(emptyForm)
@@ -144,7 +148,11 @@ export function CategoriesClient({ categories: initial }: { categories: Category
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar?")) return
+    if (!(await confirmDialog({
+      title: "Eliminar",
+      description: "¿Estás seguro de eliminar?",
+      destructive: true,
+    }))) return
     try {
       const res = await fetch("/api/admin/categories", {
         method: "PATCH",

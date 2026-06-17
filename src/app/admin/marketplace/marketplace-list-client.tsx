@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { confirmDialog } from "@/components/ui/system-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -171,7 +172,11 @@ export function MarketplaceListClient({
   }
 
   const handleDelete = async (listingId: string) => {
-    if (!confirm("¿Estás seguro de eliminar esta publicación?")) return
+    if (!(await confirmDialog({
+      title: "Eliminar publicación",
+      description: "¿Estás seguro de eliminar esta publicación?",
+      destructive: true,
+    }))) return
     await handleAction(listingId, "DELETE")
   }
 

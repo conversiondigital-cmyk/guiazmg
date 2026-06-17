@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
 import { BusinessActions } from "@/components/business/business-actions"
+import { TrackBusinessView } from "@/components/business/track-business-view"
 import { ClaimButton } from "@/components/business/claim-button"
 import { BusinessPromotions } from "@/components/business/business-promotions"
 import { BusinessReviews } from "@/components/business/business-reviews"
@@ -93,6 +94,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
+      <TrackBusinessView businessId={business.id} />
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { BusinessEditForm } from "@/components/dashboard/business-edit-form"
+import { VerificationCard } from "@/components/dashboard/verification-card"
+import { getVerificationMode } from "@/lib/verification-config"
 import Link from "next/link"
 
 export default async function MiNegocioPage() {
@@ -33,6 +35,8 @@ export default async function MiNegocioPage() {
     )
   }
 
+  const verificationMode = await getVerificationMode()
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -47,6 +51,12 @@ export default async function MiNegocioPage() {
           Ver perfil público
         </Link>
       </div>
+      <VerificationCard
+        businessId={business.id}
+        status={business.verificationStatus}
+        isVerified={business.isVerified}
+        mode={verificationMode}
+      />
       <BusinessEditForm business={business} />
     </div>
   )

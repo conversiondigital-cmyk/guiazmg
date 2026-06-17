@@ -4,6 +4,8 @@ interface UploadOptions {
   folder?: string
   maxSizeBytes?: number
   allowedTypes?: string[]
+  // Convierte JPG/PNG/GIF a WebP al subir (activado por defecto). Pasar false para conservar el original.
+  convertToWebp?: boolean
 }
 
 interface UploadResult {
@@ -46,15 +48,40 @@ function validateFile(file: File, options: UploadOptions): void {
   }
 }
 
-async function uploadLocal(file: File, folder: string): Promise<UploadResult> {
-  const buffer = Buffer.from(await file.arrayBuffer())
-  const ext = getSafeImageExtension(file.type) || "bin"
-  const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+interface PreparedUpload {
+  buffer: Buffer
+  ext: string
+  contentType: string
+}
+
+// Optimiza la imagen antes de guardarla: convierte JPG/PNG/GIF a WebP (salvo
+// convertToWebp:false). Conserva la animación de los GIF y corrige la orientación EXIF.
+// Si la conversión falla, cae al archivo original sin romper la subida.
+async function prepareUpload(file: File, options: UploadOptions): Promise<PreparedUpload> {
+  const original = Buffer.from(await file.arrayBuffer())
+  const convertible = ["image/jpeg", "image/png", "image/gif"]
+  if (options.convertToWebp !== false && convertible.includes(file.type)) {
+    try {
+      const sharp = (await import("sharp")).default
+      const animated = file.type === "image/gif"
+      let pipeline = sharp(original, { animated })
+      if (!animated) pipeline = pipeline.rotate()
+      const buffer = await pipeline.webp({ quality: 80 }).toBuffer()
+      return { buffer, ext: "webp", contentType: "image/webp" }
+    } catch (error) {
+      console.error("[STORAGE] WebP conversion failed, using original:", error)
+    }
+  }
+  return { buffer: original, ext: getSafeImageExtension(file.type) || "bin", contentType: file.type }
+}
+
+async function uploadLocal(prepared: PreparedUpload, folder: string): Promise<UploadResult> {
+  const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${prepared.ext}`
   const fs = await import("fs/promises")
   const path = await import("path")
   const uploadDir = path.join(process.cwd(), "public", "uploads", folder)
   await fs.mkdir(uploadDir, { recursive: true })
-  await fs.writeFile(path.join(uploadDir, path.basename(key)), buffer)
+  await fs.writeFile(path.join(uploadDir, path.basename(key)), prepared.buffer)
   return { url: `${baseUrl}/uploads/${key}`, key, provider: "local" }
 }
 
@@ -66,7 +93,9 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
     throw new Error("STORAGE_PROVIDER must be configured for production")
   }
 
-  if (provider === "local") return uploadLocal(file, folder)
+  const prepared = await prepareUpload(file, options)
+
+  if (provider === "local") return uploadLocal(prepared, folder)
 
   const bucket = process.env.S3_BUCKET || "guiazmg"
   try {
@@ -80,10 +109,8 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
       },
     })
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const ext = getSafeImageExtension(file.type) || "bin"
-    const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: buffer, ContentType: file.type }))
+    const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${prepared.ext}`
+    await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: prepared.buffer, ContentType: prepared.contentType }))
     const publicUrl = process.env.S3_PUBLIC_URL || `https://${bucket}.s3.amazonaws.com`
     return { url: `${publicUrl}/${key}`, key, provider: provider as "s3" | "r2" }
   } catch (error) {
@@ -92,7 +119,7 @@ export async function uploadFile(file: File, options: UploadOptions = {}): Promi
     }
 
     console.error("[STORAGE] Remote upload failed, falling back to local:", error)
-    return uploadLocal(file, folder)
+    return uploadLocal(prepared, folder)
   }
 }
 

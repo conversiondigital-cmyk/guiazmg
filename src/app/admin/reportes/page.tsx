@@ -7,24 +7,13 @@ import {
   Flag,
   Search,
   Filter,
-  MoreHorizontal,
-  CheckCircle,
-  XCircle,
-  Clock,
   Store,
   ShoppingBag,
 } from "@/lib/icons"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -34,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ReportStatus } from "@/generated/prisma/enums"
+import { ReportActions, ReportReasonFilter } from "./reportes-client"
 
 const STATUS_LABELS: Record<string, string> = {
   ALL: "Todos",
@@ -129,16 +119,6 @@ export default async function AdminReportesPage({
     return `/admin/reportes${qs ? `?${qs}` : ""}`
   }
 
-  async function handleAction(formData: FormData) {
-    "use server"
-    const id = formData.get("id") as string
-    const action = formData.get("action") as string
-    if (!id || !action) return
-    if (Object.values(ReportStatus).includes(action as ReportStatus)) {
-      await prisma.report.update({ where: { id }, data: { status: action as ReportStatus } })
-    }
-  }
-
   const filterTabs = ["ALL", "PENDING", "INVESTIGATING", "RESOLVED", "DISMISSED"]
 
   return (
@@ -196,21 +176,7 @@ export default async function AdminReportesPage({
         {reasons.length > 0 && (
           <div className="flex items-center gap-2">
             <Filter className="size-4 text-muted-foreground" />
-            <form method="GET" action="/admin/reportes">
-              {currentStatus !== "ALL" && <input type="hidden" name="status" value={currentStatus} />}
-              {currentQ && <input type="hidden" name="q" value={currentQ} />}
-              <select
-                name="reason"
-                defaultValue={currentReason}
-                onChange={(e) => e.target.form?.requestSubmit()}
-                className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-              >
-                <option value="">Todos los motivos</option>
-                {reasons.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </form>
+            <ReportReasonFilter reasons={reasons} currentReason={currentReason} />
           </div>
         )}
       </div>
@@ -293,55 +259,7 @@ export default async function AdminReportesPage({
                         })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <form action={handleAction}>
-                          <input type="hidden" name="id" value={report.id} />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
-                              <MoreHorizontal className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {report.status !== ReportStatus.INVESTIGATING && (
-                                <DropdownMenuItem>
-                                  <button
-                                    type="submit"
-                                    name="action"
-                                    value={ReportStatus.INVESTIGATING}
-                                    className="flex items-center gap-2 w-full text-left"
-                                  >
-                                    <Clock className="size-4 text-blue-600" />
-                                    Marcar en revisión
-                                  </button>
-                                </DropdownMenuItem>
-                              )}
-                              {report.status !== ReportStatus.RESOLVED && (
-                                <DropdownMenuItem>
-                                  <button
-                                    type="submit"
-                                    name="action"
-                                    value={ReportStatus.RESOLVED}
-                                    className="flex items-center gap-2 w-full text-left"
-                                  >
-                                    <CheckCircle className="size-4 text-green-600" />
-                                    Resolver
-                                  </button>
-                                </DropdownMenuItem>
-                              )}
-                              {report.status !== ReportStatus.DISMISSED && (
-                                <DropdownMenuItem>
-                                  <button
-                                    type="submit"
-                                    name="action"
-                                    value={ReportStatus.DISMISSED}
-                                    className="flex items-center gap-2 w-full text-left"
-                                  >
-                                    <XCircle className="size-4 text-gray-600" />
-                                    Descartar
-                                  </button>
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </form>
+                        <ReportActions reportId={report.id} currentStatus={report.status} />
                       </TableCell>
                     </TableRow>
                   )

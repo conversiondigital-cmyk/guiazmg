@@ -29,25 +29,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [categorySlug, locationSlug] = slug.split("-")
   if (!categorySlug || !locationSlug) return { title: "No encontrado", robots: { index: false, follow: false } }
 
-  const category = await prisma.category.findFirst({ where: { slug: categorySlug, isActive: true } })
-  const municipality = await prisma.municipality.findFirst({ where: { slug: locationSlug, isActive: true } })
-  const neighborhood = !municipality ? await prisma.neighborhood.findFirst({ where: { slug: locationSlug, isActive: true }, include: { municipality: true } }) : null
+  try {
+    const category = await prisma.category.findFirst({ where: { slug: categorySlug, isActive: true } })
+    const municipality = await prisma.municipality.findFirst({ where: { slug: locationSlug, isActive: true } })
+    const neighborhood = !municipality ? await prisma.neighborhood.findFirst({ where: { slug: locationSlug, isActive: true }, include: { municipality: true } }) : null
 
-  if (!category || (!municipality && !neighborhood)) {
-    return { title: "No encontrado", robots: { index: false, follow: false } }
+    if (!category || (!municipality && !neighborhood)) {
+      return { title: "No encontrado", robots: { index: false, follow: false } }
+    }
+
+    const locationName = municipality?.name || neighborhood?.name || titleize(locationSlug)
+    const catName = category?.name || titleize(categorySlug)
+    const munName = municipality?.name || neighborhood?.municipality?.name || ""
+
+    const title = category ? `Mejores ${catName} en ${locationName}${munName ? `, ${munName}` : ""} | Guía ZMG`
+      : `${titleize(slug)} en Guadalajara | Guía ZMG`
+    const desc = category
+      ? `Encuentra los mejores ${catName.toLowerCase()} en ${locationName}${munName ? `, ${munName}` : ""}. Teléfonos, direcciones, reseñas y más.`
+      : `Encuentra ${titleize(slug)} en la Zona Metropolitana de Guadalajara. Directorio completo.`
+
+    return { title, description: desc, openGraph: { title, description: desc } }
+  } catch {
+    // BD no disponible (p. ej. durante el build): no rompas.
+    return { title: "Guía ZMG" }
   }
-
-  const locationName = municipality?.name || neighborhood?.name || titleize(locationSlug)
-  const catName = category?.name || titleize(categorySlug)
-  const munName = municipality?.name || neighborhood?.municipality?.name || ""
-
-  const title = category ? `Mejores ${catName} en ${locationName}${munName ? `, ${munName}` : ""} | Guía ZMG`
-    : `${titleize(slug)} en Guadalajara | Guía ZMG`
-  const desc = category
-    ? `Encuentra los mejores ${catName.toLowerCase()} en ${locationName}${munName ? `, ${munName}` : ""}. Teléfonos, direcciones, reseñas y más.`
-    : `Encuentra ${titleize(slug)} en la Zona Metropolitana de Guadalajara. Directorio completo.`
-
-  return { title, description: desc, openGraph: { title, description: desc } }
 }
 
 export default async function SeoLandingPage({ params }: Props) {
