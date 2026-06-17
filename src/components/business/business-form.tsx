@@ -141,7 +141,7 @@ export function BusinessForm() {
             </div>
             <div>
               <Label htmlFor="category">Categoría</Label>
-              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+              <Select value={selectedCategory} onValueChange={handleCategoryChange} items={Object.fromEntries(categories.map((c) => [c.id, c.name]))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar categoría" />
                 </SelectTrigger>
@@ -156,7 +156,7 @@ export function BusinessForm() {
           {currentCategory && currentCategory.subcategories.length > 0 && (
             <div>
               <Label htmlFor="subcategory">Subcategoría</Label>
-              <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange}>
+              <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange} items={Object.fromEntries((currentCategory?.subcategories ?? []).map((s) => [s.id, s.name]))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar subcategoría" />
                 </SelectTrigger>
@@ -182,12 +182,12 @@ export function BusinessForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="phone">Teléfono</Label>
-              <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="3312345678" />
+              <Label htmlFor="phone">Teléfono *</Label>
+              <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="3312345678" required />
             </div>
             <div>
-              <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input id="whatsapp" value={form.whatsapp} onChange={(e) => updateField("whatsapp", e.target.value)} placeholder="3312345678" />
+              <Label htmlFor="whatsapp">WhatsApp *</Label>
+              <Input id="whatsapp" value={form.whatsapp} onChange={(e) => updateField("whatsapp", e.target.value)} placeholder="3312345678" required />
             </div>
             <div>
               <Label htmlFor="email">Correo electrónico</Label>
@@ -233,7 +233,7 @@ export function BusinessForm() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio</Label>
-              <Select value={selectedMunicipio} onValueChange={handleMunicipioChange}>
+              <Select value={selectedMunicipio} onValueChange={handleMunicipioChange} items={Object.fromEntries(municipalities.map((m) => [m.id, m.name]))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar municipio" />
                 </SelectTrigger>
@@ -247,7 +247,7 @@ export function BusinessForm() {
             {municipio && municipio.neighborhoods.length > 0 && (
               <div>
                 <Label htmlFor="neighborhood">Colonia</Label>
-                <Select value={form.neighborhoodId} onValueChange={handleNeighborhoodChange}>
+                <Select value={form.neighborhoodId} onValueChange={handleNeighborhoodChange} items={Object.fromEntries(municipio.neighborhoods.map((n) => [n.id, n.name]))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar colonia" />
                   </SelectTrigger>

@@ -3,12 +3,27 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
 import { slugify } from "@/lib/utils"
+import { createNotification } from "@/lib/notifications/create"
+import { sendEmail } from "@/lib/email"
+import { getPublicAppUrl } from "@/lib/env"
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
+    // Regla: solo un negocio por usuario.
+    const owned = await prisma.profile.findFirst({
+      where: { ownerId: session.user.id, deletedAt: null },
+      select: { id: true },
+    })
+    if (owned) {
+      return NextResponse.json(
+        { error: "Ya tienes un negocio registrado. Solo se permite uno por cuenta." },
+        { status: 409 }
+      )
     }
 
     const body = await request.json()
@@ -55,7 +70,8 @@ export async function POST(request: NextRequest) {
         neighborhoodId: data.neighborhoodId,
         slug: `${slug}-${Date.now()}`,
         ownerId: session.user.id,
-        status: "DRAFT",
+        // Entra a la cola de aprobación del admin.
+        status: "PENDING_REVIEW",
         hours: data.hours
           ? {
               createMany: {
@@ -69,6 +85,39 @@ export async function POST(request: NextRequest) {
           : undefined,
       },
     })
+
+    // Avisa a los administradores (notificación in-app + correo) que hay un
+    // negocio nuevo por aprobar. Nunca rompe el registro si algo falla.
+    try {
+      const reviewUrl = `${getPublicAppUrl()}/admin/negocios/${business.id}`
+      const admins = await prisma.user.findMany({
+        where: { role: "ADMIN", isActive: true },
+        select: { id: true, email: true },
+      })
+      await Promise.all(
+        admins.map((a) =>
+          createNotification({
+            userId: a.id,
+            type: "SYSTEM",
+            title: "Nuevo negocio por aprobar",
+            message: `${data.name} se registró y espera aprobación.`,
+          })
+        )
+      )
+      await Promise.allSettled(
+        admins
+          .filter((a) => a.email)
+          .map((a) =>
+            sendEmail(a.email, "business_registered", {
+              businessName: data.name,
+              ownerName: session.user?.name || "",
+              reviewUrl,
+            }, a.id)
+          )
+      )
+    } catch (e) {
+      console.error("[BUSINESS_REGISTER_NOTIFY]", e instanceof Error ? e.message : e)
+    }
 
     return NextResponse.json(business, { status: 201 })
   } catch {

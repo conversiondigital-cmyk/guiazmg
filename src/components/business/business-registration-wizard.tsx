@@ -94,6 +94,7 @@ export function BusinessRegistrationWizard() {
 
   const canProceed = () => {
     if (step === 1) return form.name.trim().length > 0
+    if (step === 2) return form.phone.trim().length >= 10 && form.whatsapp.trim().length >= 10
     if (step === 3) return form.addressText.trim().length > 0 && !!selectedMunicipio
     return true
   }
@@ -221,7 +222,7 @@ export function BusinessRegistrationWizard() {
           </div>
           <div>
             <Label htmlFor="category">Categoría</Label>
-            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange} items={Object.fromEntries(categories.map((c) => [c.id, c.name]))}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
@@ -237,7 +238,7 @@ export function BusinessRegistrationWizard() {
           {currentCategory && currentCategory.subcategories.length > 0 && (
             <div>
               <Label htmlFor="subcategory">Subcategoría</Label>
-              <Select value={selectedSubcategory} onValueChange={(v) => v && setSelectedSubcategory(v)}>
+              <Select value={selectedSubcategory} onValueChange={(v) => v && setSelectedSubcategory(v)} items={Object.fromEntries((currentCategory?.subcategories ?? []).map((s) => [s.id, s.name]))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar subcategoría" />
                 </SelectTrigger>
@@ -268,12 +269,12 @@ export function BusinessRegistrationWizard() {
           <h2 className="text-xl font-semibold">Información de contacto</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="phone">Teléfono</Label>
-              <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="3312345678" />
+              <Label htmlFor="phone">Teléfono *</Label>
+              <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="3312345678" required />
             </div>
             <div>
-              <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input id="whatsapp" value={form.whatsapp} onChange={(e) => updateField("whatsapp", e.target.value)} placeholder="3312345678" />
+              <Label htmlFor="whatsapp">WhatsApp *</Label>
+              <Input id="whatsapp" value={form.whatsapp} onChange={(e) => updateField("whatsapp", e.target.value)} placeholder="3312345678" required />
             </div>
             <div>
               <Label htmlFor="email">Correo electrónico</Label>
@@ -308,7 +309,7 @@ export function BusinessRegistrationWizard() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio *</Label>
-              <Select value={selectedMunicipio} onValueChange={(v) => v && setSelectedMunicipio(v)}>
+              <Select value={selectedMunicipio} onValueChange={(v) => v && setSelectedMunicipio(v)} items={Object.fromEntries(municipalities.map((m) => [m.id, m.name]))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar municipio" />
                 </SelectTrigger>
@@ -322,7 +323,7 @@ export function BusinessRegistrationWizard() {
             {municipio && municipio.neighborhoods.length > 0 && (
               <div>
                 <Label htmlFor="neighborhood">Colonia</Label>
-                <Select value={form.neighborhoodId} onValueChange={(v) => v && updateField("neighborhoodId", v)}>
+                <Select value={form.neighborhoodId} onValueChange={(v) => v && updateField("neighborhoodId", v)} items={Object.fromEntries((municipio?.neighborhoods ?? []).map((n) => [n.id, n.name]))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar colonia" />
                   </SelectTrigger>

@@ -14,6 +14,10 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
     subject: `Nuevo lead de ${v.businessName || "tu negocio"}`,
     html: `<h1>Nuevo contacto</h1><p>Has recibido un nuevo lead.</p><p><a href="${v.dashboardUrl || "#"}">Ver en el panel</a></p>`,
   }),
+  business_registered: (v) => ({
+    subject: `Nuevo negocio por aprobar: ${v.businessName || ""}`,
+    html: `<h1>Nuevo negocio registrado</h1><p><strong>${v.businessName || ""}</strong> se registró en Guía ZMG y está pendiente de aprobación${v.ownerName ? ` (dueño: ${v.ownerName})` : ""}.</p><p><a href="${v.reviewUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Revisar y aprobar</a></p>`,
+  }),
   renewal_reminder: (v) => ({
     subject: `Tu membresía está por vencer${v.businessName ? ` - ${v.businessName}` : ""}`,
     html: `<h1>Tu membresía vence pronto</h1><p>Tu membresía de <strong>${v.planName || "Guía ZMG"}</strong> vence el <strong>${v.expiryDate || "pronto"}</strong>.</p><p><a href="${v.renewalUrl || "#"}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Renovar ahora</a></p>`,
