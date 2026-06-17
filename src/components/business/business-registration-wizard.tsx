@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon } from "@/lib/icons"
+import { GoogleMapPicker } from "@/components/business/google-map-picker"
 
 interface Municipality {
   id: string
@@ -46,7 +47,7 @@ const steps = [
   { id: 4, label: "Horarios", icon: Clock },
 ]
 
-export function BusinessRegistrationWizard() {
+export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: string }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -339,6 +340,17 @@ export function BusinessRegistrationWizard() {
           <div>
             <Label htmlFor="addressText">Dirección *</Label>
             <Input id="addressText" value={form.addressText} onChange={(e) => updateField("addressText", e.target.value)} placeholder="Calle y número, Colonia" />
+          </div>
+          <div>
+            <Label>Ubicación en el mapa</Label>
+            <GoogleMapPicker
+              apiKey={mapsApiKey}
+              lat={form.latitude ? parseFloat(form.latitude) : null}
+              lng={form.longitude ? parseFloat(form.longitude) : null}
+              onChange={(la, lo) =>
+                setForm((p) => ({ ...p, latitude: la.toFixed(6), longitude: lo.toFixed(6) }))
+              }
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>

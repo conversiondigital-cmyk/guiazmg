@@ -26,6 +26,14 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "maintenance_mode", label: "Modo mantenimiento", type: "toggle" },
     ],
   },
+  mapas: {
+    title: "Google Maps",
+    description: "API key para el mapa y el selector de ubicación (pin) al registrar un negocio.",
+    fields: [
+      { key: "google_maps_api_key", label: "API Key de Google Maps", type: "text", placeholder: "AIza...", description: "Habilita el selector de pin en el mapa. Restringe la key por dominio en Google Cloud." },
+      { key: "google_maps_enabled", label: "Habilitar mapa en el registro", type: "toggle" },
+    ],
+  },
   branding: {
     title: "Branding",
     description: "Logo, favicon, colores e imágenes por defecto.",
