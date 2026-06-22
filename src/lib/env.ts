@@ -47,9 +47,8 @@ function requireProductionRuntimeEnv() {
     throw new Error("REDIS_URL must be set in production.")
   }
 
-  if (!process.env.SMTP_HOST) {
-    throw new Error("SMTP_HOST must be set in production.")
-  }
+  // SMTP es opcional: si no se configura, los correos se omiten sin romper el
+  // arranque ni las peticiones (ver sendEmail en src/lib/email/index.ts).
 }
 
 export function validateEnv() {

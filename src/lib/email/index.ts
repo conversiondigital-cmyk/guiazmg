@@ -3,7 +3,6 @@ import { getPublicAppUrl } from "@/lib/env"
 
 const FROM = process.env.SMTP_FROM || "noreply@guiazmg.com"
 const APP_URL = getPublicAppUrl()
-const isProduction = process.env.NODE_ENV === "production"
 
 const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: string; html: string }> = {
   welcome: (v) => ({
@@ -69,10 +68,9 @@ export async function sendEmail(
   try {
     if (process.env.SMTP_HOST) {
       await getTransporter().sendMail({ from: FROM, to, subject, html })
-    } else if (isProduction) {
-      throw new Error("SMTP_HOST must be configured in production")
     } else {
-      console.log(`[EMAIL LOG] [${template}] To: ${to} | Subject: ${subject}`)
+      // SMTP no configurado: se omite el envío sin romper la petición.
+      console.log(`[EMAIL OMITIDO] [${template}] Para: ${to} | Asunto: ${subject}`)
     }
     if (userId) {
       await prisma.emailLog.create({ data: { userId, to, subject, template, sentAt: new Date() } }).catch(() => {})
