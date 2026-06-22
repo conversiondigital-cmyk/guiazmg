@@ -51,3 +51,10 @@ next-env.d.ts
 # uploads & backups
 /public/uploads
 /backups
+
+# secretos / credenciales (NUNCA versionar)
+vercel-neon-cloudr2.txt
+*.secrets
+*-accesos*.txt
+
+.vercel
