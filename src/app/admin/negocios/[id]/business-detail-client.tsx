@@ -628,11 +628,11 @@ export function BusinessDetailClient({ business }: { business: BusinessDetail })
           <CardTitle>Historial de actividad</CardTitle>
         </CardHeader>
         <CardContent>
-          {business.auditLogs.length === 0 ? (
+          {(business.auditLogs?.length ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">Sin registro de actividad</p>
           ) : (
             <div className="space-y-3">
-              {business.auditLogs.map((log) => (
+              {business.auditLogs?.map((log) => (
                 <div key={log.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
                   <Activity className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="flex-1 min-w-0">

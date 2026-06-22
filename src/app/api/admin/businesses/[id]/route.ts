@@ -68,7 +68,8 @@ export async function PUT(
 
       switch (action) {
         case "APPROVE":
-          updateData = { status: "ACTIVE" }
+          // Aprobar habilita el negocio (queda visible públicamente).
+          updateData = { status: "ACTIVE", isActive: true }
           break
         case "REJECT":
           updateData = { status: "REJECTED" }
@@ -144,6 +145,19 @@ export async function PUT(
             action === "VERIFY"
               ? `${business.name} ya aparece como Verificado en Guía ZMG.`
               : `La solicitud de verificación de ${business.name} fue rechazada. Revisa tus datos e inténtalo de nuevo.`,
+        })
+      }
+
+      // Avisa al dueño cuando se aprueba (queda publicado) o se rechaza su negocio.
+      if (action === "APPROVE" || action === "REJECT") {
+        await createNotification({
+          userId: business.ownerId,
+          type: "SYSTEM",
+          title: action === "APPROVE" ? "Tu negocio fue aprobado" : "Tu negocio fue rechazado",
+          message:
+            action === "APPROVE"
+              ? `${business.name} ya está publicado y visible en Guía ZMG.`
+              : `${business.name} fue rechazado. Revisa la información e inténtalo de nuevo.`,
         })
       }
 

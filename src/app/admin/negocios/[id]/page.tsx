@@ -47,10 +47,20 @@ async function getBusiness(id: string) {
     websiteClicks: leadEvents.find((e) => e.eventType === "WEBSITE_VISIT")?._count.id ?? 0,
   }
 
+  // El cliente muestra el historial; sin esto, business.auditLogs es undefined
+  // y revienta con "Cannot read properties of undefined (reading 'length')".
+  const auditLogs = await prisma.auditLog.findMany({
+    where: { entityType: "Business", entityId: id },
+    include: { actor: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+  })
+
   return JSON.parse(
     JSON.stringify({
       ...business,
       analytics,
+      auditLogs,
     })
   )
 }

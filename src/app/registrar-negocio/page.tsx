@@ -1,10 +1,12 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessRegistrationWizard } from "@/components/business/business-registration-wizard"
+import { getGoogleMapsApiKey } from "@/lib/maps-config"
 
 export const dynamic = "force-dynamic"
 
-export default function RegistrarNegocioPage() {
+export default async function RegistrarNegocioPage() {
+  const mapsApiKey = await getGoogleMapsApiKey()
   return (
     <>
       <Header />
@@ -16,7 +18,7 @@ export default function RegistrarNegocioPage() {
               Aparece en las búsquedas de Guía ZMG y haz crecer tu negocio
             </p>
           </div>
-          <BusinessRegistrationWizard />
+          <BusinessRegistrationWizard mapsApiKey={mapsApiKey} />
         </div>
       </main>
       <Footer />
