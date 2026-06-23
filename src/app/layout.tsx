@@ -5,6 +5,7 @@ import { SessionProvider } from "@/components/providers/session-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SystemDialogHost } from "@/components/ui/system-dialog"
 import { CookieConsent } from "@/components/legal/cookie-consent"
+import { Analytics } from "@vercel/analytics/next"
 import { validateEnv } from "@/lib/env"
 
 validateEnv()
@@ -73,6 +74,7 @@ export default function RootLayout({
           <SystemDialogHost />
           <CookieConsent />
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   )
