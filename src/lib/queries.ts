@@ -114,6 +114,35 @@ export const getFeaturedProfiles = unstable_cache(
   { revalidate: 300, tags: ["profiles"] }
 )
 
+// Negocios geolocalizados para el mapa interactivo (/mapa). Solo ACTIVE con
+// coordenadas. Se cachea y revalida con la etiqueta de perfiles.
+export const getMapBusinesses = unstable_cache(
+  async () =>
+    prisma.profile.findMany({
+      where: { status: "ACTIVE", latitude: { not: null }, longitude: { not: null } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        latitude: true,
+        longitude: true,
+        coverImageUrl: true,
+        logoUrl: true,
+        googleRating: true,
+        isFeatured: true,
+        isVerified: true,
+        addressText: true,
+        category: { select: { name: true, slug: true, icon: true } },
+        municipality: { select: { name: true } },
+        neighborhood: { select: { name: true } },
+      },
+      orderBy: [{ isFeatured: "desc" }, { isVerified: "desc" }, { createdAt: "desc" }],
+      take: 500,
+    }),
+  ["map-businesses"],
+  { revalidate: 300, tags: ["profiles"] }
+)
+
 export async function searchProfiles(params: {
   q?: string
   category?: string

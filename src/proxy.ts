@@ -104,6 +104,7 @@ export async function proxy(req: NextRequest) {
     "/politica-cookies",
     "/normas-comunidad",
     "/search",
+    "/mapa",
     "/planes",
     "/feed",
     "/solicitudes",
