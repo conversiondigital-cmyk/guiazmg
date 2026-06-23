@@ -6,7 +6,20 @@ import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limi
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  // Auth.js v5 cifra la cookie de sesión usando salt = nombre de la cookie, y en
+  // HTTPS la nombra con prefijo __Secure-. getToken por defecto (sin NEXTAUTH_URL,
+  // que v5 ya no usa) busca la cookie SIN prefijo y con salt equivocado, por lo que
+  // en producción nunca encuentra la sesión. Hay que indicarle nombre/salt correctos.
+  const isHttps =
+    req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:"
+  const sessionCookieName = isHttps ? "__Secure-authjs.session-token" : "authjs.session-token"
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    secureCookie: isHttps,
+    cookieName: sessionCookieName,
+    salt: sessionCookieName,
+  })
   const isLoggedIn = !!token
   const role = token?.role as string | undefined
 
