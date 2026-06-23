@@ -190,7 +190,6 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-10 border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
           <p>© {new Date().getFullYear()} Guía ZMG. Todos los derechos reservados.</p>
-          <p>Hecho con ♥ en Guadalajara</p>
         </div>
       </div>
     </footer>
