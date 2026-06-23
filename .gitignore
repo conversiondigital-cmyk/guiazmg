@@ -3,8 +3,8 @@
 # temp files
 temp_dir_info.txt
 
-# npm lockfile (project uses pnpm)
-package-lock.json
+# npm lockfile: SE VERSIONA para builds reproducibles en Vercel (install con npm)
+
 
 # dependencies
 /node_modules
