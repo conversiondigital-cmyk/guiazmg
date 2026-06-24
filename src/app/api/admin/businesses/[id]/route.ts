@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
+import { syncProfileToSearch } from "@/lib/search/sync"
 
 // Revalida las páginas ISR afectadas por un cambio de negocio (perfil + home).
 function revalidateProfile(oldSlug: string, newSlug: string) {
@@ -113,6 +114,7 @@ export async function PUT(
       })
 
       revalidateProfile(business.slug, updated.slug)
+      await syncProfileToSearch(id)
 
       await prisma.auditLog.create({
         data: {
@@ -185,6 +187,7 @@ export async function PUT(
     })
 
     revalidateProfile(business.slug, updated.slug)
+    await syncProfileToSearch(id)
 
     await prisma.auditLog.create({
       data: {
