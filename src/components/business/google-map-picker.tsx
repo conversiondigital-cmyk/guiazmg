@@ -1,26 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-
-// Carga el script de Google Maps una sola vez por página.
-let mapsPromise: Promise<void> | null = null
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"))
-  const w = window as unknown as { google?: { maps?: unknown } }
-  if (w.google?.maps) return Promise.resolve()
-  if (!mapsPromise) {
-    mapsPromise = new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script")
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}`
-      s.async = true
-      s.defer = true
-      s.onload = () => resolve()
-      s.onerror = () => reject(new Error("No se pudo cargar Google Maps. Revisa la API key."))
-      document.head.appendChild(s)
-    })
-  }
-  return mapsPromise
-}
+import { loadGoogleMaps } from "@/lib/google-maps-loader"
 
 // Centro por defecto: Guadalajara.
 const GDL = { lat: 20.6597, lng: -103.3496 }

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon } from "@/lib/icons"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
+import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 
 interface Municipality {
   id: string
@@ -339,7 +340,22 @@ export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: s
           </div>
           <div>
             <Label htmlFor="addressText">Dirección *</Label>
-            <Input id="addressText" value={form.addressText} onChange={(e) => updateField("addressText", e.target.value)} placeholder="Calle y número, Colonia" />
+            <AddressAutocomplete
+              id="addressText"
+              apiKey={mapsApiKey}
+              value={form.addressText}
+              onChange={(v) => updateField("addressText", v)}
+              onPlace={(d) =>
+                setForm((p) => ({
+                  ...p,
+                  addressText: d.address,
+                  latitude: d.lat.toFixed(6),
+                  longitude: d.lng.toFixed(6),
+                }))
+              }
+              placeholder="Empieza a escribir tu dirección…"
+              className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+            />
           </div>
           <div>
             <Label>Ubicación en el mapa</Label>
