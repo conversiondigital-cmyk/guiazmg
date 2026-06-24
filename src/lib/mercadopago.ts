@@ -1,17 +1,19 @@
 import MercadoPagoConfig, { Preference } from "mercadopago"
 import type { PreferenceCreateData } from "mercadopago/dist/clients/preference/create/types"
 import { getPublicAppUrl } from "@/lib/env"
+import { getSetting } from "@/lib/settings"
 
-function getClient(): MercadoPagoConfig {
-  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN
+async function getClient(): Promise<MercadoPagoConfig> {
+  // Lee el Access Token de Admin → Configuración → Pagos (con respaldo a env).
+  const accessToken = await getSetting("mercado_pago_access_token", "MERCADO_PAGO_ACCESS_TOKEN")
   if (!accessToken) {
-    throw new Error("MERCADO_PAGO_ACCESS_TOKEN environment variable is not set")
+    throw new Error("Mercado Pago no está configurado (Admin → Configuración → Pagos)")
   }
   return new MercadoPagoConfig({ accessToken })
 }
 
-function getPreferenceClient(): Preference {
-  return new Preference(getClient())
+async function getPreferenceClient(): Promise<Preference> {
+  return new Preference(await getClient())
 }
 
 export function buildPreferencePayload(params: {
@@ -62,6 +64,6 @@ export function buildPreferencePayload(params: {
 }
 
 export async function createPreference(data: PreferenceCreateData) {
-  const client = getPreferenceClient()
+  const client = await getPreferenceClient()
   return client.create(data)
 }

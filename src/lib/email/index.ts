@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer"
 import { getPublicAppUrl } from "@/lib/env"
+import { getSetting, getSettingBool } from "@/lib/settings"
 
-const FROM = process.env.SMTP_FROM || "noreply@guiazmg.com"
+const DEFAULT_FROM = "noreply@guiazmg.com"
 const APP_URL = getPublicAppUrl()
 
 const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: string; html: string }> = {
@@ -39,18 +40,26 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
   }),
 }
 
-let _transporter: nodemailer.Transporter | null = null
-
-function getTransporter() {
-  if (!_transporter) {
-    _transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.mailtrap.io",
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: { user: process.env.SMTP_USER || "", pass: process.env.SMTP_PASS || "" },
-    })
-  }
-  return _transporter
+// Construye el transporte SMTP leyendo la config del admin (Admin → Configuración
+// → Correo SMTP) con respaldo a variables de entorno. Devuelve null si no hay host
+// configurado, en cuyo caso el envío se omite sin romper la petición.
+async function getMailer(): Promise<{ transporter: nodemailer.Transporter; from: string } | null> {
+  const host = await getSetting("smtp_host", "SMTP_HOST")
+  if (!host) return null
+  const [port, user, pass, from, secure] = await Promise.all([
+    getSetting("smtp_port", "SMTP_PORT"),
+    getSetting("smtp_username", "SMTP_USER"),
+    getSetting("smtp_password", "SMTP_PASS"),
+    getSetting("smtp_from_email", "SMTP_FROM"),
+    getSettingBool("smtp_tls_enabled", "SMTP_SECURE"),
+  ])
+  const transporter = nodemailer.createTransport({
+    host,
+    port: parseInt(port || "587"),
+    secure,
+    auth: { user, pass },
+  })
+  return { transporter, from: from || DEFAULT_FROM }
 }
 
 export async function sendEmail(
@@ -66,8 +75,9 @@ export async function sendEmail(
   const { prisma } = await import("@/lib/prisma")
 
   try {
-    if (process.env.SMTP_HOST) {
-      await getTransporter().sendMail({ from: FROM, to, subject, html })
+    const mailer = await getMailer()
+    if (mailer) {
+      await mailer.transporter.sendMail({ from: mailer.from, to, subject, html })
     } else {
       // SMTP no configurado: se omite el envío sin romper la petición.
       console.log(`[EMAIL OMITIDO] [${template}] Para: ${to} | Asunto: ${subject}`)

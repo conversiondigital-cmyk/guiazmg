@@ -66,10 +66,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-    }),
+    // El proveedor de Google solo se registra cuando las credenciales están
+    // configuradas (Vercel env). Así no aparece un login de Google roto antes
+    // de ponerlas; en cuanto agregues AUTH_GOOGLE_ID/SECRET y redepliegues, se activa.
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+      ? [
+          Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async signIn({ user, account }) {
