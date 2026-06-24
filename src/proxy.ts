@@ -112,7 +112,7 @@ export async function proxy(req: NextRequest) {
     "/robots.txt",
     "/sitemap.xml",
   ])
-  const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics"]
+  const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
 
   if (publicExactPaths.has(pathname) || publicPrefixPaths.some((p) => pathname === p || pathname.startsWith(p + "/")) || publicMarketplacePaths) {

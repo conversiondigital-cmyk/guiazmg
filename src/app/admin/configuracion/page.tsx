@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic"
 const sections = [
   { slug: "general", label: "General", desc: "Nombre, dominio, soporte, zona horaria y modo mantenimiento" },
   { slug: "mapas", label: "Google Maps", desc: "API key y selector de ubicación (pin) en el mapa" },
+  { slug: "eventos", label: "Eventos (RSS)", desc: "Feeds para importar eventos automáticamente" },
   { slug: "branding", label: "Branding", desc: "Logo, favicon, colores e imagenes por defecto" },
   { slug: "auth", label: "Autenticación", desc: "Registro, OAuth, sesión y reglas de password" },
   { slug: "correo", label: "Correo SMTP", desc: "Servidor, credenciales, TLS y pruebas" },

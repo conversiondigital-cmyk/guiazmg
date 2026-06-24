@@ -34,6 +34,13 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "google_maps_enabled", label: "Habilitar mapa en el registro", type: "toggle" },
     ],
   },
+  eventos: {
+    title: "Eventos (RSS)",
+    description: "Feeds RSS/Atom para importar eventos automáticamente. Se importan como borrador para revisión.",
+    fields: [
+      { key: "events_rss_feeds", label: "Feeds RSS (uno por línea o separados por coma)", type: "textarea", placeholder: "https://ejemplo.com/eventos/rss" },
+    ],
+  },
   branding: {
     title: "Branding",
     description: "Logo, favicon, colores e imágenes por defecto.",
