@@ -293,11 +293,11 @@ export const ADMIN_SIDEBAR_SECTIONS = [
     label: "Perfiles y Contenido",
     items: [
       { href: "/admin/perfiles", label: "Perfiles Comerciales", icon: "Store" },
-      { href: "/admin/productos", label: "Productos", icon: "ShoppingBag" },
+      { href: "/admin/anuncios", label: "Productos", icon: "ShoppingBag" },
       { href: "/admin/servicios", label: "Servicios", icon: "Wrench" },
       { href: "/admin/promociones", label: "Promociones", icon: "Tag" },
       { href: "/admin/marketplace", label: "Marketplace", icon: "Package" },
-      { href: "/admin/reseñas", label: "Reseñas", icon: "Star" },
+      { href: "/admin/reviews", label: "Reseñas", icon: "Star" },
       { href: "/admin/reportes", label: "Reportes", icon: "AlertCircle" },
     ],
   },
@@ -314,7 +314,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
   {
     label: "Negocio y Monetización",
     items: [
-      { href: "/admin/membresias", label: "Membresías", icon: "Star" },
+      { href: "/admin/planes", label: "Membresías", icon: "Star" },
       { href: "/admin/boosts", label: "Boosts Activos", icon: "TrendingUp" },
       { href: "/admin/boosts-definiciones", label: "Definiciones de Boosts", icon: "Settings" },
       { href: "/admin/pagos", label: "Pagos", icon: "CreditCard" },

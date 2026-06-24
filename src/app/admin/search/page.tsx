@@ -13,7 +13,6 @@ const ADMIN_PAGES = [
   { label: "Analytics globales", href: "/admin/analytics", section: "Resumen y monitoreo", icon: "BarChart3" },
   { label: "Auditoría", href: "/admin/auditoria", section: "Resumen y monitoreo", icon: "ClipboardList" },
   { label: "Estado del sistema", href: "/admin/estado", section: "Resumen y monitoreo", icon: "Activity" },
-  { label: "Logs del sistema", href: "/admin/logs", section: "Resumen y monitoreo", icon: "FileText" },
 
   // Usuarios y roles
   { label: "Todos los usuarios", href: "/admin/usuarios", section: "Usuarios y roles", icon: "Users" },
