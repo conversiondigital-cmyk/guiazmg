@@ -165,11 +165,8 @@ PUT    /api/admin/reportes/[id]      - Cambiar estado/ejecutar acción
 ## 🚀 CÓMO USAR
 
 1. **Login como Admin:**
-   ```
-   http://localhost:3100/auth/admin-login
-   Email: baeltaezaer@gmail.com
-   Password: admin123
-   ```
+   - Entra en `/auth/login` con la cuenta de administrador.
+   - La contraseña de admin se define con la variable `ADMIN_PASSWORD` al sembrar la base (`prisma/seed.ts`) o se rota con `prisma/set-admin-password.ts`. No se documenta aquí por seguridad.
 
 2. **Ir a cualquier página operacional:**
    - http://localhost:3100/admin/usuarios

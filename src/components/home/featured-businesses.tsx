@@ -1,16 +1,9 @@
 import Link from "next/link"
-import { MapPin, Star } from "lucide-react"
+import { MapPin, BadgeCheck } from "lucide-react"
 import type { Business } from "@/types"
 
 interface FeaturedBusinessesProps {
   businesses: Business[]
-}
-
-// Rating decorativo DETERMINISTA (derivado del id) → sin Math.random ni mismatch.
-function ratingFor(id: string) {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return (4.4 + (h % 6) / 10).toFixed(1)
 }
 
 const CARD =
@@ -30,11 +23,12 @@ function Cover({ biz, className }: { biz: Business; className: string }) {
   )
 }
 
-function RatingPill({ id }: { id: string }) {
+// Distintivo honesto basado en datos reales (verificación), no en un rating inventado.
+function VerifiedPill() {
   return (
-    <span className="flex items-center gap-1 rounded-lg bg-[#6cf8bb]/20 px-2 py-1">
-      <Star className="h-3.5 w-3.5 fill-[#006c49] text-[#006c49]" />
-      <span className="text-sm font-bold text-[#006c49]">{ratingFor(id)}</span>
+    <span className="flex shrink-0 items-center gap-1 rounded-lg bg-[#6cf8bb]/20 px-2 py-1">
+      <BadgeCheck className="h-3.5 w-3.5 text-[#006c49]" />
+      <span className="text-xs font-bold text-[#006c49]">Verificado</span>
     </span>
   )
 }
@@ -71,7 +65,7 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
                   )}
                   <h3 className="text-2xl font-semibold text-[#003527]">{hero.name}</h3>
                 </div>
-                <RatingPill id={hero.id} />
+                {hero.isVerified && <VerifiedPill />}
               </div>
               {hero.shortDescription && (
                 <p className="mb-6 line-clamp-2 text-[#404944]">{hero.shortDescription}</p>
@@ -93,11 +87,12 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
                   <span className="text-xs font-bold uppercase text-[#006c49]">{smalls[0].category.name}</span>
                 )}
                 <h3 className="mb-2 text-2xl font-semibold text-[#003527]">{smalls[0].name}</h3>
-                <div className="mb-4 flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-[#006c49] text-[#006c49]" />
-                  <span className="text-sm font-bold text-[#006c49]">{ratingFor(smalls[0].id)}</span>
-                </div>
-                <span className="block w-full rounded-xl border border-[#003527] py-2 text-center text-sm font-semibold text-[#003527] transition-colors group-hover:bg-[#003527]/5">
+                {smalls[0].isVerified && (
+                  <div className="mb-4">
+                    <VerifiedPill />
+                  </div>
+                )}
+                <span className="mt-4 block w-full rounded-xl border border-[#003527] py-2 text-center text-sm font-semibold text-[#003527] transition-colors group-hover:bg-[#003527]/5">
                   Ver Detalles
                 </span>
               </div>
@@ -112,11 +107,12 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
                 {biz.category && (
                   <span className="text-xs font-bold uppercase text-[#006c49]">{biz.category.name}</span>
                 )}
-                <h3 className="mb-2 text-2xl font-semibold text-[#003527]">{biz.name}</h3>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-[#006c49] text-[#006c49]" />
-                  <span className="text-sm font-bold text-[#006c49]">{ratingFor(biz.id)}</span>
-                </div>
+                <h3 className="text-2xl font-semibold text-[#003527]">{biz.name}</h3>
+                {biz.isVerified && (
+                  <div className="mt-2">
+                    <VerifiedPill />
+                  </div>
+                )}
               </div>
             </Link>
           ))}

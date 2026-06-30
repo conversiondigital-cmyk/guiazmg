@@ -16,8 +16,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 })
+    if (!newPassword || newPassword.length < 8) {
+      return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres" }, { status: 400 })
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } })
