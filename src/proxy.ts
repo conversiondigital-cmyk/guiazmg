@@ -52,11 +52,11 @@ export async function proxy(req: NextRequest) {
 
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.mercadopago.com https://*.stripe.com https://js.sentry-cdn.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.mercadopago.com https://*.stripe.com https://js.sentry-cdn.com https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://*.mercadopago.com https://*.stripe.com https://sentry.io https://o*.sentry.io wss://*.sentry.io",
+    "connect-src 'self' https://*.mercadopago.com https://*.stripe.com https://sentry.io https://o*.sentry.io wss://*.sentry.io https://va.vercel-scripts.com",
     "frame-src https://*.mercadopago.com https://*.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
