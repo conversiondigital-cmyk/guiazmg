@@ -5,11 +5,24 @@ import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
 import { syncProfileToSearch } from "@/lib/search/sync"
 
-// Revalida las páginas ISR afectadas por un cambio de negocio (perfil + home).
-function revalidateProfile(oldSlug: string, newSlug: string) {
+// Revalida las páginas ISR afectadas por un cambio de negocio (perfil, home, categoría).
+async function revalidateProfile(
+  oldSlug: string,
+  newSlug: string,
+  ...categoryIds: (string | null | undefined)[]
+) {
   revalidatePath("/")
   revalidatePath(`/perfil/${newSlug}`)
   if (oldSlug !== newSlug) revalidatePath(`/perfil/${oldSlug}`)
+  // Refresca la(s) página(s) de categoría afectada(s) (nueva y/o anterior).
+  const ids = [...new Set(categoryIds.filter(Boolean) as string[])]
+  if (ids.length) {
+    const cats = await prisma.category.findMany({
+      where: { id: { in: ids } },
+      select: { slug: true },
+    })
+    for (const c of cats) revalidatePath(`/categoria/${c.slug}`)
+  }
 }
 
 const editableFields = new Set([
@@ -113,7 +126,7 @@ export async function PUT(
         data: updateData,
       })
 
-      revalidateProfile(business.slug, updated.slug)
+      await revalidateProfile(business.slug, updated.slug, updated.categoryId, business.categoryId)
       await syncProfileToSearch(id)
 
       await prisma.auditLog.create({
@@ -186,7 +199,7 @@ export async function PUT(
       data: changedFields,
     })
 
-    revalidateProfile(business.slug, updated.slug)
+    await revalidateProfile(business.slug, updated.slug, updated.categoryId, business.categoryId)
     await syncProfileToSearch(id)
 
     await prisma.auditLog.create({

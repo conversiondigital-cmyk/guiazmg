@@ -143,6 +143,58 @@ export const getMapBusinesses = unstable_cache(
   { revalidate: 300, tags: ["profiles"] }
 )
 
+// Listado de una categoría con SELECT mínimo (solo lo que renderiza SearchResults).
+// La página /categoria/[slug] es ISR (revalidate 300) + prebuild, así que esto corre
+// en build y en cada revalidación; se refresca al aprobar/editar negocios.
+export async function getCategoryListing(categoryId: string, page = 1, limit = 20) {
+  const skip = (page - 1) * limit
+  const where = { status: "ACTIVE" as const, categoryId }
+
+  const [profiles, total] = await Promise.all([
+    prisma.profile.findMany({
+      where,
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        phone: true,
+        whatsapp: true,
+        websiteUrl: true,
+        latitude: true,
+        longitude: true,
+        isVerified: true,
+        isFeatured: true,
+        municipality: { select: { name: true } },
+        neighborhood: { select: { name: true } },
+        category: { select: { name: true } },
+        memberships: {
+          where: { status: "ACTIVE" },
+          select: { status: true, plan: { select: { priorityLevel: true } } },
+        },
+        _count: { select: { reviews: true } },
+      },
+      orderBy: [{ isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: limit,
+    }),
+    prisma.profile.count({ where }),
+  ])
+
+  const businesses = profiles
+    .map((b) => {
+      let score = 0
+      const active = b.memberships?.find((m) => m.status === "ACTIVE")
+      if (active) score += (active.plan.priorityLevel || 0) * 10
+      if (b.isVerified) score += 30
+      if (b._count.reviews) score += Math.min(b._count.reviews * 2, 20)
+      return { ...b, score }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  return { profiles: businesses, businesses, total, page, totalPages: Math.ceil(total / limit) }
+}
+
 export async function searchProfiles(params: {
   q?: string
   category?: string
