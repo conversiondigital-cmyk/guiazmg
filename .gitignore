@@ -54,6 +54,7 @@ next-env.d.ts
 
 # secretos / credenciales (NUNCA versionar)
 vercel-neon-cloudr2.txt
+oauth.txt
 *.secrets
 *-accesos*.txt
 
