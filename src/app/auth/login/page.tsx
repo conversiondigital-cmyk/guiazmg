@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
@@ -17,14 +17,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [googleEnabled, setGoogleEnabled] = useState(false)
-
-  useEffect(() => {
-    fetch("/api/auth/providers")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((p) => setGoogleEnabled(Boolean(p?.google)))
-      .catch(() => {})
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,8 +37,12 @@ export default function LoginPage() {
         return
       }
 
-      router.push("/dashboard")
-      router.refresh()
+      // Redirige a cada rol a su panel (evita caer en /dashboard en blanco).
+      const sess = await fetch("/api/auth/session").then((r) => r.json()).catch(() => null)
+      const role = sess?.user?.role
+      const dest =
+        role === "ADMIN" ? "/admin" : role === "SALES_AGENT" ? "/agente" : role === "EDITOR" ? "/editor" : "/dashboard"
+      router.push(dest)
     } catch {
       setError("No se pudo iniciar sesión. Inténtalo de nuevo.")
       toast.error("Error al iniciar sesión")
@@ -104,8 +100,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {googleEnabled && (
-            <>
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -128,8 +122,6 @@ export default function LoginPage() {
             </svg>
             Google
           </Button>
-            </>
-          )}
 
           <div className="mt-4 text-center text-sm text-gray-500">
             ¿No tienes cuenta?{" "}

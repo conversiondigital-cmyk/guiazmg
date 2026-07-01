@@ -160,7 +160,6 @@ export default function RegisterPage() {
           <Button
             variant="outline"
             className="w-full"
-            disabled={!canSubmit}
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           >
             <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
