@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -70,11 +71,14 @@ export function AgentSidebar({ user }: AgentSidebarProps) {
           <span className="hidden text-sm text-muted-foreground sm:inline">
             {user.name || "Agente"}
           </span>
-          <form action="/api/auth/signout" method="POST">
-            <Button variant="ghost" size="icon-sm" type="submit">
-              <LogOut className="size-4" />
-            </Button>
-          </form>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            title="Cerrar sesión"
+          >
+            <LogOut className="size-4" />
+          </Button>
         </div>
       </header>
 

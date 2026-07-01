@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +24,6 @@ interface UserNavProps {
 }
 
 export function UserNav({ user }: UserNavProps) {
-  const router = useRouter()
-
   const isAdmin = user.role === "ADMIN"
   const isEditor = user.role === "EDITOR"
   const isAgent = user.role === "SALES_AGENT"
@@ -82,11 +80,7 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuSeparator />
 
         <button
-          onClick={async () => {
-            await fetch("/api/auth/signout", { method: "POST" })
-            router.push("/")
-            router.refresh()
-          }}
+          onClick={() => signOut({ callbackUrl: "/" })}
           className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
         >
           Cerrar Sesión

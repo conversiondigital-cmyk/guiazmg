@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { Menu, X, MapPin, User, LogOut } from "lucide-react"
 import { getInitials } from "@/lib/utils"
 
@@ -21,7 +20,6 @@ const NAV_LINKS = [
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const { data: session } = useSession()
-  const router = useRouter()
 
   const user = session?.user
   const role = user?.role
@@ -32,11 +30,9 @@ export function MobileNav() {
   const panelLabel = isAdmin ? "Panel Admin" : isEditor ? "Panel Editor" : isAgent ? "Panel Agente" : "Mi panel"
 
   const close = () => setOpen(false)
-  const signOut = async () => {
-    await fetch("/api/auth/signout", { method: "POST" })
+  const handleSignOut = () => {
     close()
-    router.push("/")
-    router.refresh()
+    signOut({ callbackUrl: "/" })
   }
 
   return (
@@ -144,7 +140,7 @@ export function MobileNav() {
                       </>
                     )}
                     <button
-                      onClick={signOut}
+                      onClick={handleSignOut}
                       className="flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                     >
                       <LogOut className="h-4 w-4" />
