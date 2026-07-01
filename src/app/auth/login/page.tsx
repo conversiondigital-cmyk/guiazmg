@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
   const [googleEnabled, setGoogleEnabled] = useState(false)
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setLoading(true)
 
     try {
@@ -36,14 +38,17 @@ export default function LoginPage() {
         redirect: false,
       })
 
-      if (result?.error) {
-        toast.error("Credenciales inválidas")
+      // Falla si no hubo respuesta, si trae error, o si ok === false.
+      if (!result || result.error || result.ok === false) {
+        setError("Correo o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.")
+        toast.error("Correo o contraseña incorrectos")
         return
       }
 
       router.push("/dashboard")
       router.refresh()
     } catch {
+      setError("No se pudo iniciar sesión. Inténtalo de nuevo.")
       toast.error("Error al iniciar sesión")
     } finally {
       setLoading(false)
@@ -61,6 +66,14 @@ export default function LoginPage() {
           <CardDescription>Accede a tu cuenta de Guía ZMG</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
+            >
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
@@ -69,7 +82,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="tu@correo.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); if (error) setError("") }}
                 required
                 autoComplete="email"
               />
@@ -81,7 +94,7 @@ export default function LoginPage() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); if (error) setError("") }}
                 required
                 autoComplete="current-password"
               />
