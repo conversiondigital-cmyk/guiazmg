@@ -1047,6 +1047,22 @@ model Notification {
   @@map("notifications")
 }
 
+/// Visitas de entrada al sitio (1 por sesión) para analítica de fuentes de tráfico.
+model PageVisit {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  channel   String // DIRECT | ORGANIC | SOCIAL | REFERRAL | CAMPAIGN
+  source    String? // dominio del referrer o utm_source
+  medium    String? // utm_medium
+  campaign  String? // utm_campaign
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([channel])
+  @@map("page_visits")
+}
+
 /// ── Email Queue ────────────────────────────────────────
 
 model EmailQueue {

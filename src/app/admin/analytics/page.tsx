@@ -5,6 +5,7 @@ import {
   Users, Store, ShoppingBag, Search,
   MapPin, Eye, DollarSign, Target, Activity, Zap, Tag, BarChart3,
 } from "@/lib/icons"
+import { CHANNEL_LABELS, type TrafficChannel } from "@/lib/analytics/traffic"
 
 export const dynamic = "force-dynamic"
 
@@ -68,6 +69,9 @@ export default async function AdminAnalyticsPage() {
     topSearchedCategories,
     topNeighborhoods,
     topMunicipalities,
+    visitsByChannel,
+    topSources,
+    topLandings,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
@@ -136,7 +140,36 @@ export default async function AdminAnalyticsPage() {
       GROUP BY m.id, m.name, l.leads
       ORDER BY views DESC LIMIT 10
     `,
+    prisma.pageVisit.groupBy({
+      by: ["channel"],
+      _count: { _all: true },
+      where: { createdAt: { gte: thirtyDaysAgo } },
+    }),
+    prisma.pageVisit.groupBy({
+      by: ["source"],
+      _count: { _all: true },
+      where: { createdAt: { gte: thirtyDaysAgo }, source: { not: null } },
+      orderBy: { _count: { source: "desc" } },
+      take: 10,
+    }),
+    prisma.pageVisit.groupBy({
+      by: ["path"],
+      _count: { _all: true },
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      orderBy: { _count: { path: "desc" } },
+      take: 10,
+    }),
   ])
+
+  // Tráfico: canales de entrada (últimos 30 días)
+  const channelOrder: TrafficChannel[] = ["ORGANIC", "DIRECT", "SOCIAL", "REFERRAL", "CAMPAIGN"]
+  const channelCounts = new Map<string, number>(
+    (visitsByChannel as { channel: string; _count: { _all: number } }[]).map((r) => [r.channel, r._count._all])
+  )
+  const totalVisitsTracked = Array.from(channelCounts.values()).reduce((s, n) => s + n, 0)
+  const channels = channelOrder
+    .map((c) => ({ channel: c, label: CHANNEL_LABELS[c], count: channelCounts.get(c) || 0 }))
+    .filter((c) => c.count > 0)
 
   const monthlyRevenue = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0)
   const visitsCount = totalViews._sum.views ?? 0
@@ -336,6 +369,93 @@ export default async function AdminAnalyticsPage() {
                   </tr>
                 ))}
                 {(topSearchedCategories as any[]).length === 0 && (
+                  <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Sin datos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* SEO / Tráfico: de dónde vienen y cómo llegan */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Activity className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-heading text-sm font-medium">Cómo llegan al sitio (30 días)</h3>
+        </div>
+        {channels.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Aún sin datos de tráfico — se registran conforme entran visitas.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {channels.map((c) => {
+              const pct = totalVisitsTracked > 0 ? Math.round((c.count / totalVisitsTracked) * 100) : 0
+              return (
+                <div key={c.channel} className="flex items-center gap-3">
+                  <span className="w-44 shrink-0 text-sm">{c.label}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(pct, 2)}%` }} />
+                  </div>
+                  <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">
+                    {c.count} ({pct}%)
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Fuentes principales (de dónde vienen)</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4">Fuente</th>
+                  <th className="pb-2 text-right">Visitas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(topSources as { source: string | null; _count: { _all: number } }[]).map((s) => (
+                  <tr key={s.source} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{s.source}</td>
+                    <td className="py-2 text-right font-mono">{s._count._all}</td>
+                  </tr>
+                ))}
+                {(topSources as unknown[]).length === 0 && (
+                  <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Sin datos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Páginas de entrada</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4">Página</th>
+                  <th className="pb-2 text-right">Entradas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(topLandings as { path: string; _count: { _all: number } }[]).map((p) => (
+                  <tr key={p.path} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{p.path}</td>
+                    <td className="py-2 text-right font-mono">{p._count._all}</td>
+                  </tr>
+                ))}
+                {(topLandings as unknown[]).length === 0 && (
                   <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Sin datos</td></tr>
                 )}
               </tbody>
