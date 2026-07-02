@@ -13,6 +13,7 @@ type AuthToken = Omit<JWT, "id" | "role"> & {
   id?: string
   role?: string
   sessionVersion?: number
+  lastCheck?: number
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -122,24 +123,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         authToken.sessionVersion = dbUser.sessionVersion
       }
 
-      // OPTIMIZACIÓN: Si no tenemos dbUser y tenemos token.id, hacer una sola query para validación
-      // Evita N+1: no hacemos segunda query si ya tenemos los datos de login
-      if (!dbUser && authToken.id) {
-        dbUser = await prisma.user.findUnique({
-          where: { id: authToken.id },
-          select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true },
-        })
-      }
-
-      if (dbUser && (!dbUser.isActive || dbUser.deletedAt || dbUser.sessionVersion !== authToken.sessionVersion)) {
-        delete authToken.id
-        delete authToken.role
-        delete authToken.sessionVersion
+      // Tras el login (dbUser ya validado arriba): sella el timestamp y termina,
+      // así NO re-consultamos la BD en cada request.
+      if (dbUser) {
+        authToken.role = dbUser.role
+        authToken.lastCheck = Date.now()
         return token
       }
 
-      if (dbUser && authToken.id) {
-        authToken.role = dbUser.role
+      // En requests posteriores, re-valida contra la BD como máximo cada 60s
+      // (evita 1 consulta por cada request autenticado). Revoca usuarios
+      // desactivados, borrados o con sessionVersion cambiada; la revocación tarda
+      // a lo sumo esta ventana (60s) en vez de ser inmediata.
+      const REVALIDATE_MS = 60_000
+      const lastCheck = (authToken.lastCheck as number | undefined) ?? 0
+      if (authToken.id && Date.now() - lastCheck > REVALIDATE_MS) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: authToken.id },
+          select: { role: true, isActive: true, deletedAt: true, sessionVersion: true },
+        })
+        if (!fresh || !fresh.isActive || fresh.deletedAt || fresh.sessionVersion !== authToken.sessionVersion) {
+          delete authToken.id
+          delete authToken.role
+          delete authToken.sessionVersion
+          return token
+        }
+        authToken.role = fresh.role
+        authToken.lastCheck = Date.now()
       }
       return token
     },
