@@ -72,6 +72,13 @@ export async function proxy(req: NextRequest) {
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
   })
 
+  // Aplica los headers de seguridad también a las respuestas de redirect.
+  const redirectWith = (url: URL) => {
+    const res = NextResponse.redirect(url)
+    securityHeaders.forEach((v, k) => res.headers.set(k, v))
+    return res
+  }
+
   const origin = req.headers.get("origin") || ""
   const allowedOrigins = [
     "http://localhost:3100",
@@ -126,21 +133,21 @@ export async function proxy(req: NextRequest) {
   if (!isLoggedIn) {
     const loginUrl = new URL("/auth/login", req.url)
     loginUrl.searchParams.set("callbackUrl", pathname)
-    return NextResponse.redirect(loginUrl)
+    return redirectWith(loginUrl)
   }
 
   const resolvedRole = role
 
   if (pathname.startsWith("/admin") && resolvedRole !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", req.url))
+    return redirectWith(new URL("/dashboard", req.url))
   }
 
   if (pathname.startsWith("/agente") && resolvedRole !== "SALES_AGENT" && resolvedRole !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", req.url))
+    return redirectWith(new URL("/dashboard", req.url))
   }
 
   if (pathname.startsWith("/editor") && resolvedRole !== "EDITOR" && resolvedRole !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard", req.url))
+    return redirectWith(new URL("/dashboard", req.url))
   }
 
   return NextResponse.next({ headers: securityHeaders })
