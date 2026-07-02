@@ -43,6 +43,7 @@ export function NearMeButton({ query, className = "", size = "sm" }: NearMeButto
         const { latitude, longitude } = pos.coords
         try {
           localStorage.setItem(GEO_KEY, JSON.stringify({ lat: latitude, lng: longitude }))
+          window.dispatchEvent(new Event("guiazmg:geo-updated"))
         } catch {}
         setLoading(false)
         goTo(latitude, longitude)

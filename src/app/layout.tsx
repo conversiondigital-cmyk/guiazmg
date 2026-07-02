@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Manrope } from "next/font/google"
 import "./globals.css"
 import { SessionProvider } from "@/components/providers/session-provider"
+import { UserLocationProvider } from "@/components/location/user-location"
 import { Toaster } from "@/components/ui/sonner"
 import { SystemDialogHost } from "@/components/ui/system-dialog"
 import { CookieConsent } from "@/components/legal/cookie-consent"
@@ -77,10 +78,12 @@ export default function RootLayout({
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable}`}>
       <body className="min-h-screen flex flex-col">
         <SessionProvider>
-          {children}
-          <Toaster />
-          <SystemDialogHost />
-          <CookieConsent />
+          <UserLocationProvider>
+            {children}
+            <Toaster />
+            <SystemDialogHost />
+            <CookieConsent />
+          </UserLocationProvider>
         </SessionProvider>
         <Analytics />
         <TrafficBeacon />

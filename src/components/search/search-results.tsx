@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Phone, MessageCircle, Globe, Navigation, Clock, AlertTriangle } from "@/lib/icons"
 import { truncate, formatPhone, getWhatsAppLink, getMapsLink } from "@/lib/utils"
+import { DistanceBadge } from "@/components/location/distance-badge"
 import type { SearchResponse } from "@/lib/search/search-engine"
 
 type SearchBusiness = SearchResponse["businesses"][number]
@@ -136,12 +137,7 @@ export function SearchResults({ results, query }: SearchResultsProps) {
                             {business.neighborhood && ` - ${business.neighborhood.name}`}
                           </span>
                         )}
-                        {business.distance !== undefined && (
-                          <span className="inline-flex items-center gap-1 font-medium text-green-700">
-                            <Navigation className="h-3 w-3" />
-                            {business.distance.toFixed(1)} km
-                          </span>
-                        )}
+                        <DistanceBadge lat={business.latitude} lng={business.longitude} className="text-xs" />
                         {business.category && (
                           <Badge variant="secondary" className="text-xs">
                             {business.category.name}

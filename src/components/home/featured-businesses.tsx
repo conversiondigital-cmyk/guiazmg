@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { MapPin, BadgeCheck } from "lucide-react"
+import { DistanceBadge } from "@/components/location/distance-badge"
 import type { Business } from "@/types"
 
 interface FeaturedBusinessesProps {
@@ -70,11 +71,14 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
               {hero.shortDescription && (
                 <p className="mb-6 line-clamp-2 text-[#404944]">{hero.shortDescription}</p>
               )}
-              {hero.municipality && (
-                <div className="flex items-center gap-1 text-sm font-medium text-[#404944]">
-                  <MapPin className="h-4 w-4" /> {hero.municipality.name}, Jalisco
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-[#404944]">
+                {hero.municipality && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-4 w-4" /> {hero.municipality.name}, Jalisco
+                  </span>
+                )}
+                <DistanceBadge lat={hero.latitude} lng={hero.longitude} interactive />
+              </div>
             </div>
           </Link>
 
@@ -87,11 +91,10 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
                   <span className="text-xs font-bold uppercase text-[#006c49]">{smalls[0].category.name}</span>
                 )}
                 <h3 className="mb-2 text-2xl font-semibold text-[#003527]">{smalls[0].name}</h3>
-                {smalls[0].isVerified && (
-                  <div className="mb-4">
-                    <VerifiedPill />
-                  </div>
-                )}
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  {smalls[0].isVerified && <VerifiedPill />}
+                  <DistanceBadge lat={smalls[0].latitude} lng={smalls[0].longitude} className="text-sm" />
+                </div>
                 <span className="mt-4 block w-full rounded-xl border border-[#003527] py-2 text-center text-sm font-semibold text-[#003527] transition-colors group-hover:bg-[#003527]/5">
                   Ver Detalles
                 </span>
@@ -108,11 +111,10 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
                   <span className="text-xs font-bold uppercase text-[#006c49]">{biz.category.name}</span>
                 )}
                 <h3 className="text-2xl font-semibold text-[#003527]">{biz.name}</h3>
-                {biz.isVerified && (
-                  <div className="mt-2">
-                    <VerifiedPill />
-                  </div>
-                )}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {biz.isVerified && <VerifiedPill />}
+                  <DistanceBadge lat={biz.latitude} lng={biz.longitude} className="text-sm" />
+                </div>
               </div>
             </Link>
           ))}

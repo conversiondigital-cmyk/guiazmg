@@ -19,6 +19,7 @@ import { getBusinessBySlug } from "@/lib/queries"
 import { prisma } from "@/lib/prisma"
 import { getPublicAppUrl } from "@/lib/env"
 import { profileSchema, breadcrumbSchema, safeJsonLd } from "@/lib/seo/schema"
+import { DistanceBadge } from "@/components/location/distance-badge"
 
 interface BusinessPageProps {
   params: Promise<{ slug: string }>
@@ -116,6 +117,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             )}
             <span className="text-gray-900">{business.name}</span>
           </nav>
+
+          {business.latitude != null && business.longitude != null && (
+            <div className="mb-4">
+              <DistanceBadge lat={business.latitude} lng={business.longitude} interactive className="text-sm" />
+            </div>
+          )}
 
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
