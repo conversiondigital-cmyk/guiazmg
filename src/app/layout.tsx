@@ -60,7 +60,10 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "8kW42w_4Zz9e4qoNAHC_fGf7R2RBwK_DUl6-8lcN4Cg",
+    google: [
+      "8kW42w_4Zz9e4qoNAHC_fGf7R2RBwK_DUl6-8lcN4Cg",
+      "8iug59MImDZwInLWDt1DaSjapWrYiLv6NsR_XdGK7gA",
+    ],
   },
 }
 
