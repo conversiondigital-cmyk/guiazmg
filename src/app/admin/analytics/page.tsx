@@ -6,6 +6,7 @@ import {
   MapPin, Eye, DollarSign, Target, Activity, Zap, Tag, BarChart3,
 } from "@/lib/icons"
 import { CHANNEL_LABELS, type TrafficChannel } from "@/lib/analytics/traffic"
+import { getTopSearchKeywords } from "@/lib/seo/search-console"
 
 export const dynamic = "force-dynamic"
 
@@ -170,6 +171,9 @@ export default async function AdminAnalyticsPage() {
   const channels = channelOrder
     .map((c) => ({ channel: c, label: CHANNEL_LABELS[c], count: channelCounts.get(c) || 0 }))
     .filter((c) => c.count > 0)
+
+  // Palabras clave reales de Google (null si Search Console no está conectado).
+  const googleKeywords = await getTopSearchKeywords()
 
   const monthlyRevenue = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0)
   const visitsCount = totalViews._sum.views ?? 0
@@ -462,6 +466,49 @@ export default async function AdminAnalyticsPage() {
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Palabras clave reales de Google (Search Console) */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-heading text-sm font-medium">Palabras clave en Google (28 días)</h3>
+        </div>
+        {googleKeywords === null ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No conectado. Agrega la cuenta de servicio en Admin → Configuración → SEO para ver las
+            palabras clave reales con las que la gente te encuentra en Google.
+          </p>
+        ) : googleKeywords.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Conectado, pero Google aún no reporta datos (puede tardar días en acumularse).
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4">Palabra clave</th>
+                  <th className="pb-2 pr-4 text-right">Clics</th>
+                  <th className="pb-2 pr-4 text-right">Impresiones</th>
+                  <th className="pb-2 pr-4 text-right">CTR</th>
+                  <th className="pb-2 text-right">Posición</th>
+                </tr>
+              </thead>
+              <tbody>
+                {googleKeywords.map((k) => (
+                  <tr key={k.keyword} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{k.keyword}</td>
+                    <td className="py-2 pr-4 text-right font-mono">{k.clicks}</td>
+                    <td className="py-2 pr-4 text-right font-mono">{k.impressions}</td>
+                    <td className="py-2 pr-4 text-right font-mono">{(k.ctr * 100).toFixed(1)}%</td>
+                    <td className="py-2 text-right font-mono">{k.position.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

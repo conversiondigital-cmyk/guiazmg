@@ -133,6 +133,8 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "robots_txt_content", label: "Contenido robots.txt", type: "textarea" },
       { key: "enable_sitemap", label: "Generar sitemap.xml", type: "toggle" },
       { key: "schema_org_type", label: "Schema.org type", type: "text", placeholder: "LocalBusiness" },
+      { key: "gsc_site_url", label: "Search Console: URL de la propiedad", type: "url", placeholder: "https://guiazmg.vercel.app/" },
+      { key: "gsc_service_account", label: "Search Console: cuenta de servicio (JSON)", type: "textarea", description: "Pega el JSON de la cuenta de servicio con acceso a la propiedad. Activa las palabras clave reales de Google en /admin/analytics." },
     ],
   },
   seguridad: {
