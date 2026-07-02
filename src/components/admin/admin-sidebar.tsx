@@ -14,7 +14,7 @@ import {
   Search, TrendingUp,
   Upload, Webhook, Database, Images,
   Settings, Mail, ListChecks, Workflow,
-  Menu, X, LogOut, ChevronRight, ChevronDown,
+  Menu, X, LogOut, ChevronDown,
   BookOpen,
 } from "lucide-react"
 
@@ -305,12 +305,12 @@ export function AdminSidebar({
 
         {/* User badge */}
         <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-5 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-bold text-white">
             {(user.name ?? user.email ?? "A").charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-white">{user.name ?? user.email}</p>
-            <span className="inline-flex items-center rounded-full bg-blue-900/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-300">
+            <span className="inline-flex items-center rounded-full bg-emerald-900/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
               {user.role ?? "ADMIN"}
             </span>
           </div>
@@ -326,7 +326,7 @@ export function AdminSidebar({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar en el menú..."
               aria-label="Buscar en el menú"
-              className="w-full rounded-lg bg-slate-800/80 py-2 pl-8 pr-8 text-xs text-slate-100 outline-none ring-1 ring-inset ring-slate-700 transition placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg bg-slate-800/80 py-2 pl-8 pr-8 text-xs text-slate-100 outline-none ring-1 ring-inset ring-slate-700 transition placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500"
             />
             {query && (
               <button
@@ -372,13 +372,13 @@ export function AdminSidebar({
                   aria-expanded={open}
                   className={cn(
                     "group flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] transition-colors",
-                    hasActive ? "text-blue-300" : "text-slate-500 hover:text-slate-300"
+                    hasActive ? "text-emerald-300" : "text-slate-500 hover:text-slate-300"
                   )}
                 >
                   <span className="flex items-center gap-1.5 truncate">
                     {section.title}
                     {hasActive && !open && (
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
                     )}
                   </span>
                   {!searching && (
@@ -404,20 +404,24 @@ export function AdminSidebar({
                           key={item.href + item.label}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
                           className={cn(
-                            "group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                            "group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                             isActive
-                              ? "bg-white/10 text-white"
+                              ? "bg-emerald-500/10 font-medium text-white"
                               : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                           )}
                         >
-                          <div className="flex items-center gap-2.5">
-                            <Icon className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{item.label}</span>
-                          </div>
                           {isActive && (
-                            <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
+                            <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-emerald-400" />
                           )}
+                          <Icon
+                            className={cn(
+                              "h-4 w-4 shrink-0 transition-colors",
+                              isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300"
+                            )}
+                          />
+                          <span className="truncate">{item.label}</span>
                         </Link>
                       )
                     })}
