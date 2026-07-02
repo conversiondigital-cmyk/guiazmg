@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
-  Bell,
   Menu,
   Search,
   ChevronDown,
@@ -25,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/admin-constants"
+import { AdminNotifications } from "@/components/admin/admin-notifications"
 
 interface AdminHeaderProps {
   title?: string
@@ -114,10 +114,7 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
         {/* Right Section: Actions + User Menu */}
         <div className="flex items-center gap-2">
           {/* Notifications */}
-          <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+          <AdminNotifications />
 
           {/* System Status Indicator */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-xs text-gray-400">
