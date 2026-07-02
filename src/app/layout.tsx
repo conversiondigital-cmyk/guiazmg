@@ -7,7 +7,7 @@ import { SystemDialogHost } from "@/components/ui/system-dialog"
 import { CookieConsent } from "@/components/legal/cookie-consent"
 import { Analytics } from "@vercel/analytics/next"
 import { TrafficBeacon } from "@/components/analytics/traffic-beacon"
-import { validateEnv } from "@/lib/env"
+import { validateEnv, getPublicAppUrl } from "@/lib/env"
 
 validateEnv()
 
@@ -29,6 +29,7 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getPublicAppUrl()),
   title: {
     default: "Guía ZMG - Buscador Local de la Zona Metropolitana de Guadalajara",
     template: "%s | Guía ZMG",

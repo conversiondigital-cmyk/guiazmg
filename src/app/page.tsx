@@ -12,6 +12,11 @@ import { TestimonialsCarousel } from "@/components/home/testimonials-carousel"
 import { getCategories, getFeaturedBusinesses } from "@/lib/queries"
 import { getHeroImages } from "@/lib/hero-images"
 import { getHeroConfig, DEFAULT_HERO_CONFIG, type HeroConfig } from "@/lib/hero-config"
+import { organizationSchema, websiteSchema, safeJsonLd } from "@/lib/seo/schema"
+
+export const metadata = {
+  alternates: { canonical: "/" },
+}
 
 export default async function HomePage() {
   let categories: Awaited<ReturnType<typeof getCategories>> = []
@@ -32,6 +37,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema()) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema()) }} />
       <Header />
       <main
         className="flex-1 bg-[#f8f9ff] text-[#0b1c30]"
