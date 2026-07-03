@@ -15,9 +15,10 @@ import type { Review } from "@/types"
 interface BusinessReviewsProps {
   reviews: (Review & { user: { name: string | null; image: string | null } })[]
   businessId: string
+  totalCount?: number
 }
 
-export function BusinessReviews({ reviews, businessId }: BusinessReviewsProps) {
+export function BusinessReviews({ reviews, businessId, totalCount }: BusinessReviewsProps) {
   const { data: session } = useSession()
   const router = useRouter()
   const [rating, setRating] = useState(0)
@@ -50,7 +51,7 @@ export function BusinessReviews({ reviews, businessId }: BusinessReviewsProps) {
         return
       }
 
-      toast.success("Reseña enviada para revisión")
+      toast.success("¡Reseña publicada! Gracias por tu opinión")
       setRating(0)
       setComment("")
       router.refresh()
@@ -64,7 +65,7 @@ export function BusinessReviews({ reviews, businessId }: BusinessReviewsProps) {
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Reseñas ({reviews.length})
+        Reseñas ({totalCount ?? reviews.length})
       </h2>
 
       <Card className="mb-6">

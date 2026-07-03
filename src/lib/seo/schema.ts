@@ -61,7 +61,10 @@ export function organizationSchema() {
   })
 }
 
-export function profileSchema(profile: Profile) {
+export function profileSchema(
+  profile: Profile,
+  rating?: { value: number; count: number }
+) {
   const businessType = detectBusinessType(profile.category?.name)
 
   const schema: Record<string, any> = {
@@ -94,15 +97,22 @@ export function profileSchema(profile: Profile) {
       opens: h.opensAt || undefined,
       closes: h.closesAt || undefined,
     })).filter(Boolean) || undefined,
-    aggregateRating: profile._count && profile._count.reviews > 0 ? {
-      "@type": "AggregateRating",
-      ratingValue: (
-        Array.isArray(profile.reviews) && profile.reviews.length > 0
+    aggregateRating: (() => {
+      // Prefiere el promedio/conteo reales calculados sobre todas las reseñas
+      // visibles; si no se pasan, cae al cálculo sobre las reseñas incluidas.
+      const count = rating?.count ?? profile._count?.reviews ?? 0
+      if (count <= 0) return undefined
+      const value =
+        rating?.value ??
+        (Array.isArray(profile.reviews) && profile.reviews.length > 0
           ? profile.reviews.reduce((sum: number, r: any) => sum + (r.rating ?? 0), 0) / profile.reviews.length
-          : 0
-      ).toFixed(1),
-      reviewCount: profile._count.reviews,
-    } : undefined,
+          : 0)
+      return {
+        "@type": "AggregateRating",
+        ratingValue: value.toFixed(1),
+        reviewCount: count,
+      }
+    })(),
     sameAs: [
       profile.facebookUrl,
       profile.instagramUrl,

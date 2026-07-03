@@ -6,9 +6,11 @@ import type { Business } from "@/types"
 interface BusinessDetailProps {
   business: Business
   avgRating: number
+  reviewCount?: number
 }
 
-export function BusinessDetail({ business, avgRating }: BusinessDetailProps) {
+export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDetailProps) {
+  const totalReviews = reviewCount ?? business.reviews?.length ?? 0
   const activeMembership = business.memberships?.find((m) => m.status === "ACTIVE")
 
   return (
@@ -43,7 +45,7 @@ export function BusinessDetail({ business, avgRating }: BusinessDetailProps) {
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               <span className="font-medium">{avgRating.toFixed(1)}</span>
               <span className="text-gray-500">
-                ({(business.reviews?.length || 0)} reseña{(business.reviews?.length || 0) !== 1 ? "s" : ""})
+                ({totalReviews} reseña{totalReviews !== 1 ? "s" : ""})
               </span>
             </div>
           )}

@@ -50,9 +50,15 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     notFound()
   }
 
-  const avgRating = business.reviews.length
-    ? business.reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / business.reviews.length
-    : 0
+  // Promedio y conteo reales sobre TODAS las reseñas visibles (no solo las 10
+  // que se cargan para mostrar) y excluyendo las rechazadas por moderación.
+  const ratingStats = await prisma.review.aggregate({
+    where: { businessId: business.id, status: { not: "REJECTED" } },
+    _avg: { rating: true },
+    _count: true,
+  })
+  const avgRating = ratingStats._avg.rating ?? 0
+  const reviewCount = ratingStats._count
 
   const baseUrl = getPublicAppUrl()
   const url = `${baseUrl}/perfil/${business.slug}`
@@ -63,7 +69,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     { name: business.name, url },
   ]
 
-  const jsonLd = profileSchema(business)
+  const jsonLd = profileSchema(business, { value: avgRating, count: reviewCount })
   const breadcrumbLd = breadcrumbSchema(breadcrumbItems)
 
   const images = business.id
@@ -126,7 +132,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
-              <BusinessDetail business={business} avgRating={avgRating} />
+              <BusinessDetail business={business} avgRating={avgRating} reviewCount={reviewCount} />
               <BusinessPromotions promotions={business.coupons} />
               {business.hours && business.hours.length > 0 && (
                 <BusinessHours hours={business.hours as any} />
@@ -134,7 +140,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               {images.length > 0 && (
                 <BusinessGallery images={images.map((img) => ({ id: img.id, url: img.imageUrl, alt: undefined }))} />
               )}
-              <BusinessReviews reviews={business.reviews} businessId={business.id} />
+              <BusinessReviews reviews={business.reviews} businessId={business.id} totalCount={reviewCount} />
               {similarBusinesses.length > 0 && (
                 <SimilarBusinesses businesses={similarBusinesses as any} />
               )}

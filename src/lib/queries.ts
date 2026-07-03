@@ -31,6 +31,7 @@ export async function getProfileById(id: string) {
       memberships: { include: { plan: true } },
       coupons: { where: { isActive: true, endDate: { gte: new Date() } } },
       reviews: {
+        where: { status: { not: "REJECTED" } },
         take: 10,
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true, image: true } } },
@@ -55,12 +56,14 @@ export async function getProfileBySlug(slug: string) {
         orderBy: { createdAt: "desc" },
       },
       reviews: {
+        where: { status: { not: "REJECTED" } },
         take: 10,
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true, image: true } } },
       },
       tags: { include: { tag: true } },
       hours: { orderBy: { dayOfWeek: "asc" } },
+      _count: { select: { reviews: { where: { status: { not: "REJECTED" } } } } },
     },
     })
   } catch {

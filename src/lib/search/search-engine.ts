@@ -152,8 +152,8 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
         memberships: { include: { plan: true } },
         tags: { include: { tag: true } },
         hours: true,
-        reviews: { where: { status: "APPROVED" }, select: { rating: true } },
-        _count: { select: { reviews: true, favorites: true } },
+        reviews: { where: { status: { not: "REJECTED" } }, select: { rating: true } },
+        _count: { select: { reviews: { where: { status: { not: "REJECTED" } } }, favorites: true } },
       },
       skip,
       take: limit,
@@ -199,9 +199,9 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
       (now.getTime() - b.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     )
 
-    const approvedRatings = b.reviews?.map((r) => r.rating) ?? []
-    const avgRating = approvedRatings.length > 0
-      ? approvedRatings.reduce((sum, r) => sum + r, 0) / approvedRatings.length
+    const visibleRatings = b.reviews?.map((r) => r.rating) ?? []
+    const avgRating = visibleRatings.length > 0
+      ? visibleRatings.reduce((sum, r) => sum + r, 0) / visibleRatings.length
       : 0
 
     const score = calculateScore({
