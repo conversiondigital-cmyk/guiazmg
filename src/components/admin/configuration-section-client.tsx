@@ -117,19 +117,26 @@ export function ConfigurationSectionClient({
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder-slate-400 focus:border-slate-300 focus:outline-none"
                 />
               ) : field.type === "toggle" ? (
-                <div className="mt-1 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={values[field.key] === "true" || values[field.key] === "1"}
-                    onChange={(e) => handleChange(field.key, e.target.checked ? "true" : "false")}
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
-                  <span className="text-sm text-slate-600">
-                    {values[field.key] === "true" || values[field.key] === "1"
-                      ? "Habilitado"
-                      : "Deshabilitado"}
-                  </span>
-                </div>
+                (() => {
+                  // Sin valor guardado, el toggle refleja el default del campo
+                  // (p.ej. el sitemap arranca activo aunque no se haya tocado).
+                  const raw = values[field.key]
+                  const on =
+                    raw === undefined || raw === ""
+                      ? field.default === "true" || field.default === "1"
+                      : raw === "true" || raw === "1"
+                  return (
+                    <div className="mt-1 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={(e) => handleChange(field.key, e.target.checked ? "true" : "false")}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                      <span className="text-sm text-slate-600">{on ? "Habilitado" : "Deshabilitado"}</span>
+                    </div>
+                  )
+                })()
               ) : field.type === "select" && field.options ? (
                 <select
                   value={values[field.key] || ""}

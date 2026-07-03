@@ -8,6 +8,9 @@ export interface ConfigField {
   required?: boolean
   options?: { value: string; label: string }[]
   description?: string
+  // Estado por defecto cuando no hay valor guardado (p.ej. un toggle que arranca
+  // activo). Para campos de texto, el `placeholder` muestra el default en gris.
+  default?: string
 }
 
 export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description: string; fields: ConfigField[] }> = {
@@ -125,14 +128,54 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
   },
   seo: {
     title: "SEO",
-    description: "Metadatos, robots, sitemap y schema.",
+    description:
+      "Metadatos, robots, sitemap y schema. Los campos vacíos usan valores optimizados por defecto (los que aparecen en gris); escribe algo solo si quieres sobrescribirlos.",
     fields: [
-      { key: "meta_title", label: "Meta title", type: "text", placeholder: "Guía Comercial ZMG" },
-      { key: "meta_description", label: "Meta description", type: "textarea" },
-      { key: "meta_keywords", label: "Keywords (separados por coma)", type: "textarea" },
-      { key: "robots_txt_content", label: "Contenido robots.txt", type: "textarea" },
-      { key: "enable_sitemap", label: "Generar sitemap.xml", type: "toggle" },
-      { key: "schema_org_type", label: "Schema.org type", type: "text", placeholder: "LocalBusiness" },
+      {
+        key: "meta_title",
+        label: "Meta title",
+        type: "text",
+        placeholder: "Guía ZMG — Directorio de Negocios y Servicios en Guadalajara",
+        description: "Vacío = se usa el título por defecto (el de gris). Ideal: 50-60 caracteres.",
+      },
+      {
+        key: "meta_description",
+        label: "Meta description",
+        type: "textarea",
+        placeholder:
+          "Encuentra negocios, profesionales y servicios en Guadalajara, Zapopan, Tlaquepaque, Tonalá y toda la ZMG: teléfonos, ubicación, horarios, reseñas y promociones en un solo lugar.",
+        description: "Vacío = descripción optimizada por defecto. Ideal: 150-160 caracteres.",
+      },
+      {
+        key: "meta_keywords",
+        label: "Keywords (separados por coma)",
+        type: "textarea",
+        placeholder:
+          "negocios en Guadalajara, directorio Guadalajara, guía comercial Guadalajara, servicios en Guadalajara, negocios Zapopan, negocios Tlaquepaque, negocios Tonalá, ZMG",
+        description: "Vacío = keywords por defecto. Tienen poco peso en Google, pero no estorban.",
+      },
+      {
+        key: "robots_txt_content",
+        label: "Contenido robots.txt",
+        type: "textarea",
+        placeholder:
+          "Vacío = robots.txt por defecto (abre el sitio y bloquea /admin, /api, /editor, etc. + enlaza el sitemap).",
+        description: "Solo escribe aquí si quieres un robots.txt manual. Vacío usa el default seguro.",
+      },
+      {
+        key: "enable_sitemap",
+        label: "Generar sitemap.xml",
+        type: "toggle",
+        default: "true",
+        description: "Activo por defecto. Desactívalo solo si NO quieres que Google indexe vía sitemap.",
+      },
+      {
+        key: "schema_org_type",
+        label: "Schema.org type",
+        type: "text",
+        placeholder: "LocalBusiness",
+        description: "Tipo de datos estructurados Schema.org. Por defecto: LocalBusiness.",
+      },
       { key: "gsc_site_url", label: "Search Console: URL de la propiedad", type: "url", placeholder: "https://guiazmg.vercel.app/" },
       { key: "gsc_service_account", label: "Search Console: cuenta de servicio (JSON)", type: "textarea", description: "Pega el JSON de la cuenta de servicio con acceso a la propiedad. Activa las palabras clave reales de Google en /admin/analytics." },
     ],
