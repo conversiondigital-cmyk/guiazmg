@@ -54,14 +54,14 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
   const roleLabel = session?.user.role ? ROLE_LABELS[session.user.role as keyof typeof ROLE_LABELS] : ""
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-black bg-slate-950 text-white shadow-2xl">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white text-slate-900 shadow-sm">
       <div className="flex h-16 items-center justify-between px-6">
         {/* Left Section: Logo + Breadcrumb */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           {/* Menu Toggle (Mobile) */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors"
+            className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
             aria-label="Toggle menu"
           >
             <Menu className="w-5 h-5" />
@@ -69,18 +69,18 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
 
           {/* Logo */}
           <Link href="/admin" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-700">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600">
               <MapPin className="h-4 w-4 fill-current text-white" />
             </div>
             <div className="hidden sm:block">
               <span className="text-sm font-bold">Guía ZMG</span>
-              <div className="text-[10px] text-gray-400">Panel Admin</div>
+              <div className="text-[10px] text-slate-500">Panel Admin</div>
             </div>
           </Link>
 
           {/* Title/Breadcrumb */}
           {title && (
-            <div className="hidden sm:flex items-center gap-2 text-sm text-gray-300 ml-4 pl-4 border-l border-gray-700">
+            <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500 ml-4 pl-4 border-l border-slate-200">
               <span>{title}</span>
             </div>
           )}
@@ -97,13 +97,13 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onBlur={() => setSearchOpen(false)}
                 autoFocus
-                className="bg-slate-800 border-gray-600 text-white placeholder:text-gray-500 h-9"
+                className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-400 h-9"
               />
             </form>
           ) : (
             <button
               onClick={() => setSearchOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-gray-400 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm text-slate-500 transition-colors"
             >
               <Search className="w-4 h-4" />
               <span>Buscar...</span>
@@ -117,17 +117,17 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
           <AdminNotifications />
 
           {/* System Status Indicator */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-xs text-gray-400">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg text-xs text-slate-500">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
             <span>Sistema OK</span>
           </div>
 
           {/* User Menu Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800 rounded-lg transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors">
                 <div className="hidden sm:flex flex-col items-end">
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-slate-900">
                     {session?.user.name || session?.user.email}
                   </div>
                   <Badge

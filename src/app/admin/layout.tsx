@@ -12,7 +12,7 @@ export default async function AdminLayout({
   if (session.user.role !== "ADMIN") redirect("/")
 
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
       <AdminSidebar
         user={{

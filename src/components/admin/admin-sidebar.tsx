@@ -278,7 +278,7 @@ export function AdminSidebar({
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-[60] flex h-11 w-11 items-center justify-center rounded-full bg-slate-950 text-white shadow-lg lg:hidden"
+        className="fixed left-4 top-4 z-[60] flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg lg:hidden"
         aria-label="Abrir menú admin"
       >
         <Menu className="h-5 w-5" />
@@ -286,17 +286,17 @@ export function AdminSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-black bg-slate-900 text-slate-100 shadow-2xl transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white text-slate-700 shadow-sm transition-transform lg:static lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Header */}
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 px-5">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-500">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-600">
               Panel de Administración
             </p>
-            <p className="text-sm font-bold text-white">Guía ZMG</p>
+            <p className="text-sm font-bold text-slate-900">Guía ZMG</p>
           </div>
           <button onClick={() => setMobileOpen(false)} className="lg:hidden">
             <X className="h-5 w-5 text-slate-400" />
@@ -304,47 +304,47 @@ export function AdminSidebar({
         </div>
 
         {/* User badge */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-5 py-3">
+        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-5 py-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-bold text-white">
             {(user.name ?? user.email ?? "A").charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-white">{user.name ?? user.email}</p>
-            <span className="inline-flex items-center rounded-full bg-emerald-900/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
+            <p className="truncate text-xs font-medium text-slate-900">{user.name ?? user.email}</p>
+            <span className="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
               {user.role ?? "ADMIN"}
             </span>
           </div>
         </div>
 
         {/* Search */}
-        <div className="shrink-0 border-b border-slate-800 px-3 py-3">
+        <div className="shrink-0 border-b border-slate-200 px-3 py-3">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar en el menú..."
               aria-label="Buscar en el menú"
-              className="w-full rounded-lg bg-slate-800/80 py-2 pl-8 pr-8 text-xs text-slate-100 outline-none ring-1 ring-inset ring-slate-700 transition placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-lg bg-slate-100 py-2 pl-8 pr-8 text-xs text-slate-900 outline-none ring-1 ring-inset ring-slate-200 transition placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 aria-label="Limpiar búsqueda"
-                className="absolute right-2 top-2 text-slate-500 hover:text-slate-200"
+                className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
           {!searching && (
-            <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-slate-500">
-              <button onClick={() => setAll(true)} className="hover:text-slate-300">
+            <div className="mt-2 flex items-center justify-end gap-2 text-[10px] text-slate-400">
+              <button onClick={() => setAll(true)} className="hover:text-slate-600">
                 Expandir todo
               </button>
-              <span className="text-slate-700">·</span>
-              <button onClick={() => setAll(false)} className="hover:text-slate-300">
+              <span className="text-slate-300">·</span>
+              <button onClick={() => setAll(false)} className="hover:text-slate-600">
                 Contraer todo
               </button>
             </div>
@@ -372,7 +372,7 @@ export function AdminSidebar({
                   aria-expanded={open}
                   className={cn(
                     "group flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] transition-colors",
-                    hasActive ? "text-emerald-300" : "text-slate-500 hover:text-slate-300"
+                    hasActive ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
                   )}
                 >
                   <span className="flex items-center gap-1.5 truncate">
@@ -408,17 +408,17 @@ export function AdminSidebar({
                           className={cn(
                             "group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                             isActive
-                              ? "bg-emerald-500/10 font-medium text-white"
-                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                              ? "bg-emerald-50 font-medium text-emerald-700"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           )}
                         >
                           {isActive && (
-                            <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-emerald-400" />
+                            <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-emerald-500" />
                           )}
                           <Icon
                             className={cn(
                               "h-4 w-4 shrink-0 transition-colors",
-                              isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-300"
+                              isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-slate-600"
                             )}
                           />
                           <span className="truncate">{item.label}</span>
@@ -432,10 +432,10 @@ export function AdminSidebar({
           })}
 
           {/* Footer */}
-          <div className="mt-6 border-t border-slate-800 pt-4">
+          <div className="mt-6 border-t border-slate-200 pt-4">
             <Link
               href="/"
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
             >
               <LogOut className="h-3.5 w-3.5" />
               Volver al sitio

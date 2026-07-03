@@ -82,7 +82,7 @@ export function AdminNotifications() {
     <DropdownMenu onOpenChange={(o) => o && load()}>
       <DropdownMenuTrigger asChild>
         <button
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors relative"
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative"
           aria-label="Notificaciones"
         >
           <Bell className="w-5 h-5" />
