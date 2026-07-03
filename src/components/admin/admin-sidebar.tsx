@@ -18,28 +18,67 @@ import {
   BookOpen,
 } from "lucide-react"
 
+type CountKey = "verifications" | "reviews" | "reports" | "claims" | "posts"
+type PendingCounts = Partial<Record<CountKey, number>>
+
 type SidebarItem = {
   label: string
   href: string
   icon: ComponentType<{ className?: string }>
+  // Si está presente, muestra un badge con el conteo de esa cola de moderación.
+  countKey?: CountKey
 }
 type SidebarSection = {
   title: string
   items: SidebarItem[]
+  // Dibuja un separador antes de la sección (para aislar "Configuración").
+  divider?: boolean
 }
 
 const sections: SidebarSection[] = [
   {
-    title: "Resumen y monitoreo",
+    title: "Panorama",
     items: [
       { label: "Resumen general", href: "/admin", icon: LayoutDashboard },
       { label: "Analytics globales", href: "/admin/analytics", icon: BarChart3 },
-      { label: "Auditoría", href: "/admin/auditoria", icon: ClipboardList },
       { label: "Estado del sistema", href: "/admin/estado", icon: Activity },
+      { label: "Auditoría", href: "/admin/auditoria", icon: ClipboardList },
     ],
   },
   {
-    title: "Usuarios y roles",
+    title: "Pendientes",
+    items: [
+      { label: "Verificaciones", href: "/admin/verificaciones", icon: BadgeCheck, countKey: "verifications" },
+      { label: "Reseñas", href: "/admin/reviews", icon: Star, countKey: "reviews" },
+      { label: "Reportes", href: "/admin/reportes", icon: Flag, countKey: "reports" },
+      { label: "Reclamos de negocios", href: "/admin/reclamos", icon: ClipboardList, countKey: "claims" },
+      { label: "Artículos del blog", href: "/admin/blog", icon: BookOpen, countKey: "posts" },
+      { label: "Solicitudes", href: "/admin/solicitudes", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "Directorio",
+    items: [
+      { label: "Perfiles", href: "/admin/negocios", icon: Store },
+      { label: "Productos", href: "/admin/anuncios", icon: ShoppingBag },
+      { label: "Servicios", href: "/admin/servicios", icon: Wrench },
+      { label: "Promociones", href: "/admin/promociones", icon: Tag },
+      { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
+      { label: "Marketplace", href: "/admin/marketplace", icon: Package },
+    ],
+  },
+  {
+    title: "Estructura",
+    items: [
+      { label: "Categorías", href: "/admin/categorias", icon: Tags },
+      { label: "Subcategorías", href: "/admin/subcategorias", icon: Layers3 },
+      { label: "Etiquetas / tags", href: "/admin/etiquetas", icon: Tags },
+      { label: "Municipios", href: "/admin/municipios", icon: MapPinned },
+      { label: "Colonias", href: "/admin/colonias", icon: Globe },
+    ],
+  },
+  {
+    title: "Usuarios y equipo",
     items: [
       { label: "Todos los usuarios", href: "/admin/usuarios", icon: Users },
       { label: "Administradores", href: "/admin/usuarios?rol=ADMIN", icon: Shield },
@@ -51,38 +90,7 @@ const sections: SidebarSection[] = [
     ],
   },
   {
-    title: "Blog",
-    items: [
-      { label: "Moderar artículos", href: "/admin/blog", icon: BookOpen },
-    ],
-  },
-  {
-    title: "Perfiles y contenido",
-    items: [
-      { label: "Perfiles", href: "/admin/negocios", icon: Store },
-      { label: "Productos", href: "/admin/anuncios", icon: ShoppingBag },
-      { label: "Servicios", href: "/admin/servicios", icon: Wrench },
-      { label: "Promociones", href: "/admin/promociones", icon: Tag },
-      { label: "Marketplace", href: "/admin/marketplace", icon: Package },
-      { label: "Solicitudes", href: "/admin/solicitudes", icon: MessageSquare },
-      { label: "Verificaciones", href: "/admin/verificaciones", icon: BadgeCheck },
-      { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
-      { label: "Reseñas", href: "/admin/reviews", icon: Star },
-      { label: "Reportes", href: "/admin/reportes", icon: Flag },
-    ],
-  },
-  {
-    title: "Estructura del directorio",
-    items: [
-      { label: "Categorías", href: "/admin/categorias", icon: Tags },
-      { label: "Subcategorías", href: "/admin/subcategorias", icon: Layers3 },
-      { label: "Municipios", href: "/admin/municipios", icon: MapPinned },
-      { label: "Colonias", href: "/admin/colonias", icon: Globe },
-      { label: "Etiquetas / tags", href: "/admin/etiquetas", icon: Tags },
-    ],
-  },
-  {
-    title: "Negocio y monetización",
+    title: "Monetización",
     items: [
       { label: "Membresías", href: "/admin/planes", icon: Gem },
       { label: "Boosts", href: "/admin/boosts", icon: Rocket },
@@ -94,24 +102,24 @@ const sections: SidebarSection[] = [
     ],
   },
   {
-    title: "SEO y crecimiento",
+    title: "Crecimiento",
     items: [
       { label: "SEO y landing pages", href: "/admin/seo", icon: Search },
       { label: "Búsquedas populares", href: "/admin/busquedas", icon: TrendingUp },
-      { label: "Reclamos de negocios", href: "/admin/reclamos", icon: ClipboardList },
+      { label: "Carrusel del inicio", href: "/admin/hero", icon: Images },
     ],
   },
   {
-    title: "Operación",
+    title: "Sistema",
     items: [
-      { label: "Carrusel del inicio", href: "/admin/hero", icon: Images },
       { label: "Importaciones", href: "/admin/importar", icon: Upload },
       { label: "Webhooks", href: "/admin/webhooks", icon: Webhook },
       { label: "Datos demo", href: "/admin/demo", icon: Database },
     ],
   },
   {
-    title: "Configuración global",
+    title: "Configuración",
+    divider: true,
     items: [
       { label: "General", href: "/admin/configuracion/general", icon: Settings },
       { label: "Branding", href: "/admin/configuracion/branding", icon: Settings },
@@ -198,6 +206,7 @@ export function AdminSidebar({
   const spKey = searchParams.toString()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [counts, setCounts] = useState<PendingCounts>({})
 
   // Un único item activo, sensible a los query params (?rol, ?status).
   const active = useMemo(
@@ -231,6 +240,29 @@ export function AdminSidebar({
       setExpanded((prev) => (prev[activeTitle] ? prev : { ...prev, [activeTitle]: true }))
     }
   }, [activeTitle])
+
+  // Conteos de las colas de moderación para el badge de "Pendientes".
+  // Se recarga al cambiar de ruta (p.ej. tras aprobar algo) y al volver a la pestaña.
+  useEffect(() => {
+    let cancelled = false
+    const loadCounts = async () => {
+      try {
+        const r = await fetch("/api/admin/pending-counts", { cache: "no-store" })
+        if (!r.ok) return
+        const j = (await r.json()) as PendingCounts
+        if (!cancelled) setCounts(j)
+      } catch {
+        /* silencioso: si falla, el menú queda sin badges */
+      }
+    }
+    loadCounts()
+    const onFocus = () => loadCounts()
+    window.addEventListener("focus", onFocus)
+    return () => {
+      cancelled = true
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [pathname])
 
   function persist(next: Record<string, boolean>) {
     try {
@@ -362,8 +394,15 @@ export function AdminSidebar({
           {filteredSections.map((section, si) => {
             const open = searching || (expanded[section.title] ?? false)
             const hasActive = section.title === activeTitle
+            const sectionCount = section.items.reduce(
+              (sum, it) => sum + (it.countKey ? counts[it.countKey] ?? 0 : 0),
+              0
+            )
             return (
               <div key={section.title} className={cn(si > 0 && "mt-1")}>
+                {section.divider && !searching && (
+                  <div className="mb-2 mt-3 border-t border-slate-200" />
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -377,18 +416,25 @@ export function AdminSidebar({
                 >
                   <span className="flex items-center gap-1.5 truncate">
                     {section.title}
-                    {hasActive && !open && (
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                    {hasActive && !open && sectionCount === 0 && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                     )}
                   </span>
-                  {!searching && (
-                    <ChevronDown
-                      className={cn(
-                        "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
-                        open ? "rotate-0" : "-rotate-90"
-                      )}
-                    />
-                  )}
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {sectionCount > 0 && (
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold leading-none text-white">
+                        {sectionCount > 99 ? "99+" : sectionCount}
+                      </span>
+                    )}
+                    {!searching && (
+                      <ChevronDown
+                        className={cn(
+                          "h-3.5 w-3.5 transition-transform duration-200",
+                          open ? "rotate-0" : "-rotate-90"
+                        )}
+                      />
+                    )}
+                  </span>
                 </button>
 
                 {open && (
@@ -399,6 +445,7 @@ export function AdminSidebar({
                         section.title === active.section &&
                         item.href === active.href
                       const Icon = item.icon
+                      const itemCount = item.countKey ? counts[item.countKey] ?? 0 : 0
                       return (
                         <Link
                           key={item.href + item.label}
@@ -421,7 +468,12 @@ export function AdminSidebar({
                               isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-slate-600"
                             )}
                           />
-                          <span className="truncate">{item.label}</span>
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          {itemCount > 0 && (
+                            <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold leading-none text-white">
+                              {itemCount > 99 ? "99+" : itemCount}
+                            </span>
+                          )}
                         </Link>
                       )
                     })}
