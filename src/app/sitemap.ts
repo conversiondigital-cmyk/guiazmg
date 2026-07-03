@@ -1,10 +1,15 @@
 export const dynamic = "force-dynamic"
 
 import { getPublicAppUrl } from "@/lib/env"
+import { getSeoSettings } from "@/lib/seo/settings"
 
 const baseUrl = getPublicAppUrl()
 
 export default async function sitemap() {
+  // El admin puede apagar el sitemap desde /admin/configuracion/seo.
+  const seo = await getSeoSettings()
+  if (!seo.sitemapEnabled) return []
+
   const staticRoutes = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily" as const, priority: 1 },
     { url: `${baseUrl}/search`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
