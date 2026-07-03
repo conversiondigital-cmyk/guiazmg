@@ -209,6 +209,11 @@ model User {
   postsAuthored         Post[] @relation("PostAuthor")
   postsReviewed         Post[] @relation("PostReviewer")
 
+  @@index([role])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([lastLoginAt])
   @@map("users")
 }
 
@@ -510,6 +515,8 @@ model Profile {
   @@index([status])
   @@index([verificationStatus])
   @@index([isDemo])
+  @@index([deletedAt])
+  @@index([createdAt])
   @@map("businesses")
 }
 
@@ -629,6 +636,9 @@ model Listing {
   @@unique([businessId, slug])
   @@index([slug])
   @@index([businessId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([createdAt])
   @@map("listings")
 }
 
@@ -668,6 +678,7 @@ model Boost {
   @@index([listingId])
   @@index([status])
   @@index([startsAt])
+  @@index([createdAt])
   @@map("boosts")
 }
 
@@ -687,6 +698,9 @@ model Coupon {
 
    profile Profile @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
+  @@index([businessId])
+  @@index([isActive])
+  @@index([createdAt])
   @@map("coupons")
 }
 
@@ -785,6 +799,7 @@ model Review {
   response ReviewResponse?
   @@unique([businessId, userId])
   @@index([businessId])
+  @@index([status, createdAt])
   @@map("reviews")
 }
 
@@ -839,6 +854,10 @@ model Report {
   profile Profile? @relation("profileReports", fields: [businessId], references: [id])
   listing  Listing?  @relation(fields: [listingId], references: [id])
 
+  @@index([status, createdAt])
+  @@index([businessId])
+  @@index([listingId])
+  @@index([reporterUserId])
   @@map("reports")
 }
 
@@ -971,6 +990,7 @@ model SearchLog {
   user User? @relation(fields: [userId], references: [id])
 
   @@index([query])
+  @@index([createdAt])
   @@map("search_logs")
 }
 
@@ -1028,6 +1048,10 @@ model AuditLog {
 
   actor User @relation(fields: [actorUserId], references: [id])
 
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([action])
   @@map("audit_logs")
 }
 
@@ -1197,6 +1221,8 @@ model ServiceRequest {
 
   responses ServiceRequestResponse[]
 
+  @@index([status])
+  @@index([createdAt])
   @@map("service_requests")
 }
 
@@ -1307,6 +1333,8 @@ model Post {
   @@index([slug])
   @@index([category])
   @@index([isFeatured])
+  @@index([authorId])
+  @@index([updatedAt])
   @@map("posts")
 }
 

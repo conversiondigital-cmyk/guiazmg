@@ -12,27 +12,21 @@ export default async function AdminPagosPage() {
     redirect("/auth/login")
   }
 
-  const payments = await prisma.payment.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-      profile: { select: { id: true, name: true } },
-    },
-  })
-
-  const [totalRevenue, pendingTotal, refundedTotal] = await Promise.all([
-    prisma.payment.aggregate({
-      where: { status: "APPROVED" },
-      _sum: { amount: true },
+  // Acotado a los 200 pagos más recientes (antes traía TODA la tabla en cada
+  // carga). El total real y las sumas van por count/aggregate, no por longitud.
+  const [payments, totalCount, totalRevenue, pendingTotal, refundedTotal] = await Promise.all([
+    prisma.payment.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        profile: { select: { id: true, name: true } },
+      },
     }),
-    prisma.payment.aggregate({
-      where: { status: "PENDING" },
-      _sum: { amount: true },
-    }),
-    prisma.payment.aggregate({
-      where: { status: "REFUNDED" },
-      _sum: { amount: true },
-    }),
+    prisma.payment.count(),
+    prisma.payment.aggregate({ where: { status: "APPROVED" }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "PENDING" }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "REFUNDED" }, _sum: { amount: true } }),
   ])
 
   return (
@@ -43,7 +37,7 @@ export default async function AdminPagosPage() {
           totalRevenue: Number(totalRevenue._sum.amount ?? 0),
           pendingTotal: Number(pendingTotal._sum.amount ?? 0),
           refundedTotal: Number(refundedTotal._sum.amount ?? 0),
-          total: payments.length,
+          total: totalCount,
         }}
       />
     </Suspense>

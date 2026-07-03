@@ -10,8 +10,13 @@ export default async function AdminEventosPage() {
   const session = await auth()
   if (!session?.user || session.user.role !== "ADMIN") redirect("/auth/login")
 
+  // La tabla `events` puede no existir aún en algún entorno (se creó fuera de
+  // migración); si el query falla, degradamos a lista vacía en vez de romper
+  // todo el panel con un error de render del Server Component.
   const [events, municipalities] = await Promise.all([
-    prisma.event.findMany({ where: { deletedAt: null }, orderBy: { startAt: "desc" }, take: 200 }),
+    prisma.event
+      .findMany({ where: { deletedAt: null }, orderBy: { startAt: "desc" }, take: 200 })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.event.findMany>>),
     getMunicipalities().catch(() => []),
   ])
 

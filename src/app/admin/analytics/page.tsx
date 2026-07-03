@@ -60,7 +60,7 @@ export default async function AdminAnalyticsPage() {
     activeBusinesses,
     activeMarketplace,
     totalLeads,
-    approvedPayments,
+    approvedPaymentsAgg,
     totalSearches,
     totalViews,
     dailyVisitRows,
@@ -78,7 +78,7 @@ export default async function AdminAnalyticsPage() {
     prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.marketplaceListing.count({ where: { status: "ACTIVE", deletedAt: null } }),
     prisma.lead.count(),
-    prisma.payment.findMany({ where: { status: "APPROVED" }, select: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "APPROVED" }, _sum: { amount: true } }),
     prisma.searchLog.count(),
     prisma.profileAnalyticsDaily.aggregate({ _sum: { views: true } }),
     prisma.$queryRaw<{ date: Date; count: number }[]>`
@@ -175,7 +175,7 @@ export default async function AdminAnalyticsPage() {
   // Palabras clave reales de Google (null si Search Console no está conectado).
   const googleKeywords = await getTopSearchKeywords()
 
-  const monthlyRevenue = approvedPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+  const monthlyRevenue = Number(approvedPaymentsAgg._sum.amount ?? 0)
   const visitsCount = totalViews._sum.views ?? 0
   const conversionRate = visitsCount > 0 ? ((totalLeads / visitsCount) * 100).toFixed(2) : "0.00"
 

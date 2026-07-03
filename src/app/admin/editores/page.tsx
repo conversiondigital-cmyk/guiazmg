@@ -28,23 +28,35 @@ export default async function AdminEditoresPage() {
     orderBy: { createdAt: "desc" },
   })
 
-  // Enrich with published/pending counts per editor
-  const enriched = await Promise.all(
-    editors.map(async (editor) => {
-      const [publishedCount, pendingCount] = await Promise.all([
-        prisma.post.count({ where: { authorId: editor.id, status: "PUBLISHED" } }),
-        prisma.post.count({ where: { authorId: editor.id, status: "PENDING_REVIEW" } }),
-      ])
-      return {
-        ...editor,
-        _count: { posts: editor._count.postsAuthored },
-        createdAt: editor.createdAt.toISOString(),
-        lastLoginAt: editor.lastLoginAt?.toISOString() ?? null,
-        publishedCount,
-        pendingCount,
-      }
-    })
-  )
+  // Conteos publicados/pendientes por editor en UNA sola query (antes era N+1:
+  // 2 counts por cada editor). Un groupBy agrega todo y se mapea en memoria.
+  const editorIds = editors.map((e) => e.id)
+  const grouped = editorIds.length
+    ? await prisma.post.groupBy({
+        by: ["authorId", "status"],
+        where: { authorId: { in: editorIds }, status: { in: ["PUBLISHED", "PENDING_REVIEW"] } },
+        _count: { _all: true },
+      })
+    : []
+  const countMap = new Map<string, { published: number; pending: number }>()
+  for (const g of grouped) {
+    if (!g.authorId) continue
+    const rec = countMap.get(g.authorId) ?? { published: 0, pending: 0 }
+    if (g.status === "PUBLISHED") rec.published = g._count._all
+    else if (g.status === "PENDING_REVIEW") rec.pending = g._count._all
+    countMap.set(g.authorId, rec)
+  }
+  const enriched = editors.map((editor) => {
+    const c = countMap.get(editor.id) ?? { published: 0, pending: 0 }
+    return {
+      ...editor,
+      _count: { posts: editor._count.postsAuthored },
+      createdAt: editor.createdAt.toISOString(),
+      lastLoginAt: editor.lastLoginAt?.toISOString() ?? null,
+      publishedCount: c.published,
+      pendingCount: c.pending,
+    }
+  })
 
   // Global stats
   const [totalEditors, activeEditors, totalPosts, pendingReview] = await Promise.all([
