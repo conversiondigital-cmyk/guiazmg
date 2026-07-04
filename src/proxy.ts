@@ -118,6 +118,10 @@ export async function proxy(req: NextRequest) {
     "/ventas-de-cochera",
     "/robots.txt",
     "/sitemap.xml",
+    // Webhooks de pagos: los llama el proveedor sin sesión y se verifican por
+    // firma (HMAC / Stripe signature). Sin esto, el proxy los mandaría a login.
+    "/api/payments/webhook",
+    "/api/payments/stripe/webhook",
   ])
   const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
