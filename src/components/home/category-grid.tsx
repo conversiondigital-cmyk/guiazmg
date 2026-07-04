@@ -1,5 +1,6 @@
-"use client"
-
+// Server Component: es puramente presentacional (Links + iconos + hover CSS, sin
+// estado ni handlers). Quitar "use client" lo saca del bundle del cliente junto con
+// sus ~20 iconos de lucide.
 import Link from "next/link"
 import {
   Utensils, Coffee, Heart, Scissors, Car, Dumbbell, GraduationCap, PawPrint,

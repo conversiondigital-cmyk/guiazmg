@@ -14,6 +14,10 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
+  // Qué imágenes del carrusel ya se pueden descargar. Empieza solo con la 1ª (el LCP);
+  // las demás están apiladas en el viewport, así que loading="lazy" NO las difiere y se
+  // bajaban las 4 de golpe. Se cargan bajo demanda: la actual y la siguiente.
+  const [loaded, setLoaded] = useState<Set<number>>(() => new Set([0]))
 
   const hasCarousel = images.length > 0
 
@@ -32,6 +36,19 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
     const t = setInterval(() => setCurrent((c) => (c + 1) % images.length), config.intervalMs)
     return () => clearInterval(t)
   }, [images.length, config.intervalMs, paused, reduceMotion])
+
+  // Precarga la imagen actual y la siguiente (para que la transición no parpadee),
+  // dejando el resto para cuando el carrusel llegue a ellas.
+  useEffect(() => {
+    if (images.length < 2) return
+    setLoaded((prev) => {
+      if (prev.has(current) && prev.has((current + 1) % images.length)) return prev
+      const next = new Set(prev)
+      next.add(current)
+      next.add((current + 1) % images.length)
+      return next
+    })
+  }, [current, images.length])
 
   const handleSearch = (q?: string) => {
     const text = [(q ?? query).trim(), location.trim()].filter(Boolean).join(" ")
@@ -56,10 +73,11 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
           images.map((src, i) => (
             <img
               key={src}
-              src={src}
+              // Solo se asigna src cuando la imagen entra en la ventana de precarga
+              // (actual + siguiente); así la 1ª es el LCP y las demás no se bajan de golpe.
+              src={loaded.has(i) ? src : undefined}
               alt=""
               aria-hidden
-              // La primera imagen es el LCP → prioridad alta y carga inmediata; el resto perezoso.
               fetchPriority={i === 0 ? "high" : "low"}
               loading={i === 0 ? "eager" : "lazy"}
               decoding="async"

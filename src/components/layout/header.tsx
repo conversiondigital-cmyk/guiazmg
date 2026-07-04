@@ -10,10 +10,32 @@ import { MapPin, ChevronDown, User } from "lucide-react"
 import { useState, useEffect } from "react"
 import { NAV_LINKS } from "@/lib/nav-links"
 
+// El header se remonta en cada navegación (cada página lo renderiza), así que su
+// fetch de categorías salía en cada carga. Las categorías cambian rara vez → se
+// cachean a nivel de módulo y se comparte la petición en vuelo: una sola por sesión.
+type NavCategory = { id: string; name: string; slug: string }
+let categoriesCache: NavCategory[] | null = null
+let categoriesInflight: Promise<NavCategory[]> | null = null
+function loadCategories(): Promise<NavCategory[]> {
+  if (categoriesCache) return Promise.resolve(categoriesCache)
+  if (categoriesInflight) return categoriesInflight
+  categoriesInflight = fetch("/api/categories")
+    .then((r) => (r.ok ? r.json() : []))
+    .then((data) => {
+      categoriesCache = Array.isArray(data) ? data : []
+      return categoriesCache
+    })
+    .catch(() => [])
+    .finally(() => {
+      categoriesInflight = null
+    })
+  return categoriesInflight
+}
+
 export function Header() {
   const { data: session } = useSession()
   const pathname = usePathname()
-  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [categories, setCategories] = useState<NavCategory[]>(categoriesCache ?? [])
   const [showCategories, setShowCategories] = useState(false)
 
   // Resalta el enlace de la página actual. Antes se seguía por click (setActiveNav),
@@ -26,13 +48,11 @@ export function Header() {
     }`
 
   useEffect(() => {
+    if (categoriesCache) return // ya cacheado desde una navegación previa
     let active = true
-    fetch("/api/categories")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (active && Array.isArray(data)) setCategories(data)
-      })
-      .catch(() => {})
+    loadCategories().then((data) => {
+      if (active) setCategories(data)
+    })
     return () => {
       active = false
     }
