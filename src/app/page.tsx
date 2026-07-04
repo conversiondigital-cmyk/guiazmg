@@ -27,7 +27,7 @@ export default async function HomePage() {
   try {
     ;[categories, businesses, heroImages, heroConfig] = await Promise.all([
       getCategories(),
-      getFeaturedBusinesses(),
+      getFeaturedBusinesses(5), // el bloque de destacados muestra 5 (1 hero + 4); no traer 12
       getHeroImages(),
       getHeroConfig(),
     ])

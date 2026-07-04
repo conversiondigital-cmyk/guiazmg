@@ -1,29 +1,29 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { UserNav } from "@/components/layout/user-nav"
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { MapPin, ChevronDown, User } from "lucide-react"
 import { useState, useEffect } from "react"
-
-const NAV_LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/search", label: "Categorías", hasDropdown: true },
-  { href: "/mapa", label: "Mapa" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/eventos", label: "Eventos" },
-  { href: "/promociones", label: "Promociones" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contacto", label: "Contacto" },
-]
+import { NAV_LINKS } from "@/lib/nav-links"
 
 export function Header() {
   const { data: session } = useSession()
-  const [activeNav, setActiveNav] = useState("Inicio")
+  const pathname = usePathname()
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([])
   const [showCategories, setShowCategories] = useState(false)
+
+  // Resalta el enlace de la página actual. Antes se seguía por click (setActiveNav),
+  // así que entrar directo a /mapa marcaba "Inicio"; usePathname es la fuente real
+  // (mismo patrón que los 6 sidebars). "/" activo solo exacto; el resto por prefijo.
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href))
+  const navLinkClass = (active: boolean) =>
+    `flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative ${
+      active ? "text-green-800" : "text-gray-600 hover:text-green-800"
+    }`
 
   useEffect(() => {
     let active = true
@@ -63,12 +63,7 @@ export function Header() {
                 onMouseEnter={() => setShowCategories(true)}
                 onMouseLeave={() => setShowCategories(false)}
               >
-                <Link
-                  href={link.href}
-                  onClick={() => setActiveNav(link.label)}
-                  className={`flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative
-                    ${activeNav === link.label ? "text-green-800" : "text-gray-600 hover:text-green-800"}`}
-                >
+                <Link href={link.href} className={navLinkClass(isActive(link.href))}>
                   {link.label}
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCategories ? "rotate-180" : ""}`} />
                 </Link>
@@ -95,15 +90,9 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setActiveNav(link.label)}
-                className={`flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative
-                  ${activeNav === link.label ? "text-green-800" : "text-gray-600 hover:text-green-800"}`}
-              >
+              <Link key={link.label} href={link.href} className={navLinkClass(isActive(link.href))}>
                 {link.label}
-                {activeNav === link.label && (
+                {isActive(link.href) && (
                   <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-500" />
                 )}
               </Link>

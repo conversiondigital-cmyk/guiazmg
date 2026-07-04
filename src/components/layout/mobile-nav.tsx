@@ -5,17 +5,7 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Menu, X, MapPin, User, LogOut } from "lucide-react"
 import { getInitials } from "@/lib/utils"
-
-const NAV_LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/search", label: "Categorías" },
-  { href: "/mapa", label: "Mapa" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/eventos", label: "Eventos" },
-  { href: "/promociones", label: "Promociones" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contacto", label: "Contacto" },
-]
+import { NAV_LINKS } from "@/lib/nav-links"
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)

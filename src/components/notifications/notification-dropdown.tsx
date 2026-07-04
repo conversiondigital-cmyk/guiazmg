@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
 import {
   Bell,
   Star,
@@ -15,7 +14,28 @@ import {
   ChevronRight,
 } from "@/lib/icons"
 import { timeAgo } from "@/lib/utils"
-import { bellBounce } from "@/lib/animations"
+
+// El header monta el timbre en dos slots (escritorio y móvil): ambos disparaban el
+// mismo fetch de conteo al montar. Se comparte la petición en vuelo (y se cachea 5s)
+// para que solo salga una. Se invalida al marcar como leído.
+let unreadInflight: Promise<number> | null = null
+let unreadCache: { at: number; count: number } | null = null
+function fetchUnreadCount(): Promise<number> {
+  if (unreadInflight) return unreadInflight
+  if (unreadCache && Date.now() - unreadCache.at < 5000) return Promise.resolve(unreadCache.count)
+  unreadInflight = fetch("/api/notifications?unread=true&limit=1")
+    .then((r) => r.json())
+    .then((d) => {
+      const c = d.unreadCount || 0
+      unreadCache = { at: Date.now(), count: c }
+      return c
+    })
+    .catch(() => 0)
+    .finally(() => {
+      unreadInflight = null
+    })
+  return unreadInflight
+}
 
 const typeIcons: Record<string, typeof Bell> = {
   REVIEW: Star,
@@ -42,6 +62,31 @@ interface Notification {
   type: string
   isRead: boolean
   createdAt: string
+}
+
+// Campaneo del icono (antes framer-motion). Va inline para no depender del pipeline
+// de Tailwind/globals y respetar prefers-reduced-motion. Se inyecta una sola vez.
+const BELL_CSS = `
+@keyframes gzmg-bell-bounce {
+  0%,100% { transform: rotate(0) }
+  15% { transform: rotate(-15deg) }
+  30% { transform: rotate(15deg) }
+  45% { transform: rotate(-10deg) }
+  60% { transform: rotate(10deg) }
+  75% { transform: rotate(-5deg) }
+  90% { transform: rotate(5deg) }
+}
+.gzmg-bell { transform-origin: 50% 0 }
+.gzmg-bell.is-ringing { animation: gzmg-bell-bounce .6s ease-in-out }
+@media (prefers-reduced-motion: reduce) { .gzmg-bell.is-ringing { animation: none } }
+`
+let bellCssInjected = false
+function injectBellCss() {
+  if (bellCssInjected || typeof document === "undefined") return
+  bellCssInjected = true
+  const el = document.createElement("style")
+  el.textContent = BELL_CSS
+  document.head.appendChild(el)
 }
 
 export function NotificationDropdown() {
@@ -82,6 +127,7 @@ export function NotificationDropdown() {
     })
     setNotifications([])
     setUnreadCount(0)
+    unreadCache = null // el conteo compartido quedó obsoleto
     router.refresh()
   }
 
@@ -93,13 +139,13 @@ export function NotificationDropdown() {
     })
     setNotifications((prev) => prev.filter((n) => n.id !== id))
     setUnreadCount((prev) => Math.max(0, prev - 1))
+    unreadCache = null // el conteo compartido quedó obsoleto
     router.refresh()
   }
 
   useEffect(() => {
-    fetch("/api/notifications?unread=true&limit=1")
-      .then((r) => r.json())
-      .then((data) => setUnreadCount(data.unreadCount || 0))
+    injectBellCss()
+    fetchUnreadCount().then(setUnreadCount)
   }, [])
 
   return (
@@ -108,13 +154,7 @@ export function NotificationDropdown() {
         onClick={() => setOpen(!open)}
         className="relative flex items-center justify-center rounded-full p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
       >
-        <motion.div
-          variants={bellBounce}
-          animate={unreadCount > 0 ? "animate" : "rest"}
-          initial="rest"
-        >
-          <Bell className="h-5 w-5" />
-        </motion.div>
+        <Bell className={`h-5 w-5 gzmg-bell ${unreadCount > 0 ? "is-ringing" : ""}`} />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -153,7 +193,7 @@ export function NotificationDropdown() {
                     className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b last:border-b-0"
                   >
                     <div
-                      className={"flex h-8 w-8 shrink-0 items-center justify-center rounded-full " + (typeColors[notification.type] || typeColors.SYSTEM)}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${typeColors[notification.type] || typeColors.SYSTEM}`}
                     >
                       <Icon className="h-4 w-4" />
                     </div>
