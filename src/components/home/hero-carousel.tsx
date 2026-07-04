@@ -32,7 +32,7 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
   }
 
   return (
-    <section className="relative flex items-center justify-center overflow-hidden py-24 sm:py-28">
+    <section className="relative flex min-h-[440px] items-center justify-center overflow-hidden py-14 sm:min-h-[500px] sm:py-16">
       {/* Fondo: carrusel de imágenes (admin) o imagen por defecto */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49]">
         {hasCarousel ? (
@@ -42,7 +42,7 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
               src={src}
               alt=""
               aria-hidden
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
+              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-[1200ms] ${
                 i === current ? "opacity-100" : "opacity-0"
               }`}
             />
@@ -52,13 +52,15 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
             <img
               src="/guadalajara.jpg"
               alt="Guadalajara"
-              className="h-full w-full object-cover brightness-[0.4]"
+              className="h-full w-full object-cover object-center brightness-[0.4]"
               onError={() => setImgError(true)}
             />
           )
         )}
         {/* Overlay verde semitransparente (la transparencia sobre las imágenes) */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#003527]/85 via-[#003527]/55 to-[#003527]/65" />
+        {/* Fundido inferior hacia el fondo claro de la página (transición suave hacia Categorías) */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent via-transparent to-[#f8f9ff]" />
       </div>
 
       <div className="relative z-10 w-full max-w-4xl px-4 text-center">

@@ -40,8 +40,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   const shown = categories.slice(0, 6)
 
   return (
-    <section className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 lg:px-10">
-      <div className="mb-12 flex items-end justify-between">
+    <section className="mx-auto max-w-[1280px] px-4 pb-20 pt-12 sm:px-6 sm:pt-14 lg:px-10">
+      <div className="mb-10 flex items-end justify-between">
         <div>
           <h2 className="mb-2 text-3xl font-bold text-[#003527] sm:text-[32px]">Explora por Categorías</h2>
           <p className="text-[#404944]">Todo lo que necesitas, a un clic de distancia.</p>
