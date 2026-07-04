@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
+import { sendWelcomeEmail } from "@/lib/email"
 import { z } from "zod"
 
 const registerSchema = z.object({
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
         acceptedCommunityAt: new Date(acceptedCommunityAt),
       },
     })
+
+    // Correo de bienvenida (no-op si SMTP no está configurado). No debe romper
+    // el registro si el envío falla.
+    await sendWelcomeEmail(user).catch((e) => console.error("[WELCOME_EMAIL]", e))
 
     return NextResponse.json(
       { id: user.id, name: user.name, email: user.email },

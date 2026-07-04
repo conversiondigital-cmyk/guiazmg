@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
+import { getSetting } from "@/lib/settings"
 import crypto from "node:crypto"
 
 function mapMpStatus(mpStatus: string): "PENDING" | "APPROVED" | "AUTHORIZED" | "REJECTED" | "REFUNDED" | "CANCELLED" {
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
     const signature = request.headers.get("x-signature") || ""
     const requestId = request.headers.get("x-request-id") || ""
 
-    const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET
+    // Lee el secret del panel (Admin→Config→Pagos) con respaldo a env.
+    const secret = await getSetting("mercado_pago_webhook_secret", "MERCADO_PAGO_WEBHOOK_SECRET")
     if (!secret) {
       return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 })
     }

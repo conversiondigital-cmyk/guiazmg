@@ -3,5 +3,8 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "crons": [{ "path": "/api/cron/events", "schedule": "0 13 * * *" }]
+  "crons": [
+    { "path": "/api/cron/events", "schedule": "0 13 * * *" },
+    { "path": "/api/cron/google-ratings", "schedule": "0 5 * * 1" }
+  ]
 }
