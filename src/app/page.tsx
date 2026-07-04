@@ -47,8 +47,10 @@ export default async function HomePage() {
         <HeroCarousel images={heroImages} config={heroConfig} />
         <CategoryGrid categories={categories as any} />
         <FeaturedBusinesses businesses={businesses} />
-        <CTASection />
+        {/* Prueba social ANTES del CTA final (patrón Marketplace/Directory): los
+            testimonios empujan al cierre "Registrar mi negocio". */}
         <TestimonialsCarousel />
+        <CTASection />
       </main>
       <Footer />
     </>
