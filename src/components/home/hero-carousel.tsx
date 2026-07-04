@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Search, MapPin } from "lucide-react"
 import type { HeroConfig } from "@/lib/hero-config"
 import { NearMeButton } from "@/components/search/near-me-button"
@@ -70,29 +71,36 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
       {/* Fondo: carrusel de imágenes (admin) o imagen por defecto */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49]">
         {hasCarousel ? (
-          images.map((src, i) => (
-            <img
-              key={src}
-              // Solo se asigna src cuando la imagen entra en la ventana de precarga
-              // (actual + siguiente); así la 1ª es el LCP y las demás no se bajan de golpe.
-              src={loaded.has(i) ? src : undefined}
-              alt=""
-              aria-hidden
-              fetchPriority={i === 0 ? "high" : "low"}
-              loading={i === 0 ? "eager" : "lazy"}
-              decoding="async"
-              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity motion-reduce:transition-none ${
-                reduceMotion ? "duration-0" : "duration-700"
-              } ${i === current ? "opacity-100" : "opacity-0"}`}
-            />
-          ))
+          // next/image sirve AVIF/WebP responsivo (sizes=100vw) → mucho menos peso en
+          // móvil que el webp original de 1672px. Solo se monta la imagen dentro de la
+          // ventana de precarga (actual + siguiente); la 1ª es el LCP (priority).
+          images.map((src, i) =>
+            loaded.has(i) ? (
+              <Image
+                key={src}
+                src={src}
+                alt=""
+                aria-hidden
+                fill
+                sizes="100vw"
+                priority={i === 0}
+                className={`object-cover object-center transition-opacity motion-reduce:transition-none ${
+                  reduceMotion ? "duration-0" : "duration-700"
+                } ${i === current ? "opacity-100" : "opacity-0"}`}
+              />
+            ) : (
+              <div key={src} aria-hidden className="absolute inset-0" />
+            )
+          )
         ) : (
           !imgError && (
-            <img
+            <Image
               src="/guadalajara.jpg"
               alt="Guadalajara"
-              fetchPriority="high"
-              className="h-full w-full object-cover object-center brightness-[0.4]"
+              fill
+              sizes="100vw"
+              priority
+              className="object-cover object-center brightness-[0.4]"
               onError={() => setImgError(true)}
             />
           )
