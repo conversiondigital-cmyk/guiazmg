@@ -40,7 +40,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   const shown = categories.slice(0, 6)
 
   return (
-    <section className="mx-auto max-w-[1280px] px-4 pb-20 pt-12 sm:px-6 sm:pt-14 lg:px-10">
+    <div className="relative z-10 -mt-8 rounded-t-[2rem] bg-[#f8f9ff]">
+      <section className="mx-auto max-w-[1280px] px-4 pb-20 pt-14 sm:px-6 sm:pt-16 lg:px-10">
       <div className="mb-10 flex items-end justify-between">
         <div>
           <h2 className="mb-2 text-3xl font-bold text-[#003527] sm:text-[32px]">Explora por Categorías</h2>
@@ -72,6 +73,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           )
         })}
       </div>
-    </section>
+      </section>
+    </div>
   )
 }

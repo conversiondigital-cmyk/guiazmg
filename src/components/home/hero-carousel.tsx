@@ -59,8 +59,6 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
         )}
         {/* Overlay verde semitransparente (la transparencia sobre las imágenes) */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#003527]/85 via-[#003527]/55 to-[#003527]/65" />
-        {/* Fundido inferior hacia el fondo claro de la página (transición suave hacia Categorías) */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent via-transparent to-[#f8f9ff]" />
       </div>
 
       <div className="relative z-10 w-full max-w-4xl px-4 text-center">
