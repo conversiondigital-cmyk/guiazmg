@@ -53,8 +53,8 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
           {/* Hero card */}
           <Link href={`/perfil/${hero.slug}`} className={`${CARD} md:col-span-7`}>
             <div className="relative">
-              <Cover biz={hero} className="h-72" />
-              <span className="absolute left-4 top-4 rounded-full bg-[#003527]/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+              <Cover biz={hero} className="aspect-[16/9]" />
+              <span className="absolute right-4 top-4 rounded-full bg-[#003527]/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
                 Top Destacado
               </span>
             </div>
@@ -85,7 +85,7 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
           {/* Small wide card */}
           {smalls[0] && (
             <Link href={`/perfil/${smalls[0].slug}`} className={`${CARD} md:col-span-5`}>
-              <Cover biz={smalls[0]} className="h-48" />
+              <Cover biz={smalls[0]} className="aspect-[16/9]" />
               <div className="p-6">
                 {smalls[0].category && (
                   <span className="text-xs font-bold uppercase text-[#006c49]">{smalls[0].category.name}</span>
@@ -105,7 +105,7 @@ export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
           {/* Three small cards */}
           {smalls.slice(1).map((biz) => (
             <Link key={biz.id} href={`/perfil/${biz.slug}`} className={`${CARD} md:col-span-4`}>
-              <Cover biz={biz} className="h-48" />
+              <Cover biz={biz} className="aspect-[16/9]" />
               <div className="p-6">
                 {biz.category && (
                   <span className="text-xs font-bold uppercase text-[#006c49]">{biz.category.name}</span>

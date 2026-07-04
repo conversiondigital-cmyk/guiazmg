@@ -16,8 +16,8 @@ export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDet
   return (
     <div>
       {business.coverImageUrl && (
-        <div className="relative aspect-[21/9] rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-green-100 to-green-50">
-          <Image src={business.coverImageUrl} alt={business.name} fill className="object-cover" />
+        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden mb-6 bg-gradient-to-br from-green-100 to-green-50">
+          <Image src={business.coverImageUrl} alt={business.name} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
         </div>
       )}
 
