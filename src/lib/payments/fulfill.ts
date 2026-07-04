@@ -2,9 +2,10 @@ import { prisma } from "@/lib/prisma"
 
 type Provider = "MERCADO_PAGO" | "STRIPE"
 
-// Activa una membresía a partir de un pago aprobado. Idempotente (upsert por
-// providerPaymentId). Reutilizable por cualquier proveedor. Mismo comportamiento
-// que el fulfillment inline de Mercado Pago (periodo mensual de 30 días).
+// Activa una membresía a partir de un pago aprobado. IDEMPOTENTE con guardia de
+// "claim": si el pago ya se procesó antes (webhook duplicado — Stripe entrega
+// "al menos una vez"), NO vuelve a re-estampar el periodo ni re-notifica.
+// Reutilizable por cualquier proveedor. Periodo mensual de 30 días.
 export async function fulfillMembership(opts: {
   planSlug: string
   userId: string
@@ -13,7 +14,7 @@ export async function fulfillMembership(opts: {
   providerPaymentId: string
   amount: number
   metadata?: unknown
-}): Promise<{ ok: boolean; reason?: string }> {
+}): Promise<{ ok: boolean; reason?: string; alreadyProcessed?: boolean }> {
   const slug = opts.planSlug.toLowerCase()
   const plan = await prisma.membershipPlan.findUnique({ where: { slug } })
   if (!plan) return { ok: false, reason: "plan-not-found" }
@@ -22,7 +23,9 @@ export async function fulfillMembership(opts: {
   const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
   const db = prisma as any
 
-  await db.$transaction(async (tx: any) => {
+  const activated: boolean = await db.$transaction(async (tx: any) => {
+    // Crea el pago como PENDING sin processedAt (para poder "reclamarlo"). Si ya
+    // existe, no se toca en el create.
     await tx.payment.upsert({
       where: { providerPaymentId: opts.providerPaymentId },
       create: {
@@ -33,12 +36,18 @@ export async function fulfillMembership(opts: {
         provider: opts.provider,
         providerPaymentId: opts.providerPaymentId,
         type: "MEMBERSHIP",
-        status: "APPROVED",
-        processedAt: now,
+        status: "PENDING",
         metadata: opts.metadata ?? undefined,
       },
-      update: { status: "APPROVED", amount: opts.amount, processedAt: now },
+      update: {},
     })
+
+    // Reclama el pago: solo el primer webhook (processedAt aún null) gana.
+    const claim = await tx.payment.updateMany({
+      where: { providerPaymentId: opts.providerPaymentId, processedAt: null },
+      data: { processedAt: now, status: "APPROVED", amount: opts.amount },
+    })
+    if (claim.count === 0) return false // ya procesado por otro webhook → no-op
 
     await tx.profileMembership.upsert({
       where: { businessId: opts.businessId },
@@ -58,6 +67,8 @@ export async function fulfillMembership(opts: {
         currentPeriodEnd: periodEnd,
       },
     })
+    return true
   })
-  return { ok: true }
+
+  return { ok: true, alreadyProcessed: !activated }
 }

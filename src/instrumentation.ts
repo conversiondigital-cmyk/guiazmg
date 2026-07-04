@@ -22,6 +22,5 @@ export async function register() {
 // si no, Sentry no está inicializado y esto no hace nada). `captureRequestError`
 // existe en runtime pero falta en los tipos de esta versión → shim tipado.
 type OnRequestError = (error: unknown, request: unknown, context: unknown) => void | Promise<void>
-export const onRequestError: OnRequestError = (
-  Sentry as unknown as { captureRequestError: OnRequestError }
-).captureRequestError
+export const onRequestError: OnRequestError =
+  (Sentry as unknown as { captureRequestError?: OnRequestError }).captureRequestError ?? (() => {})

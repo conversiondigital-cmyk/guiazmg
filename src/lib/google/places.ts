@@ -19,13 +19,30 @@ export function extractPlaceId(url?: string | null): string | null {
   return m ? m[1] : null
 }
 
+// Google devuelve HTTP 200 con status REQUEST_DENIED/OVER_QUERY_LIMIT cuando la
+// key es inválida o sin permisos. Distinguimos eso de un genuino "no encontrado".
+class PlacesKeyError extends Error {}
+
+function assertNotKeyError(status: string | undefined, errorMessage?: string) {
+  if (status === "REQUEST_DENIED" || status === "OVER_QUERY_LIMIT" || status === "INVALID_REQUEST") {
+    throw new PlacesKeyError(
+      `Google Places ${status}${errorMessage ? `: ${errorMessage}` : ""} — revisa la API key (Places API habilitada, sin restricción de dominio, billing activo).`
+    )
+  }
+}
+
 async function findPlaceId(query: string, key: string): Promise<string | null> {
   const url =
     `https://maps.googleapis.com/maps/api/place/findplacefromtext/json` +
     `?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id&key=${key}`
   const res = await fetch(url)
   if (!res.ok) return null
-  const j = (await res.json()) as { candidates?: { place_id?: string }[] }
+  const j = (await res.json()) as {
+    status?: string
+    error_message?: string
+    candidates?: { place_id?: string }[]
+  }
+  assertNotKeyError(j.status, j.error_message)
   return j.candidates?.[0]?.place_id ?? null
 }
 
@@ -40,8 +57,10 @@ async function getPlaceRating(
   if (!res.ok) return null
   const j = (await res.json()) as {
     status?: string
+    error_message?: string
     result?: { rating?: number; user_ratings_total?: number }
   }
+  assertNotKeyError(j.status, j.error_message)
   if (j.status !== "OK") return null
   return { rating: j.result?.rating ?? null, count: j.result?.user_ratings_total ?? null }
 }
@@ -70,23 +89,29 @@ export async function syncGoogleRating(profileId: string): Promise<SyncResult> {
   })
   if (!p) return { ok: false, error: "Negocio no encontrado" }
 
-  let placeId = extractPlaceId(p.googleMapsUrl)
-  if (!placeId) {
-    const query = [p.name, p.addressText, p.municipality?.name, "Jalisco, México"]
-      .filter(Boolean)
-      .join(", ")
-    placeId = await findPlaceId(query, key)
+  try {
+    let placeId = extractPlaceId(p.googleMapsUrl)
+    if (!placeId) {
+      const query = [p.name, p.addressText, p.municipality?.name, "Jalisco, México"]
+        .filter(Boolean)
+        .join(", ")
+      placeId = await findPlaceId(query, key)
+    }
+    if (!placeId) return { ok: false, error: "No se encontró el lugar en Google" }
+
+    const r = await getPlaceRating(placeId, key)
+    if (!r) return { ok: false, error: "No se pudo leer el rating de Google" }
+
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { googleRating: r.rating, googleReviewCount: r.count },
+    })
+    return { ok: true, rating: r.rating, count: r.count }
+  } catch (e) {
+    // Error de API key (denegada/sin permiso/cuota) → mensaje claro, no "no encontrado".
+    if (e instanceof PlacesKeyError) return { ok: false, error: e.message }
+    throw e
   }
-  if (!placeId) return { ok: false, error: "No se encontró el lugar en Google" }
-
-  const r = await getPlaceRating(placeId, key)
-  if (!r) return { ok: false, error: "No se pudo leer el rating de Google" }
-
-  await prisma.profile.update({
-    where: { id: profileId },
-    data: { googleRating: r.rating, googleReviewCount: r.count },
-  })
-  return { ok: true, rating: r.rating, count: r.count }
 }
 
 // Sincroniza en lote (para el cron). Solo negocios activos con URL de Google.

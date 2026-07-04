@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { syncGoogleRatingsBatch } from "@/lib/google/places"
 
+export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 

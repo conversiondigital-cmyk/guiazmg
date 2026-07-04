@@ -63,7 +63,9 @@ export async function POST(request: Request) {
           amount,
           metadata: { source: "stripe", sessionId: s.id },
         })
-        if (result.ok) {
+        // Solo notifica en la PRIMERA activación (evita re-notificar en webhooks
+        // duplicados que Stripe entrega "al menos una vez").
+        if (result.ok && !result.alreadyProcessed) {
           await createNotification({
             userId,
             type: "PAYMENT",

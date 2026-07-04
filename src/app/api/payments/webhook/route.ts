@@ -87,11 +87,18 @@ export async function POST(request: Request) {
       const paymentId = data?.id
       if (!paymentId) return NextResponse.json({ received: true })
 
+      // El access token se lee del panel (Admin→Pagos) con respaldo a env, igual
+      // que el checkout. Antes leía process.env directo → si el token estaba solo
+      // en el panel, este fetch mandaba "Bearer undefined" y la membresía nunca
+      // se activaba.
+      const accessToken = await getSetting("mercado_pago_access_token", "MERCADO_PAGO_ACCESS_TOKEN")
+      if (!accessToken) return NextResponse.json({ received: true })
+
       const response = await fetch(
         `https://api.mercadopago.com/v1/payments/${paymentId}`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       )

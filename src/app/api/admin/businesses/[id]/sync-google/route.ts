@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { syncGoogleRating } from "@/lib/google/places"
 
+export const runtime = "nodejs"
+
 // Sincroniza el rating de Google de UN negocio (botón manual en el admin).
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
