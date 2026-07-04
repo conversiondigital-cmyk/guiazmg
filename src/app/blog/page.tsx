@@ -192,7 +192,7 @@ export default async function BlogPage({ searchParams }: Props) {
                   <article className="rounded-2xl overflow-hidden bg-white border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all h-full flex flex-col">
                     <div className="relative aspect-video bg-gradient-to-br from-green-50 to-emerald-100 overflow-hidden">
                       {post.coverImageUrl ? (
-                        <img src={post.coverImageUrl} alt={post.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={post.coverImageUrl} alt={post.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
                           <span className="text-6xl font-black text-green-800/10">{post.title.charAt(0)}</span>
@@ -248,7 +248,7 @@ export default async function BlogPage({ searchParams }: Props) {
                     <article className="flex gap-4 rounded-xl bg-white border border-gray-100 p-4 hover:border-green-200 hover:shadow-md transition-all">
                       {post.coverImageUrl && (
                         <div className="shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-gray-100">
-                          <img src={post.coverImageUrl} alt={post.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={post.coverImageUrl} alt={post.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">

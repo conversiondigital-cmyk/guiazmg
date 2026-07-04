@@ -118,11 +118,16 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Cover image */}
         {post.coverImageUrl && (
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 -mt-6">
-            <img
-              src={post.coverImageUrl}
-              alt={post.title}
-              className="w-full rounded-2xl object-cover shadow-xl max-h-[400px]"
-            />
+            {/* Contenedor con proporción reservada (21:9) para evitar salto de layout (CLS). */}
+            <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 shadow-xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.coverImageUrl}
+                alt={post.title}
+                fetchPriority="high"
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
         )}
 
@@ -212,7 +217,7 @@ export default async function BlogPostPage({ params }: Props) {
                     <article className="rounded-2xl overflow-hidden bg-white border border-gray-100 hover:border-green-200 hover:shadow-md transition-all">
                       <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-100 overflow-hidden">
                         {p.coverImageUrl ? (
-                          <img src={p.coverImageUrl} alt={p.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={p.coverImageUrl} alt={p.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center">
                             <span className="text-4xl font-black text-green-800/10">{p.title.charAt(0)}</span>

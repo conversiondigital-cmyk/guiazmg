@@ -75,7 +75,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
                   <div className="relative aspect-[16/9] bg-gradient-to-br from-[#064e3b] to-[#006c49]">
                     {ev.coverImageUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ev.coverImageUrl} alt={ev.title} className="h-full w-full object-cover" />
+                      <img src={ev.coverImageUrl} alt={ev.title} loading="lazy" className="h-full w-full object-cover" />
                     )}
                     <span className={`absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-xs font-bold ${ev.isFree ? "bg-[#4edea3] text-[#003527]" : "bg-white/90 text-gray-800"}`}>
                       {ev.isFree ? "Gratis" : ev.priceText || "De pago"}

@@ -54,7 +54,7 @@ export default async function EventDetailPage({ params }: EventDetailProps) {
             <div className="relative aspect-[21/9] bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49]">
               {ev.coverImageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={ev.coverImageUrl} alt={ev.title} className="h-full w-full object-cover" />
+                <img src={ev.coverImageUrl} alt={ev.title} fetchPriority="high" className="h-full w-full object-cover" />
               )}
               <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-sm font-bold ${ev.isFree ? "bg-[#4edea3] text-[#003527]" : "bg-white/90 text-gray-800"}`}>
                 {ev.isFree ? "Gratis" : ev.priceText || "De pago"}
