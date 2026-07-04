@@ -64,7 +64,7 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "oauth_google_enabled", label: "OAuth Google habilitado", type: "toggle" },
       { key: "session_duration_days", label: "Duración de sesión (días)", type: "number", placeholder: "30" },
       { key: "password_min_length", label: "Longitud mínima de password", type: "number", placeholder: "8" },
-      { key: "require_email_verification", label: "Verificación de email requerida", type: "toggle" },
+      { key: "require_email_verification", label: "Verificación de email requerida", type: "toggle", description: "Bloquea el inicio de sesión con correo/contraseña hasta activar la cuenta por el enlace. Google entra directo (ya verificado). IMPORTANTE: préndelo solo cuando el SMTP funcione, o nadie podrá activarse. Las cuentas ya existentes conviene marcarlas verificadas antes de prender esto." },
       { key: "two_factor_enabled", label: "2FA disponible", type: "toggle" },
     ],
   },

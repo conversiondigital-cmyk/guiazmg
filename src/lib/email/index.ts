@@ -38,6 +38,10 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
     subject: "Restablece tu contraseña de Guía ZMG",
     html: `<h1>Restablecer contraseña</h1><p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p><p><a href="${v.resetUrl || "#"}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Restablecer contraseña</a></p><p>Este enlace expira en 1 hora.</p>`,
   }),
+  verify_email: (v) => ({
+    subject: "Activa tu cuenta de Guía ZMG",
+    html: `<h1>¡Casi listo${v.name ? `, ${v.name}` : ""}!</h1><p>Confirma tu correo para activar tu cuenta en Guía ZMG.</p><p><a href="${v.verifyUrl || "#"}" style="background:#059669;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Activar mi cuenta</a></p><p>El enlace expira en 24 horas. Si no creaste esta cuenta, ignora este correo.</p>`,
+  }),
 }
 
 // Construye el transporte SMTP leyendo la config del admin (Admin → Configuración
@@ -113,4 +117,13 @@ export async function sendRenewalReminder(email: string, data: { businessName?: 
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string, userId?: string) {
   return sendEmail(email, "reset_password", { resetUrl }, userId)
+}
+
+export async function sendVerificationEmail(
+  email: string,
+  verifyUrl: string,
+  name?: string | null,
+  userId?: string,
+) {
+  return sendEmail(email, "verify_email", { verifyUrl, name: name || "" }, userId)
 }

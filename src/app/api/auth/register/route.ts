@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
-import { sendWelcomeEmail } from "@/lib/email"
+import { sendVerificationEmail } from "@/lib/email"
+import { createVerificationToken } from "@/lib/auth/verification"
 import { z } from "zod"
 
 const registerSchema = z.object({
@@ -46,9 +47,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Correo de bienvenida (no-op si SMTP no está configurado). No debe romper
-    // el registro si el envío falla.
-    await sendWelcomeEmail(user).catch((e) => console.error("[WELCOME_EMAIL]", e))
+    // Enlace de activación (no-op si SMTP no está configurado). No debe romper
+    // el registro si el envío falla. Google no pasa por aquí (se auto-verifica).
+    try {
+      const verifyUrl = await createVerificationToken(user.email)
+      await sendVerificationEmail(user.email, verifyUrl, user.name, user.id)
+    } catch (e) {
+      console.error("[VERIFY_EMAIL]", e)
+    }
 
     return NextResponse.json(
       { id: user.id, name: user.name, email: user.email },

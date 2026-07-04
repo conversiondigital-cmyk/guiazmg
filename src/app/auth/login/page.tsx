@@ -17,10 +17,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [info, setInfo] = useState("")
+  const [resending, setResending] = useState(false)
 
-  // Si volvemos de un fallo de OAuth (?error=...), muéstralo en vez de un 500.
+  // Mensajes de OAuth (?error=) y de activación de cuenta (?verified / ?verify_error).
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("error")
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("verified")) {
+      setInfo("¡Cuenta activada! Ya puedes iniciar sesión.")
+      return
+    }
+    if (params.get("verify_error")) {
+      setError("El enlace de activación no es válido o ya expiró. Escribe tu correo abajo y reenvíalo.")
+      return
+    }
+    const code = params.get("error")
     if (!code) return
     if (code === "OAuthAccountNotLinked") {
       setError("Ese correo ya está registrado con contraseña. Inicia sesión con tu correo y contraseña.")
@@ -28,6 +39,26 @@ export default function LoginPage() {
       setError("No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu correo y contraseña.")
     }
   }, [])
+
+  const handleResend = async () => {
+    if (!email) {
+      toast.error("Escribe tu correo para reenviar el enlace")
+      return
+    }
+    setResending(true)
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      toast.success("Si tu cuenta necesita activación, te enviamos el enlace")
+    } catch {
+      toast.error("No se pudo reenviar. Inténtalo de nuevo.")
+    } finally {
+      setResending(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,12 +104,28 @@ export default function LoginPage() {
           <CardDescription>Accede a tu cuenta de Guía ZMG</CardDescription>
         </CardHeader>
         <CardContent>
+          {info && (
+            <div
+              role="status"
+              className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-medium text-emerald-700"
+            >
+              {info}
+            </div>
+          )}
           {error && (
             <div
               role="alert"
               className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
             >
               {error}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="mt-1 block font-semibold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-60"
+              >
+                {resending ? "Reenviando…" : "Reenviar enlace de activación"}
+              </button>
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">

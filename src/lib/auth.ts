@@ -8,6 +8,7 @@ import type { JWT } from "next-auth/jwt"
 import { prisma } from "@/lib/prisma"
 import { enforceRateLimits } from "@/lib/security/request-rate-limit"
 import { getTrustedClientIp } from "@/lib/security/rate-limit"
+import { getSettingBool } from "@/lib/settings"
 
 type AuthToken = Omit<JWT, "id" | "role"> & {
   id?: string
@@ -57,6 +58,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
 
         if (!isValid) return null
+
+        // Verificación de correo (solo si el admin la activó). Google no pasa
+        // por aquí, se auto-verifica. Sin verificar → no se puede entrar.
+        const requireVerification = await getSettingBool("require_email_verification")
+        if (requireVerification && !user.emailVerified) return null
 
         return {
           id: user.id,
@@ -121,6 +127,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         authToken.id = dbUser.id
         authToken.role = dbUser.role
         authToken.sessionVersion = dbUser.sessionVersion
+
+        // Google ya verificó el correo → marca la cuenta como verificada (una
+        // sola vez; updateMany con emailVerified:null es idempotente). Corre en
+        // el jwt porque el adapter crea al usuario nuevo ANTES de este callback.
+        if (account?.provider === "google") {
+          await prisma.user
+            .updateMany({ where: { id: dbUser.id, emailVerified: null }, data: { emailVerified: new Date() } })
+            .catch(() => {})
+        }
       }
 
       // Tras el login (dbUser ya validado arriba): sella el timestamp y termina,
