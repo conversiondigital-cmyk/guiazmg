@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getStripe } from "@/lib/stripe"
-import { MEMBERSHIP_PLANS } from "@/lib/constants"
+import { getPlanBySlug } from "@/lib/constants"
 import { getPublicAppUrl } from "@/lib/env"
 
 // Crea una sesión de Stripe Checkout para una membresía. Espeja el flujo de
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     businessId?: string
   }
 
-  const planDef = plan ? MEMBERSHIP_PLANS[plan as keyof typeof MEMBERSHIP_PLANS] : undefined
+  const planDef = getPlanBySlug(plan)
   if (!planDef) {
     return NextResponse.json({ error: "Plan inválido" }, { status: 400 })
   }

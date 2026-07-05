@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { buildPreferencePayload, createPreference } from "@/lib/mercadopago"
-import { MEMBERSHIP_PLANS } from "@/lib/constants"
+import { getPlanBySlug } from "@/lib/constants"
 
 async function assertBusinessOwnership(userId: string, businessId: string, isAdmin: boolean) {
   if (isAdmin) return true
@@ -77,7 +77,8 @@ export async function POST(request: Request) {
       }
 
     if (type === "membership") {
-      if (!plan || !MEMBERSHIP_PLANS[plan as keyof typeof MEMBERSHIP_PLANS]) {
+      const membershipPlan = getPlanBySlug(plan)
+      if (!plan || !membershipPlan) {
         return NextResponse.json({ error: "Plan inválido" }, { status: 400 })
       }
 
@@ -90,7 +91,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "No autorizado" }, { status: 403 })
       }
 
-      const membershipPlan = MEMBERSHIP_PLANS[plan as keyof typeof MEMBERSHIP_PLANS]
       if (coupon) {
         const amount = membershipPlan.price
         if (coupon.startsAt && coupon.startsAt > new Date()) {

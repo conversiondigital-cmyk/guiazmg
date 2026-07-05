@@ -82,6 +82,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           Google({
             clientId: process.env.AUTH_GOOGLE_ID,
             clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            // Solo login básico: email, nombre y foto de perfil. NADA de Gmail,
+            // Drive, Calendar ni scopes sensibles. Se fija explícitamente para que
+            // nadie agregue permisos que compliquen la verificación de Google o
+            // expongan datos del usuario sin necesidad (principio de mínimo privilegio).
+            authorization: { params: { scope: "openid email profile" } },
           }),
         ]
       : []),

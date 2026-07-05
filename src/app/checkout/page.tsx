@@ -9,7 +9,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Check, ArrowRight } from "@/lib/icons"
-import { MEMBERSHIP_PLANS } from "@/lib/constants"
+import { getPlanBySlug } from "@/lib/constants"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -22,7 +22,7 @@ function CheckoutContent() {
   const plan = searchParams.get("plan")
   const businessId = searchParams.get("businessId")
 
-  const membershipPlan = plan ? MEMBERSHIP_PLANS[plan as keyof typeof MEMBERSHIP_PLANS] : null
+  const membershipPlan = getPlanBySlug(plan)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -98,10 +98,10 @@ function CheckoutContent() {
     <>
       <Header />
       <main className="flex-1 bg-gray-50">
-        <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800">
+        <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-20">
           <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
             <h1 className="text-4xl font-bold text-white">Confirmar compra</h1>
-            <p className="mt-4 text-xl text-blue-100">
+            <p className="mt-4 text-xl text-white/85">
               Revisa los detalles antes de continuar
             </p>
           </div>

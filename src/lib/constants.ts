@@ -9,68 +9,62 @@ export const MUNICIPALITIES = [
   { name: "Ixtlahuacán de los Membrillos", slug: "ixtlahuacan-de-los-membrillos" },
 ] as const
 
+// Modelo de cobro oficial: 2 planes de pago + boost. No hay tier gratuito (el
+// acceso de prueba se da con cupones canjeables, ver MembershipCoupon).
 export const MEMBERSHIP_PLANS = {
-  GRATUITO: {
-    name: "Gratuito",
-    price: 0,
-    slug: "gratuito",
-    tagline: "Empieza a aparecer",
-    features: [
-      "1 perfil comercial",
-      "Hasta 10 productos",
-      "1 promoción activa",
-      "Botón de WhatsApp",
-      "Botón de llamada",
-      "Acceso básico al marketplace",
-    ],
-  },
-  EMPRENDEDOR: {
-    name: "Emprendedor",
+  EMPRENDIMIENTO: {
+    name: "Emprendimiento",
     price: 49,
+    // El slug interno se mantiene "emprendedor" a propósito: el webhook de pagos y
+    // las suscripciones existentes resuelven por slug. Solo cambió el nombre visible.
     slug: "emprendedor",
-    tagline: "Empieza a vender mejor",
+    tagline: "Para quien vende por su cuenta",
     features: [
       "1 perfil comercial",
-      "Hasta 100 productos",
+      "Catálogo de hasta 100 productos",
       "Hasta 20 servicios",
       "Hasta 3 promociones activas",
-      "Galería ampliada",
-      "Métricas básicas (vistas, clics)",
-      "Mejor posicionamiento que Gratuito",
+      "WhatsApp, teléfono y ubicación",
+      "Galería básica",
+      "Métricas básicas (vistas y clics)",
+      "Puedes comprar boost",
     ],
   },
   NEGOCIO: {
     name: "Negocio",
     price: 149,
     slug: "negocio",
-    tagline: "Consigue más clientes",
+    tagline: "Para negocios y servicios establecidos",
     features: [
-      "1 perfil comercial robusto",
-      "Hasta 100 productos",
-      "Hasta 100 servicios",
+      "Perfil comercial completo",
+      "Hasta 100 productos y 100 servicios",
       "Hasta 10 promociones activas",
-      "Estadísticas completas",
+      "Dirección, horarios, cobertura, redes y sitio web",
+      "Galería ampliada",
       "Reseñas habilitadas",
+      "Estadísticas completas + leads",
       "Posibilidad de verificación",
-      "Horarios, cobertura, redes sociales",
-      "Mejor posicionamiento que Emprendedor",
-    ],
-  },
-  PREMIUM: {
-    name: "Premium",
-    price: 299,
-    slug: "premium",
-    tagline: "Aparece primero",
-    features: [
-      "Todo lo de Negocio",
-      "Hasta 200 productos y servicios",
-      "Insignia premium visible",
-      "Máxima prioridad en búsquedas",
-      "Métricas avanzadas",
-      "Soporte prioritario",
+      "Mejor posicionamiento + boost",
     ],
   },
 } as const
+
+// Paquetes de boost (aparecer más arriba por un tiempo). Pago único por duración,
+// sin créditos ni saldo interno.
+export const BOOSTS = [
+  { name: "Semanal", days: 7, price: 49 },
+  { name: "Quincenal", days: 15, price: 99 },
+  { name: "Mensual", days: 30, price: 149 },
+  { name: "Trimestral", days: 90, price: 399 },
+] as const
+
+// Resuelve un plan por su slug — que es lo que viaja en las URLs (/checkout?plan=)
+// y en el externalReference del webhook. Antes el checkout indexaba por KEY
+// (mayúsculas) mientras las URLs pasan el slug (minúsculas) → "Plan inválido".
+export function getPlanBySlug(slug: string | null | undefined) {
+  if (!slug) return null
+  return Object.values(MEMBERSHIP_PLANS).find((p) => p.slug === slug) ?? null
+}
 
 export const SEARCH_SUGGESTIONS = [
   "cerrajero",
