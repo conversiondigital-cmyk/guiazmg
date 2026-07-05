@@ -28,7 +28,9 @@ export function CouponRedeemForm({ businesses }: { businesses: Business[] }) {
         body: JSON.stringify({ code: code.trim(), businessId }),
       })
       const data = await res.json().catch(() => ({}))
-      if (res.ok) {
+      // Se gatea en data.success (no en res.ok): si la sesión expiró, el proxy
+      // redirige a la página de login (200 HTML) y res.ok sería true sin haber canjeado.
+      if (res.ok && data.success) {
         toast.success(`¡Listo! Se activó ${data.planName} por ${data.days} días.`)
         setCode("")
         router.refresh()

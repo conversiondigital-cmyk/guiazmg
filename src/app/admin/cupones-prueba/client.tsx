@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,7 +27,6 @@ export function MembershipCouponsClient({
   plans: Plan[]
   initialCoupons: Coupon[]
 }) {
-  const router = useRouter()
   const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -60,10 +58,11 @@ export function MembershipCouponsClient({
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (res.ok) {
+      // Gatea en data.coupon (no en res.ok): un redirect de auth (200 HTML) haría
+      // res.ok true e insertaría una fila fantasma con data.coupon undefined.
+      if (res.ok && data.coupon) {
         toast.success("Cupón creado")
         setForm((f) => ({ ...f, code: "", note: "" }))
-        router.refresh()
         setCoupons((c) => [{ ...data.coupon, plan: { name: plans.find((p) => p.id === form.planId)?.name ?? "" } }, ...c])
       } else {
         toast.error(data.error ?? "No se pudo crear")
@@ -76,11 +75,18 @@ export function MembershipCouponsClient({
   const toggle = async (c: Coupon) => {
     const next = !c.isActive
     setCoupons((list) => list.map((x) => (x.id === c.id ? { ...x, isActive: next } : x)))
-    await fetch("/api/admin/membership-coupons", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: c.id, isActive: next }),
-    }).catch(() => {})
+    try {
+      const res = await fetch("/api/admin/membership-coupons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: c.id, isActive: next }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      // Revierte el cambio optimista si el server no lo aplicó (evita que la UI mienta).
+      setCoupons((list) => list.map((x) => (x.id === c.id ? { ...x, isActive: c.isActive } : x)))
+      toast.error("No se pudo actualizar el cupón")
+    }
   }
 
   return (

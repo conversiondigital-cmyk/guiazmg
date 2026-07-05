@@ -28,10 +28,11 @@ const comparisonRows: { label: string; emprendimiento: CellVal; negocio: CellVal
   { label: "Boost disponible", emprendimiento: "Desde $49", negocio: "Desde $49" },
 ]
 
-const planMeta = {
+const planMeta: Record<string, { icon: typeof TrendingUp; color: string }> = {
   EMPRENDIMIENTO: { icon: TrendingUp, color: "text-[#0f7a52]" },
   NEGOCIO: { icon: Briefcase, color: "text-[#003527]" },
-} as const
+}
+const PLAN_META_FALLBACK = { icon: Briefcase, color: "text-gray-500" }
 
 function Cell({ value }: { value: CellVal }) {
   if (value === true) return <Check className="mx-auto h-5 w-5 text-green-600" />
@@ -65,7 +66,7 @@ export default function PlansPage() {
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 sm:grid-cols-2">
               {plans.map(([key, plan]) => {
-                const meta = planMeta[key]
+                const meta = planMeta[key] ?? PLAN_META_FALLBACK
                 const Icon = meta.icon
                 const isRecommended = key === "NEGOCIO"
                 return (

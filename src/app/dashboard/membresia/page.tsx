@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Crown, Star, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Link as LinkIcon, Globe, Store } from "@/lib/icons"
+import { Crown, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Link as LinkIcon, Globe, Store } from "@/lib/icons"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { CouponRedeemForm } from "@/components/dashboard/coupon-redeem-form"
@@ -20,10 +20,8 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 }
 
 const planIcon: Record<string, React.ReactNode> = {
-  free: <Star className="h-5 w-5 text-gray-400" />,
-  basic: <Zap className="h-5 w-5 text-green-600" />,
-  professional: <Crown className="h-5 w-5 text-amber-500" />,
-  premium: <Gem className="h-5 w-5 text-purple-500" />,
+  emprendedor: <Zap className="h-5 w-5 text-green-600" />,
+  negocio: <Crown className="h-5 w-5 text-amber-500" />,
 }
 
 export default async function MembresiaPage() {
@@ -227,7 +225,6 @@ export default async function MembresiaPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => {
               const isActive = activeMembership?.planId === plan.id
-              const isZero = Number(plan.monthlyPrice) === 0
 
               return (
                 <Card
@@ -235,7 +232,7 @@ export default async function MembresiaPage() {
                   className={`relative flex flex-col ${
                     isActive
                       ? "border-blue-500 ring-2 ring-blue-200"
-                      : plan.slug === "professional" && !activeMembership
+                      : plan.slug === "negocio" && !activeMembership
                         ? "border-amber-300"
                         : ""
                   }`}
@@ -245,7 +242,7 @@ export default async function MembresiaPage() {
                       <Badge className="bg-green-700 text-white">Actual</Badge>
                     </div>
                   )}
-                  {plan.slug === "professional" && !activeMembership && (
+                  {plan.slug === "negocio" && !activeMembership && (
                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-amber-500 text-white">Recomendado</Badge>
                     </div>
@@ -256,11 +253,9 @@ export default async function MembresiaPage() {
                       <h3 className="font-semibold">{plan.name}</h3>
                     </div>
                     <p className="text-2xl font-bold">
-                      {isZero ? "Gratuito" : formatCurrency(Number(plan.monthlyPrice))}
+                      {formatCurrency(Number(plan.monthlyPrice))}
                     </p>
-                    {!isZero && (
-                      <p className="text-xs text-gray-500 mb-3">MXN/mes</p>
-                    )}
+                    <p className="text-xs text-gray-500 mb-3">MXN/mes</p>
                     {plan.description && (
                       <p className="text-xs text-gray-400 mb-4">{plan.description}</p>
                     )}
@@ -303,17 +298,13 @@ export default async function MembresiaPage() {
                       >
                         <Button
                           variant={
-                            plan.slug === "professional" && !activeMembership
+                            plan.slug === "negocio" && !activeMembership
                               ? "default"
                               : "outline"
                           }
                           className="w-full"
                         >
-                          {isZero
-                            ? "Seleccionar"
-                            : activeMembership
-                              ? "Cambiar a este plan"
-                              : "Adquirir"}
+                          {activeMembership ? "Cambiar a este plan" : "Adquirir"}
                         </Button>
                       </Link>
                     )}
