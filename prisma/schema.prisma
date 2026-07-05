@@ -591,6 +591,7 @@ model MembershipPlan {
   updatedAt        DateTime @updatedAt
 
    memberships ProfileMembership[]
+  coupons     MembershipCoupon[]
 
   @@map("membership_plans")
 }
@@ -612,6 +613,45 @@ model ProfileMembership {
   plan     MembershipPlan @relation(fields: [planId], references: [id])
 
   @@map("business_memberships")
+}
+
+/// ── Cupones de prueba ──────────────────────────────────
+/// Código canjeable por el usuario que activa un plan por N días SIN pago.
+/// Reemplaza al tier gratuito: el admin decide quién prueba, qué plan y cuánto.
+model MembershipCoupon {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  planId          String
+  days            Int
+  maxRedemptions  Int? // null = ilimitado
+  redemptionCount Int       @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean   @default(true)
+  note            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  plan        MembershipPlan               @relation(fields: [planId], references: [id])
+  redemptions MembershipCouponRedemption[]
+
+  @@index([code])
+  @@map("membership_coupons")
+}
+
+/// Un canje por negocio (evita doble uso del mismo código en el mismo negocio).
+model MembershipCouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  businessId String
+  userId     String
+  days       Int
+  redeemedAt DateTime @default(now())
+
+  coupon MembershipCoupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, businessId])
+  @@index([businessId])
+  @@map("membership_coupon_redemptions")
 }
 
 /// ── Listings ───────────────────────────────────────────

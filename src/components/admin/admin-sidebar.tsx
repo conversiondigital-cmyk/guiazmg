@@ -98,6 +98,7 @@ const sections: SidebarSection[] = [
       { label: "Pagos", href: "/admin/pagos", icon: CreditCard },
       { label: "Financiero", href: "/admin/financiero", icon: DollarSign },
       { label: "Cupones descuento", href: "/admin/cupones", icon: Gift },
+      { label: "Cupones de prueba", href: "/admin/cupones-prueba", icon: Tag },
       { label: "Regalos y beneficios", href: "/admin/promociones-admin", icon: Award },
     ],
   },

@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Crown, Star, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Link as LinkIcon, Globe, Store } from "@/lib/icons"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
+import { CouponRedeemForm } from "@/components/dashboard/coupon-redeem-form"
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   ACTIVE: { label: "ACTIVA", color: "bg-green-100 text-green-700 border-green-300" },
@@ -209,6 +210,10 @@ export default async function MembresiaPage() {
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {businesses.length > 0 && (
+        <CouponRedeemForm businesses={businesses.map((b) => ({ id: b.id, name: b.name }))} />
       )}
 
       <Card id="planes">
