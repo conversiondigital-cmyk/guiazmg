@@ -143,51 +143,29 @@ async function main() {
   }
 
   // Planes de membresía oficiales — economía local ZMG
+  // Modelo oficial: 2 planes de pago. El acceso de prueba se da con cupones
+  // (MembershipCoupon), no con un tier gratuito.
   const membershipPlans = [
     {
-      name: "Gratuito",
-      slug: "gratuito",
-      description: "Empieza a aparecer. Para emprendedores que apenas empiezan.",
-      monthlyPrice: 0,
-      priorityLevel: 0,
-      maxListings: 10,      // hasta 10 productos
-      maxGalleryImages: 3,
-      hasFeaturedBadge: false,
-      hasSocialLinks: false,
-      hasWebsiteLink: false,
-    },
-    {
-      name: "Emprendedor",
-      slug: "emprendedor",
-      description: "Empieza a vender mejor. Para catálogos, ventas desde casa y servicios personales.",
+      name: "Emprendimiento",
+      slug: "emprendedor", // slug interno se mantiene (webhook/suscripciones)
+      description: "Para quien vende por su cuenta: catálogo y perfil para que te encuentren en tu zona.",
       monthlyPrice: 49,
       priorityLevel: 1,
       maxListings: 100,     // hasta 100 productos / 20 servicios
       maxGalleryImages: 15,
       hasFeaturedBadge: false,
-      hasSocialLinks: true,
+      hasSocialLinks: false,
       hasWebsiteLink: false,
     },
     {
       name: "Negocio",
       slug: "negocio",
-      description: "Consigue más clientes. Para negocios y prestadores de servicios locales.",
+      description: "Para negocios y servicios establecidos: ficha completa, reseñas, estadísticas y mejor visibilidad.",
       monthlyPrice: 149,
       priorityLevel: 2,
       maxListings: 100,     // hasta 100 productos y 100 servicios
       maxGalleryImages: 30,
-      hasFeaturedBadge: true,
-      hasSocialLinks: true,
-      hasWebsiteLink: true,
-    },
-    {
-      name: "Premium",
-      slug: "premium",
-      description: "Máxima exposición. Para negocios que buscan dominar búsquedas en su zona.",
-      monthlyPrice: 299,
-      priorityLevel: 3,
-      maxListings: 200,
-      maxGalleryImages: 50,
       hasFeaturedBadge: true,
       hasSocialLinks: true,
       hasWebsiteLink: true,
@@ -206,6 +184,7 @@ async function main() {
     { name: "7 Días", durationDays: 7, price: 49, priorityBonus: 2 },
     { name: "15 Días", durationDays: 15, price: 99, priorityBonus: 3 },
     { name: "30 Días", durationDays: 30, price: 149, priorityBonus: 5 },
+    { name: "90 Días", durationDays: 90, price: 399, priorityBonus: 8 },
   ]
   for (const boost of boostDefinitions) {
     const existing = await prisma.boostDefinition.findFirst({ where: { name: boost.name } })
