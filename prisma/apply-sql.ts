@@ -11,22 +11,28 @@ import "dotenv/config"
 import { readFileSync } from "node:fs"
 import pg from "pg"
 
-const file = process.argv[2]
-if (!file) {
-  console.error("uso: npx tsx prisma/apply-sql.ts <archivo.sql>")
-  process.exit(1)
-}
-const url = process.env.DATABASE_URL
-if (!url) {
-  console.error("falta DATABASE_URL")
-  process.exit(1)
+async function main() {
+  const file = process.argv[2]
+  if (!file) {
+    console.error("uso: npx tsx prisma/apply-sql.ts <archivo.sql>")
+    process.exit(1)
+  }
+  const url = process.env.DATABASE_URL
+  if (!url) {
+    console.error("falta DATABASE_URL")
+    process.exit(1)
+  }
+  const client = new pg.Client({ connectionString: url })
+  await client.connect()
+  try {
+    await client.query(readFileSync(file, "utf8"))
+    console.log("OK:", file, "->", new URL(url).host)
+  } finally {
+    await client.end()
+  }
 }
 
-const client = new pg.Client({ connectionString: url })
-await client.connect()
-try {
-  await client.query(readFileSync(file, "utf8"))
-  console.log("OK:", file, "->", new URL(url).host)
-} finally {
-  await client.end()
-}
+main().then(() => process.exit(0)).catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
