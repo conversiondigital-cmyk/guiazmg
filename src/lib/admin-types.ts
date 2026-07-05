@@ -17,7 +17,7 @@ export interface SidebarItem {
 export type UserRole = "ADMIN" | "EDITOR" | "SALES_AGENT" | "BUSINESS_OWNER" | "USER"
 export type UserStatus = "active" | "suspended" | "pending" | "deleted"
 export type BusinessStatus = "draft" | "pending" | "active" | "suspended" | "rejected" | "archived"
-export type MembershipPlan = "gratuito" | "emprendedor" | "negocio" | "premium"
+export type MembershipPlan = "emprendedor" | "negocio"
 export type PaymentStatus = "pending" | "approved" | "failed" | "refunded" | "cancelled"
 
 // ============================================================================

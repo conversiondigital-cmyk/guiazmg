@@ -46,6 +46,12 @@ export async function POST(request: Request) {
     } | undefined
 
     if (couponCode) {
+      // Endurecimiento: el código debe ser un string (evita que un objeto tipo
+      // {gte:""} llegue al where de Prisma). Los demás campos se resuelven con
+      // lookups/ownership tipados, que rechazan formas inválidas.
+      if (typeof couponCode !== "string") {
+        return NextResponse.json({ error: "Cupón inválido" }, { status: 400 })
+      }
       const found = await prisma.promotionCoupon.findUnique({
         where: { code: couponCode },
       })

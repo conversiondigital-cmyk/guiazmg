@@ -32,6 +32,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS "membership_coupon_redemptions_couponId_busine
   ON "membership_coupon_redemptions" ("couponId", "businessId");
 CREATE INDEX IF NOT EXISTS "membership_coupon_redemptions_businessId_idx"
   ON "membership_coupon_redemptions" ("businessId");
+CREATE INDEX IF NOT EXISTS "membership_coupon_redemptions_userId_idx"
+  ON "membership_coupon_redemptions" ("userId");
 
 -- Llaves foráneas (idempotentes)
 DO $$ BEGIN

@@ -123,36 +123,24 @@ export const BUSINESS_STATUS_COLORS: Record<BusinessStatus, { bg: string; text: 
 // ============================================================================
 
 export const MEMBERSHIP_PLAN_LABELS: Record<MembershipPlan, string> = {
-  gratuito: "Gratuito",
-  emprendedor: "Emprendedor",
+  emprendedor: "Emprendimiento",
   negocio: "Negocio",
-  premium: "Premium",
 }
 
 export const MEMBERSHIP_PLAN_COLORS: Record<MembershipPlan, { bg: string; text: string }> = {
-  gratuito: {
-    bg: "bg-gray-100",
-    text: "text-gray-800",
-  },
   emprendedor: {
-    bg: "bg-blue-100",
-    text: "text-blue-800",
+    bg: "bg-emerald-100",
+    text: "text-emerald-800",
   },
   negocio: {
     bg: "bg-green-100",
     text: "text-green-800",
   },
-  premium: {
-    bg: "bg-purple-100",
-    text: "text-purple-800",
-  },
 }
 
 export const MEMBERSHIP_PLAN_PRICES: Record<MembershipPlan, number> = {
-  gratuito: 0,
   emprendedor: 49,
   negocio: 149,
-  premium: 299,
 }
 
 // ============================================================================
