@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { enforceRateLimits } from "@/lib/security/request-rate-limit"
+import { getTrustedClientIp } from "@/lib/security/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -26,6 +28,20 @@ export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Inicia sesión para canjear un cupón" }, { status: 401 })
+    }
+
+    // Rate limit: los códigos son cortos/adivinables → sin límite se podrían probar
+    // por fuerza bruta. Se acota por usuario e IP.
+    const ip = getTrustedClientIp(req)
+    const limited = await enforceRateLimits([
+      { key: `coupon:redeem:user:${session.user.id}`, windowMs: 60_000, maxRequests: 8 },
+      { key: `coupon:redeem:ip:${ip}`, windowMs: 60_000, maxRequests: 15 },
+    ])
+    if (limited) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera un momento e inténtalo de nuevo." },
+        { status: 429 },
+      )
     }
 
     const parsed = schema.safeParse(await req.json().catch(() => ({})))
@@ -55,6 +71,20 @@ export async function POST(req: NextRequest) {
       if (coupon.expiresAt && coupon.expiresAt < now) throw new CouponError("El cupón ya expiró")
       if (coupon.maxRedemptions !== null && coupon.redemptionCount >= coupon.maxRedemptions) {
         throw new CouponError("El cupón ya alcanzó su límite de usos")
+      }
+
+      // No sobrescribir una membresía vigente (de pago o trial) con el cupón: si el
+      // negocio ya tiene una activa, se rechaza el canje.
+      const existing = await tx.profileMembership.findUnique({
+        where: { businessId },
+        select: { status: true, currentPeriodEnd: true },
+      })
+      if (
+        existing &&
+        existing.currentPeriodEnd > now &&
+        (existing.status === "ACTIVE" || existing.status === "TRIAL")
+      ) {
+        throw new CouponError("Este negocio ya tiene una membresía activa")
       }
 
       // Registra el canje. El @@unique([couponId, businessId]) impide que el mismo
