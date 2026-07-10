@@ -7,15 +7,21 @@ import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Loader2 } from "@/lib/icons"
+import { Loader2, Eye, EyeOff, Store, MapPin, Star } from "@/lib/icons"
+
+const HIGHLIGHTS = [
+  { icon: Store, text: "Miles de negocios de Guadalajara y la ZMG" },
+  { icon: MapPin, text: "Ubicación, horarios y contacto directo" },
+  { icon: Star, text: "Reseñas y promociones para destacar" },
+]
 
 export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
   const [resending, setResending] = useState(false)
@@ -94,16 +100,53 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold mb-2 inline-block">
+    <div className="flex min-h-screen">
+      {/* Panel de marca — solo escritorio */}
+      <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-green-800 via-green-700 to-emerald-600 p-12 lg:flex xl:p-16">
+        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-emerald-400/20 blur-3xl" />
+
+        <Link href="/" className="relative z-10 inline-flex w-fit items-center gap-1 text-2xl font-bold text-white">
+          <span className="rounded-lg bg-white/15 px-2 py-0.5 backdrop-blur-sm">Guía</span> ZMG
+        </Link>
+
+        <div className="relative z-10 max-w-md">
+          <h2 className="text-3xl font-bold leading-tight text-white xl:text-4xl">
+            Bienvenido de vuelta
+          </h2>
+          <p className="mt-4 text-green-50/90">
+            Administra tu negocio, conecta con más clientes y destaca en el directorio local de Guadalajara.
+          </p>
+          <ul className="mt-8 space-y-4">
+            {HIGHLIGHTS.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-green-50">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+                  <Icon className="h-4 w-4 text-white" />
+                </span>
+                <span className="text-sm">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative z-10 text-sm text-green-100/70">
+          Tu guía local de negocios · Guadalajara, Zapopan, Tlaquepaque, Tonalá
+        </p>
+      </aside>
+
+      {/* Formulario */}
+      <main className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-10 sm:px-6 lg:w-1/2">
+        <div className="w-full max-w-md">
+          {/* Marca en móvil (el panel de la izquierda se oculta) */}
+          <Link href="/" className="mb-8 flex items-center justify-center gap-1 text-2xl font-bold lg:hidden">
             <span className="text-green-700">Guía</span> ZMG
           </Link>
-          <CardTitle className="text-xl">Iniciar Sesión</CardTitle>
-          <CardDescription>Accede a tu cuenta de Guía ZMG</CardDescription>
-        </CardHeader>
-        <CardContent>
+
+          <div className="mb-6 text-center lg:text-left">
+            <h1 className="text-2xl font-bold text-gray-900">Iniciar sesión</h1>
+            <p className="mt-1 text-sm text-gray-500">Accede a tu cuenta de Guía ZMG</p>
+          </div>
+
           {info && (
             <div
               role="status"
@@ -128,6 +171,7 @@ export default function LoginPage() {
               </button>
             </div>
           )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
@@ -148,15 +192,26 @@ export default function LoginPage() {
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); if (error) setError("") }}
-                required
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); if (error) setError("") }}
+                  required
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Iniciar Sesión"}
@@ -168,7 +223,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">o continúa con</span>
+              <span className="bg-gray-50 px-2 text-muted-foreground">o continúa con</span>
             </div>
           </div>
 
@@ -192,14 +247,14 @@ export default function LoginPage() {
             Google
           </Button>
 
-          <div className="mt-4 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-gray-500">
             ¿No tienes cuenta?{" "}
-            <Link href="/auth/register" className="text-green-700 hover:underline">
+            <Link href="/auth/register" className="font-medium text-green-700 hover:underline">
               Registrarse
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </main>
     </div>
   )
 }
