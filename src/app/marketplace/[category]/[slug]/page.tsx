@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
 import { getPublicAppUrl } from "@/lib/env"
 import { MapPin, Phone, MessageCircle, Calendar, Eye, Star } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
@@ -54,6 +55,14 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
     },
   })
   if (!listing || listing.deletedAt) notFound()
+
+  // Solo se muestran públicamente los anuncios ACTIVOS. El dueño y el admin sí
+  // pueden previsualizar los suyos aunque estén en revisión (PENDING/HIDDEN).
+  if (listing.status !== "ACTIVE") {
+    const session = await auth()
+    const privileged = session?.user?.id === listing.userId || session?.user?.role === "ADMIN"
+    if (!privileged) notFound()
+  }
 
   if (listing.category.slug !== category) {
     redirect(`/marketplace/${listing.category.slug}/${listing.slug}`)

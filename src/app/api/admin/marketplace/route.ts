@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (status && status !== "todos") {
       const statusMap: Record<string, string> = {
         activos: "ACTIVE",
-        pendientes: "ACTIVE",
+        pendientes: "PENDING",
         ocultos: "HIDDEN",
         suspendidos: "HIDDEN",
         eliminados: "DELETED",

@@ -41,7 +41,7 @@ async function getMarketplaceListings(searchParams: Record<string, string | stri
   if (status && status !== "todos") {
     const statusMap: Record<string, string> = {
       activos: "ACTIVE",
-      pendientes: "ACTIVE",
+      pendientes: "PENDING",
       ocultos: "HIDDEN",
       suspendidos: "HIDDEN",
       eliminados: "DELETED",
@@ -81,9 +81,10 @@ async function getMarketplaceListings(searchParams: Record<string, string | stri
     ),
   }))
 
-  const [totalCount, activeCount, hiddenCount, deletedCount] = await Promise.all([
+  const [totalCount, activeCount, pendingCount, hiddenCount, deletedCount] = await Promise.all([
     prisma.marketplaceListing.count(),
     prisma.marketplaceListing.count({ where: { status: "ACTIVE" } }),
+    prisma.marketplaceListing.count({ where: { status: "PENDING" } }),
     prisma.marketplaceListing.count({ where: { status: "HIDDEN" } }),
     prisma.marketplaceListing.count({ where: { status: "DELETED" } }),
   ])
@@ -91,7 +92,7 @@ async function getMarketplaceListings(searchParams: Record<string, string | stri
   return {
     listings: JSON.parse(JSON.stringify(enhancedListings)),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    stats: { total: totalCount, active: activeCount, hidden: hiddenCount, deleted: deletedCount },
+    stats: { total: totalCount, active: activeCount, pending: pendingCount, hidden: hiddenCount, deleted: deletedCount },
   }
 }
 

@@ -143,6 +143,7 @@ enum EmailStatus {
 }
 
 enum MarketplaceListingStatus {
+  PENDING
   ACTIVE
   SOLD
   RESERVED
@@ -1195,7 +1196,7 @@ model MarketplaceListing {
   description   String?
   price         Decimal?                   @db.Decimal(10, 2)
   type          MarketplaceListingType     @default(SALE)
-  status        MarketplaceListingStatus   @default(ACTIVE)
+  status        MarketplaceListingStatus   @default(PENDING)
   categoryId    String
   category      MarketplaceCategory        @relation(fields: [categoryId], references: [id])
   userId        String

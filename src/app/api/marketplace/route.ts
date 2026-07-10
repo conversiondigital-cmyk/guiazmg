@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         description,
         price,
         type,
+        status: "PENDING", // entra a la cola de moderación; el admin aprueba
         categoryId,
         municipalityId,
         neighborhood,

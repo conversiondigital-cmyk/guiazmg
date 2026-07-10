@@ -49,7 +49,7 @@ type ListingRow = {
   images: ListingImage[]
 }
 
-type Stats = { total: number; active: number; hidden: number; deleted: number }
+type Stats = { total: number; active: number; pending: number; hidden: number; deleted: number }
 type Pagination = { page: number; limit: number; total: number; totalPages: number }
 
 const TYPE_TABS = [
@@ -81,6 +81,7 @@ const STATUS_OPTIONS = [
 ]
 
 const STATUS_BADGE: Record<string, { variant: string; label: string }> = {
+  PENDING: { variant: "outline", label: "Pendiente" },
   ACTIVE: { variant: "default", label: "Activo" },
   SOLD: { variant: "secondary", label: "Vendido" },
   RESERVED: { variant: "outline", label: "Reservado" },
@@ -190,7 +191,7 @@ export function MarketplaceListClient({
         <ShoppingBag className="h-8 w-8 text-pink-600" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -207,6 +208,15 @@ export function MarketplaceListClient({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
           </CardContent>
         </Card>
         <Card>
