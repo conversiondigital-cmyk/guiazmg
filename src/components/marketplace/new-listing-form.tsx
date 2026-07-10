@@ -60,7 +60,8 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
   const [selectedMunicipio, setSelectedMunicipio] = useState("")
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [images, setImages] = useState<string[]>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
 
   const [form, setForm] = useState({
     title: "",
@@ -96,14 +97,54 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
     if (v) updateField("type", v)
   }
 
-  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Sube cada archivo a R2 vía /api/upload y guarda la URL PERSISTENTE que
+  // devuelve (antes se guardaba una URL blob: local a la pestaña, que se rompía
+  // para todos los demás). Valida en cliente para fallar rápido y respeta el
+  // tope de 10 imágenes del schema.
+  const handleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const previews = files.map((f) => URL.createObjectURL(f))
-    setImagePreviews((prev) => [...prev, ...previews])
+    e.target.value = "" // permite re-seleccionar el mismo archivo
+    if (!files.length) return
+
+    const room = 10 - images.length
+    if (room <= 0) {
+      toast.error("Máximo 10 imágenes")
+      return
+    }
+
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    setUploadingImages(true)
+    try {
+      for (const file of files.slice(0, room)) {
+        if (!allowed.includes(file.type)) {
+          toast.error(`${file.name}: usa JPG, PNG, WebP o GIF`)
+          continue
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name}: máximo 5MB`)
+          continue
+        }
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("folder", "marketplace")
+        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        const data = await res.json()
+        if (!res.ok) {
+          toast.error(data.error || `No se pudo subir ${file.name}`)
+          continue
+        }
+        setImages((prev) => [...prev, data.url])
+      }
+      if (files.length > room) {
+        toast.error("Solo se permiten 10 imágenes; algunas no se agregaron")
+      }
+    } finally {
+      setUploadingImages(false)
+    }
   }
 
   const removeImage = (index: number) => {
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+    setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,6 +155,10 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
     }
     if (!selectedCategory) {
       toast.error("Selecciona una categoría")
+      return
+    }
+    if (uploadingImages) {
+      toast.error("Espera a que terminen de subir las imágenes")
       return
     }
 
@@ -131,7 +176,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
         phone: form.phone || undefined,
         whatsapp: form.whatsapp || undefined,
         contactEmail: form.contactEmail || undefined,
-        images: imagePreviews.length > 0 ? imagePreviews.map((url, i) => ({ url, sortOrder: i })) : undefined,
+        images: images.length > 0 ? images.map((url, i) => ({ url, sortOrder: i })) : undefined,
       }
 
       const res = await fetch("/api/marketplace", {
@@ -247,9 +292,9 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
           <div>
             <Label>Imágenes</Label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {imagePreviews.map((preview, i) => (
+              {images.map((url, i) => (
                 <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border">
-                  <Image src={preview} alt="" fill className="object-cover" unoptimized />
+                  <Image src={url} alt="" fill className="object-cover" unoptimized />
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
@@ -261,10 +306,11 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
               ))}
               <Label
                 htmlFor="images"
-                className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500"
+                aria-disabled={uploadingImages}
+                className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500 aria-disabled:pointer-events-none aria-disabled:opacity-60"
               >
-                <Camera className="h-5 w-5" />
-                <span className="mt-1 text-[10px]">Agregar</span>
+                {uploadingImages ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                <span className="mt-1 text-[10px]">{uploadingImages ? "Subiendo…" : "Agregar"}</span>
               </Label>
               <input
                 id="images"
@@ -273,6 +319,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
                 multiple
                 className="sr-only"
                 onChange={handleImages}
+                disabled={uploadingImages}
               />
             </div>
           </div>
@@ -344,7 +391,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || uploadingImages}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           Publicar
         </Button>
