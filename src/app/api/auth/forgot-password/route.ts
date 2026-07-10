@@ -23,22 +23,30 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } })
 
-    if (user) {
-      await prisma.verificationToken.deleteMany({ where: { identifier: email } })
-      const token = crypto.randomBytes(32).toString("hex")
-      const expiresAt = new Date(Date.now() + 3600000) // 1 hour
-
-      await prisma.verificationToken.create({
-        data: {
-          identifier: email,
-          token,
-          expires: expiresAt,
-        },
-      })
-
-      const resetUrl = `${getPublicAppUrl()}/auth/reset-password?token=${token}`
-      await sendPasswordResetEmail(email, resetUrl, user.id)
+    // Por decisión de producto se informa explícitamente cuando el correo no
+    // está registrado (mejor UX que el mensaje genérico). El rate-limit de
+    // arriba (5/min IP, 3/min correo) acota el sondeo masivo de cuentas.
+    if (!user) {
+      return NextResponse.json(
+        { error: "No hay ninguna cuenta registrada con ese correo." },
+        { status: 404 },
+      )
     }
+
+    await prisma.verificationToken.deleteMany({ where: { identifier: email } })
+    const token = crypto.randomBytes(32).toString("hex")
+    const expiresAt = new Date(Date.now() + 3600000) // 1 hour
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token,
+        expires: expiresAt,
+      },
+    })
+
+    const resetUrl = `${getPublicAppUrl()}/auth/reset-password?token=${token}`
+    await sendPasswordResetEmail(email, resetUrl, user.id)
 
     return NextResponse.json({ ok: true })
   } catch {
