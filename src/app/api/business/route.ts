@@ -6,6 +6,32 @@ import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
 import { sendEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
+import { z } from "zod"
+
+const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
+const optText = (max: number) => z.preprocess(blankToNull, z.string().trim().max(max).nullable().optional())
+const optUrl = z.preprocess(blankToNull, z.string().trim().url().max(500).nullable().optional())
+
+// Campos que el DUEÑO puede editar (subconjunto seguro: texto libre y enlaces).
+// Categoría, ubicación geo, estado y verificación NO se editan por aquí.
+const businessUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(160).optional(),
+  shortDescription: optText(200),
+  description: optText(5000),
+  phone: optText(30),
+  whatsapp: optText(30),
+  email: z.preprocess(blankToNull, z.string().trim().email().nullable().optional()),
+  websiteUrl: optUrl,
+  facebookUrl: optUrl,
+  instagramUrl: optUrl,
+  tiktokUrl: optUrl,
+  youtubeUrl: optUrl,
+  linkedinUrl: optUrl,
+  addressText: optText(300),
+  postalCode: optText(12),
+  googleMapsUrl: optUrl,
+  wazeUrl: optUrl,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -144,5 +170,59 @@ export async function GET() {
     return NextResponse.json(businesses)
   } catch {
     return NextResponse.json({ error: "Error al obtener negocios" }, { status: 500 })
+  }
+}
+
+// El dueño edita su propio negocio (relación 1:1 por ownerId).
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
+    const business = await prisma.profile.findFirst({
+      where: { ownerId: session.user.id, deletedAt: null },
+      select: { id: true },
+    })
+    if (!business) {
+      return NextResponse.json({ error: "No tienes un negocio registrado" }, { status: 404 })
+    }
+
+    const parsed = businessUpdateSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
+    }
+
+    await prisma.profile.update({ where: { id: business.id }, data: parsed.data })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[BUSINESS_UPDATE]", error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: "Error al actualizar el negocio" }, { status: 500 })
+  }
+}
+
+// El dueño elimina su propio negocio (soft-delete: marca deletedAt; las queries
+// públicas ya filtran deletedAt. Después puede registrar uno nuevo).
+export async function DELETE() {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
+    const business = await prisma.profile.findFirst({
+      where: { ownerId: session.user.id, deletedAt: null },
+      select: { id: true },
+    })
+    if (!business) {
+      return NextResponse.json({ error: "No tienes un negocio registrado" }, { status: 404 })
+    }
+
+    await prisma.profile.update({ where: { id: business.id }, data: { deletedAt: new Date() } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[BUSINESS_DELETE]", error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: "Error al eliminar el negocio" }, { status: 500 })
   }
 }
