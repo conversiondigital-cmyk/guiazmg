@@ -157,6 +157,11 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
       toast.error("Selecciona una categoría")
       return
     }
+    const priceNum = parseFloat(form.price)
+    if (!form.price.trim() || Number.isNaN(priceNum) || priceNum < 20) {
+      toast.error("El precio es obligatorio y debe ser de al menos $20")
+      return
+    }
     if (uploadingImages) {
       toast.error("Espera a que terminen de subir las imágenes")
       return
@@ -167,7 +172,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
       const body = {
         title: form.title,
         description: form.description,
-        price: form.price ? parseFloat(form.price) : undefined,
+        price: parseFloat(form.price),
         type: form.type,
         // Si hay subcategoría, se publica bajo ESA (más específica); si no, bajo
         // la padre. Antes se mandaba subcategoryId, que el API ignoraba → se perdía.
@@ -278,16 +283,18 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
           </div>
 
           <div>
-            <Label htmlFor="price">Precio</Label>
+            <Label htmlFor="price">Precio (MXN) *</Label>
             <Input
               id="price"
               type="number"
-              min="0"
+              min="20"
               step="0.01"
               value={form.price}
               onChange={(e) => updateField("price", e.target.value)}
-              placeholder="0.00"
+              placeholder="Ej: 250"
+              required
             />
+            <p className="mt-1 text-xs text-gray-500">Mínimo $20. No se permiten publicaciones gratis.</p>
           </div>
 
           <div>

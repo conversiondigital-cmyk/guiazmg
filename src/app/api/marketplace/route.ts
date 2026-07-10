@@ -12,7 +12,8 @@ const blankToNull = (value: unknown) => (value === "" || value === undefined ? n
 const listingSchema = z.object({
   title: z.string().trim().min(3).max(180),
   description: z.string().trim().max(5000).optional().nullable(),
-  price: z.preprocess(blankToNull, z.coerce.number().nonnegative().max(9999999).optional().nullable()),
+  // Obligatorio y mínimo $20: bloquea "Gratis" (0) y montos de gancho como 1 peso.
+  price: z.coerce.number().min(20, "El precio mínimo es $20").max(9999999),
   type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]),
   categoryId: z.string().cuid(),
   municipalityId: z.string().cuid().optional().nullable(),
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         title,
         slug,
         description,
-        price: price ?? null,
+        price,
         type,
         categoryId,
         municipalityId,
