@@ -169,8 +169,9 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
         description: form.description,
         price: form.price ? parseFloat(form.price) : undefined,
         type: form.type,
-        categoryId: selectedCategory,
-        subcategoryId: selectedSubcategory || undefined,
+        // Si hay subcategoría, se publica bajo ESA (más específica); si no, bajo
+        // la padre. Antes se mandaba subcategoryId, que el API ignoraba → se perdía.
+        categoryId: selectedSubcategory || selectedCategory,
         municipalityId: selectedMunicipio || undefined,
         neighborhood: form.neighborhood || undefined,
         phone: form.phone || undefined,

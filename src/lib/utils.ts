@@ -14,6 +14,22 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)/g, "")
 }
 
+// Genera un slug \u00fanico legible: prueba `base`, `base-2`, `base-3`\u2026 y devuelve
+// el primero que no exista (seg\u00fan el checker `exists`). Reemplaza el patr\u00f3n
+// `base-${Date.now()}`, que produc\u00eda URLs feas y hac\u00eda inalcanzable el chequeo
+// de duplicados. Tras 100 intentos cae a un sufijo aleatorio corto.
+export async function generateUniqueSlug(
+  base: string,
+  exists: (slug: string) => Promise<boolean>
+): Promise<string> {
+  const root = base || "item"
+  for (let i = 1; i <= 100; i++) {
+    const candidate = i === 1 ? root : `${root}-${i}`
+    if (!(await exists(candidate))) return candidate
+  }
+  return `${root}-${Math.random().toString(36).slice(2, 8)}`
+}
+
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, "")
   if (cleaned.length === 10) {

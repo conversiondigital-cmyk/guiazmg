@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
-import { slugify } from "@/lib/utils"
+import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
 import { sendEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
@@ -37,15 +37,11 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validation.data
-    const slug = slugify(data.name)
-
-    const existing = await prisma.profile.findUnique({ where: { slug } })
-    if (existing) {
-      return NextResponse.json(
-        { error: "Ya existe un negocio con ese nombre" },
-        { status: 409 }
-      )
-    }
+    // Slug único legible (nombre, nombre-2, nombre-3…). Distintos dueños SÍ
+    // pueden tener negocios con el mismo nombre; el slug los desambigua.
+    const slug = await generateUniqueSlug(slugify(data.name), async (s) =>
+      Boolean(await prisma.profile.findUnique({ where: { slug: s }, select: { id: true } }))
+    )
 
     const business = await prisma.profile.create({
       data: {
@@ -62,13 +58,14 @@ export async function POST(request: NextRequest) {
         googleMapsUrl: data.googleMapsUrl,
         wazeUrl: data.wazeUrl,
         addressText: data.addressText,
+        postalCode: data.postalCode,
         latitude: data.latitude,
         longitude: data.longitude,
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId,
         municipalityId: data.municipalityId,
         neighborhoodId: data.neighborhoodId,
-        slug: `${slug}-${Date.now()}`,
+        slug,
         ownerId: session.user.id,
         // Entra a la cola de aprobación del admin.
         status: "PENDING_REVIEW",
@@ -120,7 +117,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(business, { status: 201 })
-  } catch {
+  } catch (error) {
+    console.error("[BUSINESS_CREATE]", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al crear el negocio" }, { status: 500 })
   }
 }

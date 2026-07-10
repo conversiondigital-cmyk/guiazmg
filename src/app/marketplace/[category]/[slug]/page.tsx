@@ -241,7 +241,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
               {/* Report */}
               <p className="text-center text-xs text-gray-400">
                 ¿Ves algo sospechoso?{" "}
-                <Link href={`/reportar?type=marketplace&id=${listing.id}`} className="text-blue-600 hover:underline">
+                <Link href={`/reportar?type=marketplace&id=${listing.slug}`} className="text-blue-600 hover:underline">
                   Reportar
                 </Link>
               </p>

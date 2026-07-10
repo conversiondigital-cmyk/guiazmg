@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { slugify } from "@/lib/utils"
+import { slugify, generateUniqueSlug } from "@/lib/utils"
+import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
 import { z } from "zod"
 
 const blankToNull = (value: unknown) => (value === "" || value === undefined ? null : value)
@@ -29,9 +30,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
+    // Anti-abuso: tope de publicaciones por minuto (usuario e IP).
+    const rateLimited = await enforceRateLimits([
+      { key: `marketplace:create:user:${session.user.id}`, windowMs: 60_000, maxRequests: 5 },
+      { key: `marketplace:create:ip:${getClientIp(request)}`, windowMs: 60_000, maxRequests: 10 },
+    ])
+    if (rateLimited) return rateLimited
+
     const { title, description, price, type, categoryId, municipalityId, neighborhood, phone, whatsapp, contactEmail, images } = listingSchema.parse(await request.json())
 
-    const slug = `${slugify(title)}-${Date.now()}`
+    const slug = await generateUniqueSlug(slugify(title), async (s) =>
+      Boolean(await prisma.marketplaceListing.findUnique({ where: { slug: s }, select: { id: true } }))
+    )
 
     const listing = await prisma.marketplaceListing.create({
       data: {
