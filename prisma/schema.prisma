@@ -386,6 +386,7 @@ model Category {
   name        String
   slug        String   @unique
   description String?
+  keywords    String?  // sinónimos/términos de búsqueda para el buscador (Fase 2)
   icon        String?
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)

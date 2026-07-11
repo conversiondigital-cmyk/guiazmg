@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, description, icon, sortOrder, isActive, isSubcategory, categoryId } = body
+    const { name, slug, description, icon, sortOrder, isActive, isSubcategory, categoryId, keywords } = body
 
     if (!name || !slug) {
       return NextResponse.json({ error: "Nombre y slug requeridos" }, { status: 400 })
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         slug,
         description,
         icon,
+        keywords: keywords || null,
         sortOrder: sortOrder ?? 0,
         isActive: isActive ?? true,
       },
@@ -124,7 +125,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, name, slug, description, icon, sortOrder, isActive } = body
+    const { id, name, slug, description, icon, sortOrder, isActive, keywords } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID requerido" }, { status: 400 })
@@ -137,6 +138,7 @@ export async function PUT(request: NextRequest) {
     if (icon !== undefined) data.icon = icon
     if (sortOrder !== undefined) data.sortOrder = sortOrder
     if (isActive !== undefined) data.isActive = isActive
+    if (keywords !== undefined) data.keywords = keywords || null
 
     const category = await prisma.category.update({
       where: { id },
@@ -151,6 +153,13 @@ export async function PUT(request: NextRequest) {
         _count: { select: { subcategories: true, businesses: true, listings: true } },
       },
     })
+
+    // Si cambió keywords o nombre, re-dispara el trigger de search_vector en los
+    // negocios de esta categoría (poner categoryId = categoryId basta: categoryId
+    // está en la lista UPDATE OF del trigger). Así los sinónimos nuevos aplican.
+    if (keywords !== undefined || name !== undefined) {
+      await prisma.$executeRawUnsafe(`UPDATE businesses SET "categoryId" = "categoryId" WHERE "categoryId" = $1`, id)
+    }
 
     await prisma.auditLog.create({
       data: {

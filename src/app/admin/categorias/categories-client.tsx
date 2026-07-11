@@ -35,6 +35,7 @@ type CategoryRow = {
   slug: string
   description: string | null
   icon: string | null
+  keywords: string | null
   isActive: boolean
   sortOrder: number
   subcategories: SubcategoryRow[]
@@ -46,11 +47,12 @@ type FormData = {
   slug: string
   description: string
   icon: string
+  keywords: string
   sortOrder: number
   isActive: boolean
 }
 
-const emptyForm: FormData = { name: "", slug: "", description: "", icon: "", sortOrder: 0, isActive: true }
+const emptyForm: FormData = { name: "", slug: "", description: "", icon: "", keywords: "", sortOrder: 0, isActive: true }
 
 export function CategoriesClient({ categories }: { categories: CategoryRow[] }) {
   const router = useRouter()
@@ -83,6 +85,7 @@ export function CategoriesClient({ categories }: { categories: CategoryRow[] }) 
       slug: cat.slug,
       description: cat.description || "",
       icon: cat.icon || "",
+      keywords: cat.keywords || "",
       sortOrder: cat.sortOrder,
       isActive: cat.isActive,
     })
@@ -266,6 +269,20 @@ export function CategoriesClient({ categories }: { categories: CategoryRow[] }) 
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </div>
+            {!editDialog.subcategory && !editDialog.parentId && (
+              <div className="grid gap-2">
+                <Label htmlFor="keywords">Palabras clave (búsqueda)</Label>
+                <Input
+                  id="keywords"
+                  placeholder="taco tacos taquería pastor asada..."
+                  value={form.keywords}
+                  onChange={(e) => setForm({ ...form, keywords: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Sinónimos para que el buscador encuentre estos negocios (separados por espacios). Se aplican al guardar.
+                </p>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="icon">Icono</Label>
               <Input
