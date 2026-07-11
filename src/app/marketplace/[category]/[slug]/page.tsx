@@ -14,6 +14,11 @@ import { getPublicAppUrl } from "@/lib/env"
 import { MapPin, Phone, MessageCircle, Calendar, Eye, Star } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
 
+const TYPE_LABELS: Record<string, string> = {
+  SALE: "Venta", PURCHASE: "Compra", TRADE: "Intercambio", SERVICE: "Servicio",
+  REQUEST: "Solicitud", EVENT: "Evento", PROMOTION: "Promoción",
+}
+
 interface ListingDetailProps {
   params: Promise<{ category: string; slug: string }>
 }
@@ -49,6 +54,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
     where: { slug },
     include: {
       category: true,
+      municipality: true,
       user: { select: { id: true, name: true, image: true, createdAt: true } },
       images: { orderBy: { sortOrder: "asc" } },
       _count: { select: { favorites: true } },
@@ -126,7 +132,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                     <div>
                       <h1 className="text-2xl font-bold text-gray-900">{listing.title}</h1>
                       <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
-                        <Badge variant="outline">{listing.type}</Badge>
+                        <Badge variant="outline">{TYPE_LABELS[listing.type] ?? listing.type}</Badge>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           {new Date(listing.createdAt).toLocaleDateString("es-MX")}
@@ -149,7 +155,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                   )}
                   <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
                     <MapPin className="h-4 w-4" />
-                    {listing.neighborhood || "Zona Metropolitana de Guadalajara"}
+                    {[listing.neighborhood, listing.municipality?.name].filter(Boolean).join(", ") || "Zona Metropolitana de Guadalajara"}
                   </div>
                 </CardContent>
               </Card>

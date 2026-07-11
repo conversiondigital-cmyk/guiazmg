@@ -44,6 +44,16 @@ export async function POST(request: NextRequest) {
       Boolean(await prisma.marketplaceListing.findUnique({ where: { slug: s }, select: { id: true } }))
     )
 
+    // Valida que la categoría exista y esté activa (antes un cuid inexistente
+    // provocaba un 500 genérico por error de FK).
+    const validCategory = await prisma.marketplaceCategory.findFirst({
+      where: { id: categoryId, isActive: true },
+      select: { id: true },
+    })
+    if (!validCategory) {
+      return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
+    }
+
     const listing = await prisma.marketplaceListing.create({
       data: {
         title,
@@ -69,7 +79,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(listing, { status: 201 })
+    return NextResponse.json({ slug: listing.slug, category: listing.category?.slug }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Datos inválidos" }, { status: 400 })

@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       console.error("[BUSINESS_REGISTER_NOTIFY]", e instanceof Error ? e.message : e)
     }
 
-    return NextResponse.json(business, { status: 201 })
+    return NextResponse.json({ slug: business.slug }, { status: 201 })
   } catch (error) {
     console.error("[BUSINESS_CREATE]", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al crear el negocio" }, { status: 500 })

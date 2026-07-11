@@ -3,7 +3,9 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import Image from "next/image"
 import { Package, Plus, Tag } from "lucide-react"
+import { formatCurrency } from "@/lib/utils"
 import { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Marketplace | Guía ZMG" }
@@ -67,15 +69,15 @@ export default async function CuentaMarketplacePage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {listings.map((item) => (
             <div key={item.id} className="rounded-2xl bg-white border border-gray-100 p-4 flex gap-4">
-              <div className="h-16 w-16 shrink-0 rounded-xl bg-gray-100 overflow-hidden">
+              <div className="relative h-16 w-16 shrink-0 rounded-xl bg-gray-100 overflow-hidden">
                 {item.images[0]
-                  ? <img src={item.images[0].url} alt={item.title} className="h-full w-full object-cover" />
+                  ? <Image src={item.images[0].url} alt={item.title} fill className="object-cover" unoptimized />
                   : <div className="h-full w-full flex items-center justify-center"><Tag className="h-6 w-6 text-gray-300" /></div>
                 }
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-900 line-clamp-1">{item.title}</p>
-                {item.price && <p className="text-sm font-bold text-green-700 mt-0.5">${Number(item.price).toLocaleString("es-MX")} MXN</p>}
+                {item.price != null && <p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(Number(item.price))}</p>}
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_BADGE[item.status] ?? ""}`}>
                     {STATUS_LABEL[item.status] ?? item.status}
