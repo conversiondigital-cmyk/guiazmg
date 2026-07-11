@@ -32,9 +32,27 @@ interface Municipality {
   name: string
 }
 
+interface EditListing {
+  id: string
+  slug: string
+  categorySlug: string
+  title: string
+  description: string | null
+  price: number | null
+  type: ListingType
+  categoryId: string
+  municipalityId: string | null
+  neighborhood: string | null
+  phone: string | null
+  whatsapp: string | null
+  contactEmail: string | null
+  images: { url: string }[]
+}
+
 interface NewListingFormProps {
   categories: Category[]
   municipalities: Municipality[]
+  listing?: EditListing
 }
 
 type ListingType = "SALE" | "PURCHASE" | "TRADE" | "SERVICE" | "REQUEST" | "EVENT" | "PROMOTION"
@@ -49,29 +67,39 @@ const LISTING_TYPES: { value: ListingType; label: string }[] = [
   { value: "PROMOTION", label: "Promoción" },
 ]
 
-export function NewListingForm({ categories, municipalities }: NewListingFormProps) {
+export function NewListingForm({ categories, municipalities, listing }: NewListingFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const isEdit = !!listing
   const typeParam = searchParams.get("type")
-  const initialType: ListingType = LISTING_TYPES.some((t) => t.value === typeParam)
-    ? (typeParam as ListingType)
-    : "SALE"
+  const initialType: ListingType =
+    listing?.type ?? (LISTING_TYPES.some((t) => t.value === typeParam) ? (typeParam as ListingType) : "SALE")
+
+  // Resuelve si la categoría del anuncio es padre o hija (para prellenar los selects).
+  const initCat = (() => {
+    const id = listing?.categoryId
+    if (!id) return { cat: "", sub: "" }
+    if (categories.some((c) => c.id === id)) return { cat: id, sub: "" }
+    const parent = categories.find((c) => c.children.some((ch) => ch.id === id))
+    return parent ? { cat: parent.id, sub: id } : { cat: id, sub: "" }
+  })()
+
   const [loading, setLoading] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState("")
-  const [selectedSubcategory, setSelectedSubcategory] = useState("")
-  const [selectedMunicipio, setSelectedMunicipio] = useState("")
-  const [images, setImages] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState(initCat.cat)
+  const [selectedSubcategory, setSelectedSubcategory] = useState(initCat.sub)
+  const [selectedMunicipio, setSelectedMunicipio] = useState(listing?.municipalityId ?? "")
+  const [images, setImages] = useState<string[]>(listing?.images.map((i) => i.url) ?? [])
   const [uploadingImages, setUploadingImages] = useState(false)
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
+    title: listing?.title ?? "",
+    description: listing?.description ?? "",
+    price: listing?.price != null ? String(listing.price) : "",
     type: initialType,
-    neighborhood: "",
-    phone: "",
-    whatsapp: "",
-    contactEmail: "",
+    neighborhood: listing?.neighborhood ?? "",
+    phone: listing?.phone ?? "",
+    whatsapp: listing?.whatsapp ?? "",
+    contactEmail: listing?.contactEmail ?? "",
   })
 
   const updateField = (field: string, value: string) => {
@@ -182,23 +210,23 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
         phone: form.phone || undefined,
         whatsapp: form.whatsapp || undefined,
         contactEmail: form.contactEmail || undefined,
-        images: images.length > 0 ? images.map((url, i) => ({ url, sortOrder: i })) : undefined,
+        images: images.map((url, i) => ({ url, sortOrder: i })),
       }
 
-      const res = await fetch("/api/marketplace", {
-        method: "POST",
+      const res = await fetch(isEdit ? `/api/marketplace/${listing!.id}` : "/api/marketplace", {
+        method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        toast.error(data.error || "Error al crear publicación")
+        toast.error(data.error || "Error al guardar la publicación")
         return
       }
 
-      toast.success("Publicación creada exitosamente")
-      router.push("/marketplace")
+      toast.success(isEdit ? "Publicación actualizada" : "Publicación creada exitosamente")
+      router.push(isEdit ? "/dashboard/marketplace" : "/marketplace")
       router.refresh()
     } catch {
       toast.error("Error al crear la publicación")
@@ -401,7 +429,7 @@ export function NewListingForm({ categories, municipalities }: NewListingFormPro
         </Button>
         <Button type="submit" disabled={loading || uploadingImages}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Publicar
+          {isEdit ? "Guardar cambios" : "Publicar"}
         </Button>
       </div>
     </form>

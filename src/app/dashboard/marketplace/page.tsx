@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Table,
   TableHeader,
@@ -19,8 +19,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
-import { Package, Plus, Eye, Edit3, Trash2 } from "@/lib/icons"
+import { Package, Plus } from "@/lib/icons"
 import { cn } from "@/lib/utils"
+import { ListingActions } from "@/components/marketplace/listing-actions"
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Activo",
@@ -57,7 +58,7 @@ export default async function MisPublicacionesPage() {
   const listings = await prisma.marketplaceListing.findMany({
     where: { userId: session.user.id, deletedAt: null },
     include: {
-      category: { select: { name: true } },
+      category: { select: { name: true, slug: true } },
       municipality: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -138,17 +139,11 @@ export default async function MisPublicacionesPage() {
                       {listing.createdAt.toLocaleDateString("es-MX")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      <ListingActions
+                        id={listing.id}
+                        viewHref={`/marketplace/${listing.category.slug}/${listing.slug}`}
+                        editHref={`/marketplace/${listing.category.slug}/${listing.slug}/editar`}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
