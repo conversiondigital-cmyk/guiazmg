@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { search } from "@/lib/search/search-engine"
-import { searchProfiles } from "@/lib/search/meilisearch"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
@@ -34,27 +33,11 @@ export async function GET(request: NextRequest) {
 
     const { q, category, municipality, neighborhood, subcategory, lat, lng, page, limit, sort, openNow, verified, premium, minRating, maxDistance } = parsed.data
 
-    // Try Meilisearch first (fast, typo-tolerant). Falls back to PostgreSQL if unavailable.
-    let meiliHitIds: string[] | null = null
-    if (q && process.env.MEILISEARCH_HOST) {
-      const meiliResult = await searchProfiles({
-        query: q,
-        category,
-        municipality,
-        limit: Math.min(limit * 3, 100), // over-fetch to allow PostgreSQL re-ranking
-      })
-      if (meiliResult) {
-        meiliHitIds = meiliResult.hits.map((h) => h.id)
-      }
-    }
-
     const results = await search({
       q, category, municipality, neighborhood, subcategory,
       lat, lng, page, limit, sort,
       isOpenNow: openNow, isVerified: verified, isPremium: premium, minRating, maxDistance,
-      // Pass Meilisearch pre-filtered IDs if available (engine will prioritize them)
-      meiliHitIds: meiliHitIds ?? undefined,
-    } as any)
+    })
 
     if (typeof q === "string" && q.trim()) {
       try {

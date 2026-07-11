@@ -17,34 +17,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(popular.map((p) => p.query))
     }
 
-    const query = q.toLowerCase()
+    // Autocompletado insensible a acentos (unaccent). Las categorías matchean
+    // también por sus keywords/sinónimos (ej. "taco" sugiere "Restaurantes").
+    // El texto del usuario va SIEMPRE como parámetro ($1), nunca concatenado.
+    const like = `%${q.trim()}%`
 
-    const [nameResults, categoryResults, tagResults] = await Promise.all([
-      prisma.profile.findMany({
-        where: {
-          status: "ACTIVE",
-          name: { contains: query, mode: "insensitive" },
-        },
-        select: { name: true },
-        take: limit,
-        orderBy: [{ isVerified: "desc" }, { isFeatured: "desc" }],
-      }),
-      prisma.category.findMany({
-        where: { name: { contains: query, mode: "insensitive" }, isActive: true },
-        select: { name: true, slug: true },
-        take: 4,
-      }),
-      prisma.tag.findMany({
-        where: { name: { contains: query, mode: "insensitive" }, isActive: true },
-        select: { name: true },
-        take: 4,
-      }),
+    const [nameRows, catRows, tagRows] = await Promise.all([
+      prisma.$queryRawUnsafe<Array<{ name: string }>>(
+        `SELECT name FROM businesses WHERE status='ACTIVE' AND unaccent(lower(name)) LIKE unaccent(lower($1)) ORDER BY "isVerified" DESC, "isFeatured" DESC LIMIT $2`,
+        like, limit
+      ),
+      prisma.$queryRawUnsafe<Array<{ name: string }>>(
+        `SELECT name FROM categories WHERE "isActive"=true AND (unaccent(lower(name)) LIKE unaccent(lower($1)) OR unaccent(lower(coalesce(keywords,''))) LIKE unaccent(lower($1))) LIMIT 4`,
+        like
+      ),
+      prisma.$queryRawUnsafe<Array<{ name: string }>>(
+        `SELECT name FROM tags WHERE "isActive"=true AND unaccent(lower(name)) LIKE unaccent(lower($1)) LIMIT 4`,
+        like
+      ),
     ])
 
     const suggestions = new Set<string>()
-    categoryResults.forEach((c) => suggestions.add(c.name))
-    tagResults.forEach((t) => suggestions.add(t.name))
-    nameResults.forEach((b) => suggestions.add(b.name))
+    catRows.forEach((c) => suggestions.add(c.name))
+    tagRows.forEach((t) => suggestions.add(t.name))
+    nameRows.forEach((b) => suggestions.add(b.name))
 
     return NextResponse.json(Array.from(suggestions).slice(0, limit))
   } catch {
