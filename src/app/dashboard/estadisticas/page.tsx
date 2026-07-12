@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Eye, Users, TrendingUp, Target, Search, Megaphone, MessageCircle } from "@/lib/icons"
-import { ViewsChart, LeadsChart, ContactsChart, CONTACT_SERIES } from "./analytics-charts"
+import { ViewsChart, LeadsChart, ContactsChart } from "./analytics-charts"
+import { CONTACT_SERIES } from "./contact-series"
 
 export default async function EstadisticasPage() {
   const session = await auth()
