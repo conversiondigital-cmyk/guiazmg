@@ -4,7 +4,7 @@ import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, Phone, TrendingUp, MapPin, Globe, Users, MessageCircle } from "@/lib/icons"
+import { Eye, Phone, TrendingUp, MapPin, Globe, Users, MessageCircle, Store } from "@/lib/icons"
 import { DashboardCharts } from "@/components/dashboard/charts"
 import { ProfileScoreCard } from "@/components/dashboard/profile-score"
 import { NotificationsPanel } from "@/components/dashboard/notifications"
@@ -107,6 +107,37 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">Panel de Control</h1>
         <p className="text-gray-500">Resumen de tu negocio en Guía ZMG</p>
       </div>
+
+      {/* Acceso directo a editar el negocio (lo primero que ve el dueño) */}
+      {businesses.length > 0 && (
+        <Card className="border-green-200 bg-green-50/40">
+          <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                <Store className="size-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">{businesses[0].name}</p>
+                <p className="text-sm text-gray-500">Administra información, fotos, horarios y ubicación de tu negocio</p>
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Link
+                href={`/perfil/${businesses[0].slug}`}
+                className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Ver perfil público
+              </Link>
+              <Link
+                href="/dashboard/negocio"
+                className="inline-flex items-center rounded-lg bg-green-700 px-3 py-2 text-sm font-semibold text-white hover:bg-green-800"
+              >
+                Editar mi negocio
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

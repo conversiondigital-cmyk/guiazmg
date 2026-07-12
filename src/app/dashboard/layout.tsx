@@ -14,17 +14,20 @@ export default async function DashboardLayout({
 
   const role = (session.user as any).role
 
-  // Each role has its own panel — dashboard is exclusively for BUSINESS_OWNER
+  // Cada rol especial tiene su propio panel.
   if (role === "ADMIN")        redirect("/admin")
   if (role === "EDITOR")       redirect("/editor")
   if (role === "SALES_AGENT")  redirect("/agente")
-  if (!role || role === "USER") redirect("/cuenta")
 
-  // Fetch profileType for BUSINESS_OWNER
+  // El dashboard es para DUEÑOS de negocio, detectado por PROPIEDAD (tiene un
+  // Profile) y no solo por rol: si alguien registró su negocio pero su rol quedó
+  // en USER (no se promovió), igual debe poder entrar a administrarlo.
   const profile = await prisma.profile.findFirst({
-    where: { ownerId: session.user.id },
+    where: { ownerId: session.user.id, deletedAt: null },
     select: { profileType: true },
   })
+  // Usuario sin negocio → su área es /cuenta.
+  if (!profile && role !== "BUSINESS_OWNER") redirect("/cuenta")
   const profileType: "EMPRENDEDOR" | "NEGOCIO" = profile?.profileType ?? "NEGOCIO"
 
   return (

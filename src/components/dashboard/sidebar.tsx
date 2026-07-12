@@ -37,7 +37,7 @@ function buildGroups(mode: "EMPRENDEDOR" | "NEGOCIO"): NavGroup[] {
       label: "General",
       items: [
         { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
-        { href: "/dashboard/negocio", label: isEmprendedor ? "Mi emprendimiento" : "Mi perfil comercial", icon: Store },
+        { href: "/dashboard/negocio", label: isEmprendedor ? "Mi emprendimiento" : "Mi negocio", icon: Store },
       ],
     },
     {

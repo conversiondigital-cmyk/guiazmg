@@ -135,6 +135,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Promueve al usuario a BUSINESS_OWNER (si aún es USER) para que su panel
+    // pase a ser el dashboard del negocio. La sesión (JWT) puede tardar en
+    // reflejarlo, pero el acceso al dashboard también se valida por propiedad,
+    // así que el dueño entra a administrar su negocio de inmediato.
+    try {
+      const current = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
+      if (!current?.role || current.role === "USER") {
+        await prisma.user.update({ where: { id: session.user.id }, data: { role: "BUSINESS_OWNER" } })
+      }
+    } catch (e) {
+      console.error("[BUSINESS_ROLE_PROMOTE]", e instanceof Error ? e.message : e)
+    }
+
     // Avisa a los administradores (notificación in-app + correo) que hay un
     // negocio nuevo por aprobar. Nunca rompe el registro si algo falla.
     try {

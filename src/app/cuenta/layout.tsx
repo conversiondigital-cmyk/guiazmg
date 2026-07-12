@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { CuentaSidebar } from "@/components/cuenta/cuenta-sidebar"
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
 
@@ -14,6 +15,15 @@ export default async function CuentaLayout({ children }: { children: React.React
   if (role === "EDITOR")        redirect("/editor")
   if (role === "SALES_AGENT")   redirect("/agente")
   if (role === "BUSINESS_OWNER") redirect("/dashboard")
+
+  // Dueño de un negocio cuyo rol quedó en USER (no se promovió al registrar):
+  // su área también es el dashboard del negocio, no la cuenta de usuario. Así
+  // no queda atorado sin enlace para editar su negocio.
+  const ownsBusiness = await prisma.profile.findFirst({
+    where: { ownerId: session.user.id, deletedAt: null },
+    select: { id: true },
+  })
+  if (ownsBusiness) redirect("/dashboard")
 
   return (
     <div className="flex min-h-screen bg-gray-50">
