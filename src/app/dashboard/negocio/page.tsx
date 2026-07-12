@@ -69,6 +69,16 @@ export default async function MiNegocioPage() {
           Ver perfil público
         </Link>
       </div>
+      {business.status !== "ACTIVE" && (
+        <div className="flex flex-col gap-1 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="font-semibold">Tu negocio está en revisión.</span>
+          <span>
+            Aún no aparece en el directorio público (por eso su enlace da 404 a otras personas). Un administrador
+            lo revisará y, al aprobarlo, será visible para todos. Puedes ver cómo quedará en{" "}
+            <Link href={`/perfil/${business.slug}`} className="font-medium underline">tu perfil (vista previa)</Link>.
+          </span>
+        </div>
+      )}
       <VerificationCard
         businessId={business.id}
         status={business.verificationStatus}

@@ -4,6 +4,7 @@ export const revalidate = 300
 
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { auth } from "@/lib/auth"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
@@ -46,7 +47,16 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
   const { slug } = await params
   const business = await getBusinessBySlug(slug)
 
-  if (!business || business.status !== "ACTIVE") {
+  if (!business) {
+    notFound()
+  }
+
+  // El dueño puede PREVISUALIZAR su negocio aunque aún no esté aprobado (en
+  // revisión/borrador). Para el público, un negocio no ACTIVE sigue dando 404.
+  const session = await auth()
+  const isOwner = !!session?.user?.id && business.ownerId === session.user.id
+  const isPublished = business.status === "ACTIVE"
+  if (!isPublished && !isOwner) {
     notFound()
   }
 
@@ -103,10 +113,20 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
-      <TrackBusinessView businessId={business.id} />
+      {isPublished && <TrackBusinessView businessId={business.id} />}
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {!isPublished && (
+            <div className="mb-6 flex flex-col gap-1 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span className="font-semibold">Este perfil está en revisión — solo tú puedes verlo.</span>
+              <span>
+                Tu negocio aún no aparece en el directorio público. Un administrador lo revisará y, al aprobarlo,
+                será visible para todos. Mientras tanto puedes seguir completándolo desde{" "}
+                <Link href="/dashboard/negocio" className="font-medium underline">Mi negocio</Link>.
+              </span>
+            </div>
+          )}
           <nav className="mb-6 text-sm text-gray-500">
             <Link href="/" className="hover:text-green-700 transition-colors">Inicio</Link>
             <span className="mx-2">/</span>

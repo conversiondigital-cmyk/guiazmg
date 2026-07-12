@@ -110,8 +110,8 @@ export function BusinessForm() {
         return
       }
 
-      toast.success("Negocio creado exitosamente")
-      router.push("/dashboard")
+      toast.success("¡Negocio registrado! Está en revisión; aparecerá en el directorio cuando un administrador lo apruebe.")
+      router.push("/dashboard/negocio")
       router.refresh()
     } catch {
       toast.error("Error al crear el negocio")
