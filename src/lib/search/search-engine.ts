@@ -95,18 +95,28 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
     interpretation = await enrichInterpretation(interpretation, getCategories, getMunicipalities)
   }
 
-  const categoryId = interpretation?.categoryQuery || categorySlug
+  // Ubicación y "abierto ahora": filtros DUROS (el usuario nombró un lugar/estado).
   const municipalityId = interpretation?.municipalityQuery || municipalitySlug
-  const subcategoryId = interpretation?.subcategoryQuery || subcategory
   const neighborhoodId = interpretation?.neighborhoodQuery || neighborhood
   const isOpenNowFilter = interpretation?.isOpenNow || isOpenNow
+
+  // Categoría/subcategoría ELEGIDAS en la UI (clic en un filtro) → duras (AND).
+  const uiCategoryId = categorySlug
+  const uiSubcategoryId = subcategory
+  // Categoría/subcategoría INFERIDAS del texto ("tacos" → subcategoría "Tacos") →
+  // señal SUAVE: se combinan en OR con la búsqueda de texto, NO excluyen.
+  const softCategoryId = interpretation?.categoryQuery
+  const softSubcategoryId = interpretation?.subcategoryQuery
 
   // Texto para FTS: lo que quede tras extraer categoría/municipio; o la query
   // completa si no se extrajo nada. Vacío = búsqueda por filtro puro (sin texto).
   let searchText = ""
   if (interpretation?.remainingTokens?.length) {
     searchText = interpretation.remainingTokens.join(" ")
-  } else if (q && !categoryId && !municipalityId) {
+  } else if (q && !uiCategoryId && !uiSubcategoryId && !municipalityId && !neighborhoodId) {
+    // No hay tokens sobrantes, pero tampoco hay filtro duro de la UI: busca el
+    // texto completo (así "tacos", aunque se interprete como subcategoría, sí
+    // hace match de texto en la descripción).
     searchText = q
   }
   searchText = searchText.trim()
@@ -123,22 +133,29 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
 
   const conditions: string[] = [`b.status = 'ACTIVE'`]
 
+  // Grupo de COINCIDENCIA (OR): el negocio entra si su TEXTO coincide, o si
+  // pertenece a la categoría/subcategoría que el intérprete dedujo del término.
+  // Antes la categoría inferida era un AND que excluía negocios cuyo texto SÍ
+  // coincidía ("tacos" ocultaba una taquería cuya subcategoría no era exactamente
+  // "Tacos"). Ahora suma, no resta.
+  const matchOr: string[] = []
   let rankSql = `0::float`
   if (searchText) {
     const tq = param(searchText)
-    conditions.push(
-      `(b.search_vector @@ websearch_to_tsquery('spanish', unaccent(${tq})) ` +
-        `OR similarity(unaccent(b.name), unaccent(${tq})) > 0.3)`
-    )
+    matchOr.push(`b.search_vector @@ websearch_to_tsquery('spanish', unaccent(${tq}))`)
+    matchOr.push(`similarity(unaccent(b.name), unaccent(${tq})) > 0.3`)
     rankSql =
       `(ts_rank(b.search_vector, websearch_to_tsquery('spanish', unaccent(${tq}))) ` +
       `+ GREATEST(similarity(unaccent(b.name), unaccent(${tq})), 0) * 0.5)`
   }
+  if (softCategoryId) { const v = param(softCategoryId); matchOr.push(`b."categoryId" IN (SELECT id FROM categories WHERE id = ${v} OR slug = ${v})`) }
+  if (softSubcategoryId) { const v = param(softSubcategoryId); matchOr.push(`b."subcategoryId" IN (SELECT id FROM subcategories WHERE id = ${v} OR slug = ${v})`) }
+  if (matchOr.length) conditions.push(`(${matchOr.join(" OR ")})`)
 
-  // El filtro puede llegar como id (del intérprete) o como slug (de la UI):
-  // se resuelve contra ambas columnas para no devolver 0 al filtrar por slug.
-  if (categoryId) { const v = param(categoryId); conditions.push(`b."categoryId" IN (SELECT id FROM categories WHERE id = ${v} OR slug = ${v})`) }
-  if (subcategoryId) { const v = param(subcategoryId); conditions.push(`b."subcategoryId" IN (SELECT id FROM subcategories WHERE id = ${v} OR slug = ${v})`) }
+  // Filtros DUROS (AND): categoría/subcategoría elegidas en la UI y ubicación.
+  // Se resuelven por id (del intérprete/UI) o slug (UI) contra ambas columnas.
+  if (uiCategoryId) { const v = param(uiCategoryId); conditions.push(`b."categoryId" IN (SELECT id FROM categories WHERE id = ${v} OR slug = ${v})`) }
+  if (uiSubcategoryId) { const v = param(uiSubcategoryId); conditions.push(`b."subcategoryId" IN (SELECT id FROM subcategories WHERE id = ${v} OR slug = ${v})`) }
   if (municipalityId) { const v = param(municipalityId); conditions.push(`b."municipalityId" IN (SELECT id FROM municipalities WHERE id = ${v} OR slug = ${v})`) }
   if (neighborhoodId) { const v = param(neighborhoodId); conditions.push(`b."neighborhoodId" IN (SELECT id FROM neighborhoods WHERE id = ${v} OR slug = ${v})`) }
   if (isVerified) conditions.push(`b."isVerified" = true`)
