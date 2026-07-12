@@ -249,12 +249,18 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
   },
 }
 
-// Claves cuyo valor es un secreto (API keys, tokens, contraseñas). Su valor
-// NUNCA se envía al navegador: la UI solo indica si ya hay uno guardado, y al
-// guardar un input vacío se conserva el existente (no se sobrescribe con "").
-export const SECRET_KEYS: ReadonlySet<string> = new Set(
-  Object.values(ADMIN_CONFIG_SECTIONS)
+// Secretos que NO son type=password: textareas que contienen credenciales
+// (p.ej. el JSON de la cuenta de servicio de Google Search Console).
+const EXTRA_SECRET_KEYS = ["gsc_service_account"]
+
+// Claves cuyo valor es un secreto (API keys, tokens, contraseñas, JSON de
+// credenciales). Su valor NUNCA se envía al navegador: la UI solo indica si ya
+// hay uno guardado, y al guardar un input vacío se conserva el existente (no se
+// sobrescribe con "").
+export const SECRET_KEYS: ReadonlySet<string> = new Set([
+  ...Object.values(ADMIN_CONFIG_SECTIONS)
     .flatMap((section) => section.fields)
     .filter((field) => field.type === "password")
-    .map((field) => field.key)
-)
+    .map((field) => field.key),
+  ...EXTRA_SECRET_KEYS,
+])

@@ -123,7 +123,11 @@ export function ConfigurationSectionClient({
                 <textarea
                   value={values[field.key] || ""}
                   onChange={(e) => handleChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={
+                    savedSecretSet.has(field.key)
+                      ? "•••••••••••• (guardado — escribe para reemplazar)"
+                      : field.placeholder
+                  }
                   rows={3}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder-slate-400 focus:border-slate-300 focus:outline-none"
                 />
