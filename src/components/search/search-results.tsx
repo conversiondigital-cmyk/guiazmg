@@ -1,9 +1,8 @@
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
+import NextImage from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Phone, MessageCircle, Globe, Navigation, Clock, AlertTriangle } from "@/lib/icons"
-import { truncate, formatPhone, getWhatsAppLink, getMapsLink } from "@/lib/utils"
-import { DistanceBadge } from "@/components/location/distance-badge"
+import { MapPin, Phone, MessageCircle, Globe, Navigation, Clock, AlertTriangle, Star, ChevronDown } from "@/lib/icons"
+import { getWhatsAppLink, getMapsLink } from "@/lib/utils"
 import type { SearchResponse } from "@/lib/search/search-engine"
 
 type SearchBusiness = SearchResponse["businesses"][number]
@@ -19,6 +18,7 @@ interface SearchResultsProps {
   query?: string
   municipio?: string
   category?: string
+  sort?: string
 }
 
 function isOpenNow(hours: BusinessHour[] | undefined): boolean | null {
@@ -31,8 +31,153 @@ function isOpenNow(hours: BusinessHour[] | undefined): boolean | null {
   return today.opensAt <= time && time <= today.closesAt
 }
 
-export function SearchResults({ results, query }: SearchResultsProps) {
+// Un botón de acción (icono arriba, etiqueta abajo). Si no hay dato, se ve
+// deshabilitado en gris para conservar la retícula de 4.
+function ActionTile({
+  href, icon: Icon, label, tone = "default", external,
+}: {
+  href?: string
+  icon: React.FC<React.SVGProps<SVGSVGElement>>
+  label: string
+  tone?: "default" | "whatsapp"
+  external?: boolean
+}) {
+  const base = "flex flex-col items-center justify-center gap-1 rounded-xl border py-2.5 text-[11px] font-semibold uppercase tracking-wide transition-colors"
+  if (!href) {
+    return (
+      <span className={`${base} cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300`}>
+        <Icon className="h-4 w-4" />
+        {label}
+      </span>
+    )
+  }
+  const style =
+    tone === "whatsapp"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+      : "border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50 hover:text-green-700"
+  return (
+    <a
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={`${base} ${style}`}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </a>
+  )
+}
+
+const SORT_LABELS: Record<string, string> = {
+  relevance: "Relevancia",
+  distance: "Más cercano",
+  rating: "Mejor valorado",
+  newest: "Más reciente",
+}
+
+function BusinessCard({ business }: { business: SearchBusiness }) {
+  const open = isOpenNow(business.hours)
+  const img: string | null = business.coverImageUrl || business.logoUrl || null
+  const rating: number = Number(business.avgRating) || 0
+  const reviews: number = business._count?.reviews ?? 0
+  const activeMembership = business.memberships?.find((m: { status: string }) => m.status === "ACTIVE")
+
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
+      <Link
+        href={`/perfil/${business.slug}`}
+        className="relative block aspect-[16/10] overflow-hidden bg-gradient-to-br from-green-50 to-emerald-100"
+      >
+        {img ? (
+          <NextImage
+            src={img}
+            alt={business.name}
+            fill
+            sizes="(max-width: 640px) 100vw, 400px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-5xl">{business.category?.icon || "🏢"}</div>
+        )}
+        {reviews > 0 && (
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-sm font-bold text-gray-800 shadow-sm">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            {rating.toFixed(1)}
+          </span>
+        )}
+        <div className="absolute bottom-3 left-3 flex gap-2">
+          {business.category && (
+            <span className="rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              {business.category.name}
+            </span>
+          )}
+          {business.isVerified && (
+            <span className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Verificado
+            </span>
+          )}
+          {activeMembership && (
+            <span className="rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+              Premium
+            </span>
+          )}
+        </div>
+      </Link>
+
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-2">
+          <Link
+            href={`/perfil/${business.slug}`}
+            className="text-lg font-bold leading-tight text-gray-900 transition-colors hover:text-green-700"
+          >
+            {business.name}
+          </Link>
+          {open !== null && (
+            <span className={`inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold ${open ? "text-emerald-600" : "text-red-500"}`}>
+              <span className={`h-2 w-2 rounded-full ${open ? "bg-emerald-500" : "bg-red-500"}`} />
+              {open ? "Abierto" : "Cerrado"}
+            </span>
+          )}
+        </div>
+
+        {business.municipality && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+            <MapPin className="h-3 w-3" />
+            {business.municipality.name}
+            {business.neighborhood ? ` · ${business.neighborhood.name}` : ""}
+          </p>
+        )}
+
+        {business.shortDescription && (
+          <p className="mt-2 line-clamp-2 flex-1 text-sm text-gray-500">{business.shortDescription}</p>
+        )}
+
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          <ActionTile href={business.phone ? `tel:${business.phone}` : undefined} icon={Phone} label="Llamar" />
+          <ActionTile
+            href={business.whatsapp ? getWhatsAppLink(business.whatsapp, "Hola, vi tu perfil en Guía ZMG") : undefined}
+            icon={MessageCircle}
+            label="WhatsApp"
+            tone="whatsapp"
+            external
+          />
+          <ActionTile href={business.websiteUrl || undefined} icon={Globe} label="Web" external />
+          <ActionTile
+            href={business.latitude && business.longitude ? getMapsLink(business.latitude, business.longitude) : undefined}
+            icon={Navigation}
+            label="Mapa"
+            external
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function SearchResults({ results, query, municipio, sort }: SearchResultsProps) {
   const { businesses, total, page, totalPages, interpretation } = results
+  const currentSort = SORT_LABELS[sort ?? ""] ?? "Relevancia"
+  const qParam = query ? `&q=${encodeURIComponent(query)}` : ""
 
   return (
     <div>
@@ -46,26 +191,54 @@ export function SearchResults({ results, query }: SearchResultsProps) {
             "Todos los perfiles"
           )}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          {total} perfil{total !== 1 ? "es" : ""} encontrado{total !== 1 ? "s" : ""}
-        </p>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">
+              {total} resultado{total !== 1 ? "s" : ""}
+            </span>
+            <span className="text-gray-500">
+              · Mostrando negocios en {municipio ? municipio : "la Zona Metropolitana de Guadalajara"}
+            </span>
+          </div>
+
+          {/* Orden (dropdown nativo con <details>, sin JS) */}
+          <details className="group relative">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              {currentSort}
+              <ChevronDown className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-lg">
+              {Object.entries(SORT_LABELS).map(([value, label]) => (
+                <Link
+                  key={value}
+                  href={`/search?sort=${value}&page=1${qParam}`}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </details>
+        </div>
+
         {interpretation && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {interpretation.isUrgency && (
-              <Badge className="bg-red-100 text-red-700 border-red-200">
-                <AlertTriangle className="h-3 w-3 mr-1" />
+              <Badge className="border-red-200 bg-red-100 text-red-700">
+                <AlertTriangle className="mr-1 h-3 w-3" />
                 Urgente
               </Badge>
             )}
             {interpretation.isProximity && (
-              <Badge className="bg-green-100 text-green-700 border-green-200">
-                <Navigation className="h-3 w-3 mr-1" />
+              <Badge className="border-green-200 bg-green-100 text-green-700">
+                <Navigation className="mr-1 h-3 w-3" />
                 Cerca de ti
               </Badge>
             )}
             {interpretation.isOpenNow && (
-              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                <Clock className="h-3 w-3 mr-1" />
+              <Badge className="border-emerald-200 bg-emerald-100 text-emerald-700">
+                <Clock className="mr-1 h-3 w-3" />
                 Abierto ahora
               </Badge>
             )}
@@ -74,138 +247,47 @@ export function SearchResults({ results, query }: SearchResultsProps) {
       </div>
 
       {businesses.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-gray-200 p-12 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
           <h2 className="text-xl font-semibold text-gray-900">Sin resultados</h2>
-          <p className="mt-2 text-gray-500">
-            No encontramos perfiles con esos criterios. Intenta con otra búsqueda.
-          </p>
+          <p className="mt-2 text-gray-500">No encontramos perfiles con esos criterios. Intenta con otra búsqueda.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {businesses.map((business: SearchBusiness) => {
-            const openStatus = isOpenNow(business.hours)
-            const activeMembership = business.memberships?.find((m) => m.status === "ACTIVE")
-
-            return (
-              <Card key={business.id} className="overflow-hidden transition-all hover:shadow-md">
-                <CardContent className="p-0">
-                  <div className="flex flex-col sm:flex-row">
-                    <div className="flex-1 p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Link
-                            href={`/perfil/${business.slug}`}
-                              className="text-lg font-semibold text-gray-900 hover:text-green-700 transition-colors"
-                            >
-                              {business.name}
-                            </Link>
-                            {business.isVerified && (
-                              <Badge className="bg-blue-600 text-white text-xs">Verificado</Badge>
-                            )}
-                            {activeMembership && (
-                              <Badge className="bg-amber-500 text-white text-xs">Premium</Badge>
-                            )}
-                            {openStatus === true && (
-                              <Badge className="bg-emerald-500 text-white text-xs">Abierto</Badge>
-                            )}
-                            {openStatus === false && (
-                              <Badge variant="secondary" className="text-xs">Cerrado</Badge>
-                            )}
-                          </div>
-                          {business.shortDescription && (
-                            <p className="mt-1 text-sm text-gray-500">
-                              {truncate(business.shortDescription, 150)}
-                            </p>
-                          )}
-                        </div>
-                        {business.score && (
-                          <div className="text-right ml-4 shrink-0">
-                            <div className="text-xs text-gray-400">Relevancia</div>
-                            <div className="text-lg font-bold text-green-700">
-                              {Math.round(business.score)}%
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                        {business.municipality && (
-                          <span className="inline-flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {business.municipality.name}
-                            {business.neighborhood && ` - ${business.neighborhood.name}`}
-                          </span>
-                        )}
-                        <DistanceBadge lat={business.latitude} lng={business.longitude} className="text-xs" />
-                        {business.category && (
-                          <Badge variant="secondary" className="text-xs">
-                            {business.category.name}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {business.phone && (
-                          <a
-                            href={`tel:${business.phone}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-background px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                            {formatPhone(business.phone)}
-                          </a>
-                        )}
-                        {business.whatsapp && (
-                          <a
-                            href={getWhatsAppLink(business.whatsapp, `Hola, vi tu perfil en Guía ZMG`)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            WhatsApp
-                          </a>
-                        )}
-                        {business.websiteUrl && (
-                          <a
-                            href={business.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
-                          >
-                            <Globe className="h-3.5 w-3.5" />
-                            Sitio web
-                          </a>
-                        )}
-                        {business.latitude && business.longitude && (
-                          <a
-                            href={getMapsLink(business.latitude, business.longitude)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
-                          >
-                            <Navigation className="h-3.5 w-3.5" />
-                            Cómo llegar
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
+        <div className="grid gap-6 sm:grid-cols-2">
+          {businesses.flatMap((business: SearchBusiness, i: number) => {
+            const card = <BusinessCard key={business.id} business={business} />
+            // Banner destacado a mitad de la retícula (tras la 2ª tarjeta).
+            if (i === 1) {
+              return [
+                card,
+                <Link
+                  key="featured-banner"
+                  href="/mapa"
+                  className="relative flex min-h-[180px] flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-green-800 to-emerald-600 p-7 text-white sm:col-span-2"
+                >
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-200">Explora la ZMG</span>
+                  <h3 className="mt-2 max-w-md text-2xl font-bold leading-tight">
+                    Descubre negocios cerca de ti en el mapa interactivo
+                  </h3>
+                  <span className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-bold text-green-800">
+                    <Navigation className="h-4 w-4" />
+                    Ver mapa
+                  </span>
+                </Link>,
+              ]
+            }
+            return [card]
           })}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="mt-8 flex justify-center gap-2">
+        <div className="mt-10 flex items-center justify-center gap-2">
           {page > 1 && (
             <Link
-              href={`/search?page=${page - 1}&q=${query || ""}`}
-              className="inline-flex items-center rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+              href={`/search?page=${page - 1}${qParam}`}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
             >
-              Anterior
+              ‹
             </Link>
           )}
           {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -213,9 +295,9 @@ export function SearchResults({ results, query }: SearchResultsProps) {
             .map((p) => (
               <Link
                 key={p}
-                href={`/search?page=${p}&q=${query || ""}`}
-                className={`inline-flex items-center rounded-lg border px-4 py-2 text-sm ${
-                  p === page ? "bg-green-800 text-white border-green-800" : "hover:bg-gray-50"
+                href={`/search?page=${p}${qParam}`}
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-medium ${
+                  p === page ? "border-green-800 bg-green-800 text-white" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {p}
@@ -223,10 +305,10 @@ export function SearchResults({ results, query }: SearchResultsProps) {
             ))}
           {page < totalPages && (
             <Link
-              href={`/search?page=${page + 1}&q=${query || ""}`}
-              className="inline-flex items-center rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+              href={`/search?page=${page + 1}${qParam}`}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
             >
-              Siguiente
+              ›
             </Link>
           )}
         </div>

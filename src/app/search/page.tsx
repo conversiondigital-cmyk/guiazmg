@@ -71,6 +71,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 query={params.q}
                 municipio={params.municipio}
                 category={params.category}
+                sort={searchOpts.sort}
               />
             </div>
           </div>
