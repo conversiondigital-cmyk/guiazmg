@@ -5,8 +5,8 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Eye, Users, TrendingUp, Target, Search, Megaphone } from "@/lib/icons"
-import { ViewsChart, LeadsChart } from "./analytics-charts"
+import { Eye, Users, TrendingUp, Target, Search, Megaphone, MessageCircle } from "@/lib/icons"
+import { ViewsChart, LeadsChart, ContactsChart, CONTACT_SERIES } from "./analytics-charts"
 
 export default async function EstadisticasPage() {
   const session = await auth()
@@ -103,6 +103,33 @@ export default async function EstadisticasPage() {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, count]) => ({ date: date.slice(5), leads: count }))
 
+  // Contactos por canal: cómo la gente contacta al negocio (llamada, WhatsApp,
+  // sitio web, ruta en mapa, redes). Mapa+Waze se agrupan; Facebook+Instagram
+  // se agrupan como "Redes".
+  const contactTotals = {
+    whatsapp: analytics.reduce((s, r) => s + r.whatsappClicks, 0),
+    phone: analytics.reduce((s, r) => s + r.phoneClicks, 0),
+    website: analytics.reduce((s, r) => s + r.websiteClicks, 0),
+    map: analytics.reduce((s, r) => s + r.mapClicks + r.wazeClicks, 0),
+    social: analytics.reduce((s, r) => s + r.facebookClicks + r.instagramClicks, 0),
+  }
+  const maxContact = Math.max(1, ...Object.values(contactTotals))
+
+  const contactsMap = new Map<string, { whatsapp: number; phone: number; website: number; map: number; social: number }>()
+  for (const r of analytics) {
+    const key = r.date.toISOString().slice(0, 10)
+    const e = contactsMap.get(key) || { whatsapp: 0, phone: 0, website: 0, map: 0, social: 0 }
+    e.whatsapp += r.whatsappClicks
+    e.phone += r.phoneClicks
+    e.website += r.websiteClicks
+    e.map += r.mapClicks + r.wazeClicks
+    e.social += r.facebookClicks + r.instagramClicks
+    contactsMap.set(key, e)
+  }
+  const dailyContactsData = [...contactsMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({ date: date.slice(5), ...v }))
+
   const topByViews = [...listings]
     .sort((a, b) => b._count.leadEvents - a._count.leadEvents)
     .slice(0, 5)
@@ -118,7 +145,7 @@ export default async function EstadisticasPage() {
         <p className="text-gray-500">Métricas detalladas de tus negocios en los últimos 30 días</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <Link href="/dashboard/estadisticas" className="block">
           <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -127,6 +154,17 @@ export default async function EstadisticasPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalViews}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/leads" className="block">
+          <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Contactos</CardTitle>
+              <MessageCircle className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalClicks}</div>
             </CardContent>
           </Card>
         </Link>
@@ -189,6 +227,62 @@ export default async function EstadisticasPage() {
               <p className="text-sm text-gray-400 text-center py-8">Sin datos de leads</p>
             ) : (
               <LeadsChart data={dailyLeadsData} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-emerald-600" />
+              Contactos por día
+            </CardTitle>
+            <CardDescription>Llamadas, WhatsApp, sitio web, ruta y redes (últimos 30 días)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {totalClicks === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Sin contactos aún</p>
+            ) : (
+              <ContactsChart data={dailyContactsData} />
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-emerald-600" />
+              Contactos por canal
+            </CardTitle>
+            <CardDescription>Cómo te contactan ({totalClicks} en total)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {totalClicks === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Sin contactos aún</p>
+            ) : (
+              <div className="space-y-4">
+                {CONTACT_SERIES.map((s) => {
+                  const val = contactTotals[s.key]
+                  const pct = totalClicks > 0 ? Math.round((val / totalClicks) * 100) : 0
+                  return (
+                    <div key={s.key}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">{s.label}</span>
+                        <span className="font-medium text-gray-900">
+                          {val} <span className="text-gray-400">({pct}%)</span>
+                        </span>
+                      </div>
+                      <div className="mt-1.5 h-2 rounded-full bg-gray-100">
+                        <div
+                          className="h-2 rounded-full"
+                          style={{ width: `${Math.round((val / maxContact) * 100)}%`, backgroundColor: s.color }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
