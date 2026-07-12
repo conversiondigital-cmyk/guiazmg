@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { confirmDialog } from "@/components/ui/system-dialog"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
@@ -126,9 +127,26 @@ type BusinessData = {
   [key: string]: unknown
 }
 
+type CategoryOption = {
+  id: string
+  name: string
+  subcategories: Array<{ id: string; name: string }>
+}
+
+type HourRow = {
+  dayOfWeek: number
+  opensAt: string
+  closesAt: string
+  isClosed: boolean
+}
+
 interface BusinessEditFormProps {
   business: BusinessData
+  categories: CategoryOption[]
 }
+
+// Orden de despliegue: Lunes → Domingo (dayOfWeek 0 = Domingo va al final).
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
 // Campos de texto/enlace que el dueño puede editar (deben coincidir con
 // businessUpdateSchema en /api/business PATCH).
@@ -170,7 +188,7 @@ function ReadOnlyInput({ value }: { value: string | null | undefined }) {
   )
 }
 
-export function BusinessEditForm({ business }: BusinessEditFormProps) {
+export function BusinessEditForm({ business, categories }: BusinessEditFormProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -184,6 +202,34 @@ export function BusinessEditForm({ business }: BusinessEditFormProps) {
 
   const set = (key: EditableKey, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
 
+  // Categoría / subcategoría editables.
+  const [categoryId, setCategoryId] = useState(business.category?.id ?? "")
+  const [subcategoryId, setSubcategoryId] = useState(business.subcategory?.id ?? "")
+  const subOptions = categories.find((c) => c.id === categoryId)?.subcategories ?? []
+
+  const handleCategoryChange = (value: string | null) => {
+    setCategoryId(value ?? "")
+    setSubcategoryId("") // al cambiar de categoría la subcategoría anterior ya no aplica
+  }
+
+  // Horarios editables: una fila por día (7), rellenando desde los registros
+  // existentes; los días sin registro arrancan como "Cerrado".
+  const [hours, setHours] = useState<HourRow[]>(() => {
+    const byDay = new Map(business.hours.map((h) => [h.dayOfWeek, h]))
+    return DAY_ORDER.map((d) => {
+      const h = byDay.get(d)
+      return {
+        dayOfWeek: d,
+        opensAt: h?.opensAt ?? "09:00",
+        closesAt: h?.closesAt ?? "18:00",
+        isClosed: h ? h.isClosed : true,
+      }
+    })
+  })
+
+  const setHour = (dayOfWeek: number, patch: Partial<HourRow>) =>
+    setHours((prev) => prev.map((h) => (h.dayOfWeek === dayOfWeek ? { ...h, ...patch } : h)))
+
   const statusColor = STATUS_VARIANTS[business.status] ?? "outline"
   const verificationColor = VERIFICATION_VARIANTS[business.verificationStatus] ?? "outline"
 
@@ -192,12 +238,26 @@ export function BusinessEditForm({ business }: BusinessEditFormProps) {
       toast.error("El nombre no puede quedar vacío")
       return
     }
+    if (!categoryId) {
+      toast.error("Selecciona una categoría")
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          categoryId,
+          subcategoryId: subcategoryId || null,
+          hours: hours.map((h) => ({
+            dayOfWeek: h.dayOfWeek,
+            opensAt: h.isClosed ? null : h.opensAt,
+            closesAt: h.isClosed ? null : h.closesAt,
+            isClosed: h.isClosed,
+          })),
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -275,10 +335,32 @@ export function BusinessEditForm({ business }: BusinessEditFormProps) {
                 <ReadOnlyInput value={business.slug} />
               </Field>
               <Field label="Categoría">
-                <ReadOnlyInput value={business.category?.name} />
+                <Select value={categoryId} onValueChange={handleCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
               <Field label="Subcategoría">
-                <ReadOnlyInput value={business.subcategory?.name} />
+                <Select
+                  value={subcategoryId}
+                  onValueChange={(v) => setSubcategoryId(v ?? "")}
+                  disabled={subOptions.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={subOptions.length ? "Seleccionar subcategoría" : "Sin subcategorías"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subOptions.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
             </div>
             <div className="grid grid-cols-1 gap-4 mt-4">
@@ -405,38 +487,42 @@ export function BusinessEditForm({ business }: BusinessEditFormProps) {
 
         <TabsContent value="hours" className="space-y-6">
           <SectionCard title="Horarios" icon={Clock}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Día</TableHead>
-                  <TableHead>Abre</TableHead>
-                  <TableHead>Cierra</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {business.hours.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
-                      No hay horarios registrados
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  business.hours.map((hour) => (
-                    <TableRow key={hour.id}>
-                      <TableCell className="font-medium">{DAY_LABELS[hour.dayOfWeek] ?? `Día ${hour.dayOfWeek}`}</TableCell>
-                      <TableCell>{hour.isClosed ? "—" : hour.opensAt ?? "—"}</TableCell>
-                      <TableCell>{hour.isClosed ? "—" : hour.closesAt ?? "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant={hour.isClosed ? "outline" : "default"}>
-                          {hour.isClosed ? "Cerrado" : "Abierto"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Activa cada día que abras y define la hora de apertura y cierre.
+            </p>
+            <div className="divide-y">
+              {hours.map((h) => (
+                <div key={h.dayOfWeek} className="flex flex-wrap items-center gap-3 py-3">
+                  <span className="w-24 shrink-0 font-medium">{DAY_LABELS[h.dayOfWeek]}</span>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={!h.isClosed}
+                      onCheckedChange={(open) => setHour(h.dayOfWeek, { isClosed: !open })}
+                    />
+                    <span className="w-16 text-sm text-muted-foreground">
+                      {h.isClosed ? "Cerrado" : "Abierto"}
+                    </span>
+                  </div>
+                  {!h.isClosed && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={h.opensAt}
+                        onChange={(e) => setHour(h.dayOfWeek, { opensAt: e.target.value })}
+                        className="w-32"
+                      />
+                      <span className="text-muted-foreground">a</span>
+                      <Input
+                        type="time"
+                        value={h.closesAt}
+                        onChange={(e) => setHour(h.dayOfWeek, { closesAt: e.target.value })}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </SectionCard>
         </TabsContent>
 

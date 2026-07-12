@@ -35,7 +35,22 @@ export default async function MiNegocioPage() {
     )
   }
 
-  const verificationMode = await getVerificationMode()
+  const [verificationMode, categories] = await Promise.all([
+    getVerificationMode(),
+    prisma.category.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        subcategories: {
+          where: { isActive: true },
+          select: { id: true, name: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ])
 
   return (
     <div className="space-y-6">
@@ -57,7 +72,7 @@ export default async function MiNegocioPage() {
         isVerified={business.isVerified}
         mode={verificationMode}
       />
-      <BusinessEditForm business={business} />
+      <BusinessEditForm business={business} categories={categories} />
     </div>
   )
 }

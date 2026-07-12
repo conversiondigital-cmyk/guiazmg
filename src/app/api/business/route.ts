@@ -12,8 +12,17 @@ const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
 const optText = (max: number) => z.preprocess(blankToNull, z.string().trim().max(max).nullable().optional())
 const optUrl = z.preprocess(blankToNull, z.string().trim().url().max(500).nullable().optional())
 
-// Campos que el DUEÑO puede editar (subconjunto seguro: texto libre y enlaces).
-// Categoría, ubicación geo, estado y verificación NO se editan por aquí.
+// Un renglón de horario (una fila por día de la semana).
+const hourSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  opensAt: z.preprocess(blankToNull, z.string().trim().regex(/^\d{2}:\d{2}$/).nullable().optional()),
+  closesAt: z.preprocess(blankToNull, z.string().trim().regex(/^\d{2}:\d{2}$/).nullable().optional()),
+  isClosed: z.boolean().optional(),
+})
+
+// Campos que el DUEÑO puede editar. Texto/enlaces, categoría, subcategoría y
+// horarios. La ubicación geo (lat/lng), el estado y la verificación NO se
+// editan por aquí.
 const businessUpdateSchema = z.object({
   name: z.string().trim().min(2).max(160).optional(),
   shortDescription: optText(200),
@@ -31,6 +40,9 @@ const businessUpdateSchema = z.object({
   postalCode: optText(12),
   googleMapsUrl: optUrl,
   wazeUrl: optUrl,
+  categoryId: z.string().min(1).optional(),
+  subcategoryId: z.preprocess(blankToNull, z.string().nullable().optional()),
+  hours: z.array(hourSchema).max(7).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -183,7 +195,7 @@ export async function PATCH(request: NextRequest) {
 
     const business = await prisma.profile.findFirst({
       where: { ownerId: session.user.id, deletedAt: null },
-      select: { id: true },
+      select: { id: true, categoryId: true },
     })
     if (!business) {
       return NextResponse.json({ error: "No tienes un negocio registrado" }, { status: 404 })
@@ -193,8 +205,49 @@ export async function PATCH(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
     }
+    const { categoryId, subcategoryId, hours, ...rest } = parsed.data
 
-    await prisma.profile.update({ where: { id: business.id }, data: parsed.data })
+    // Valida que la categoría exista y esté activa antes de reasignarla.
+    if (categoryId) {
+      const cat = await prisma.category.findFirst({ where: { id: categoryId, isActive: true }, select: { id: true } })
+      if (!cat) return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
+    }
+    // La subcategoría (si viene) debe pertenecer a la categoría efectiva.
+    const effectiveCategoryId = categoryId ?? business.categoryId
+    if (subcategoryId) {
+      const sub = await prisma.subcategory.findFirst({
+        where: { id: subcategoryId, isActive: true, categoryId: effectiveCategoryId ?? undefined },
+        select: { id: true },
+      })
+      if (!sub) return NextResponse.json({ error: "Subcategoría inválida" }, { status: 400 })
+    }
+
+    await prisma.profile.update({
+      where: { id: business.id },
+      data: {
+        ...rest,
+        ...(categoryId ? { categoryId } : {}),
+        ...(subcategoryId !== undefined ? { subcategoryId } : {}),
+        // Reemplaza todos los horarios (borra los anteriores y crea los nuevos).
+        // Al tocar categoryId/subcategoryId el trigger de Postgres recalcula el
+        // search_vector solo, no hay que reindexar a mano.
+        ...(hours
+          ? {
+              hours: {
+                deleteMany: {},
+                createMany: {
+                  data: hours.map((h) => ({
+                    dayOfWeek: h.dayOfWeek,
+                    opensAt: h.isClosed ? null : h.opensAt ?? null,
+                    closesAt: h.isClosed ? null : h.closesAt ?? null,
+                    isClosed: !!h.isClosed,
+                  })),
+                },
+              },
+            }
+          : {}),
+      },
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[BUSINESS_UPDATE]", error instanceof Error ? error.message : error)
