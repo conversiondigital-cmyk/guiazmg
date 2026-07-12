@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { ADMIN_CONFIG_SECTIONS } from "@/lib/admin-config-fields"
+import { ADMIN_CONFIG_SECTIONS, SECRET_KEYS } from "@/lib/admin-config-fields"
 
 // Build SETTING_KEY_MAP from config sections
 const SETTING_KEY_MAP: Record<string, { key: string; label: string; section: string }> = {}
@@ -27,17 +27,20 @@ export async function GET() {
       where: { key: { in: allKeys } },
     })
 
-    const grouped: Record<string, { key: string; label: string; value: string; description: string | null }[]> = {}
+    const grouped: Record<string, { key: string; label: string; value: string; hasValue: boolean; description: string | null }[]> = {}
 
     for (const meta of Object.values(SETTING_KEY_MAP)) {
       const setting = settings.find((s) => s.key === meta.key)
-      const value = setting?.value ?? ""
+      const stored = setting?.value ?? ""
+      const isSecret = SECRET_KEYS.has(meta.key)
 
       if (!grouped[meta.section]) grouped[meta.section] = []
       grouped[meta.section].push({
         key: meta.key,
         label: meta.label,
-        value,
+        // Un secreto nunca sale al cliente en claro; solo se informa si existe.
+        value: isSecret ? "" : stored,
+        hasValue: stored !== "",
         description: setting?.description ?? null,
       })
     }
@@ -81,10 +84,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Valor inválido" }, { status: 400 })
     }
 
+    const isSecret = SECRET_KEYS.has(key)
+
+    // Un secreto con valor vacío NO se guarda: se conserva el existente. Evita
+    // que el formulario (que reenvía todos los campos) borre una key al dejar
+    // el input en blanco.
+    if (isSecret && value.trim() === "") {
+      return NextResponse.json({ skipped: true })
+    }
+
     const setting = await prisma.systemSetting.upsert({
       where: { key },
-      update: { value, isSecret: false },
-      create: { key, value, isSecret: false, description: meta.label },
+      update: { value, isSecret },
+      create: { key, value, isSecret, description: meta.label },
     })
 
     await prisma.auditLog.create({

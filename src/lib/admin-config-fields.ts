@@ -33,7 +33,7 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
     title: "Google Maps",
     description: "API key para el mapa y el selector de ubicación (pin) al registrar un negocio.",
     fields: [
-      { key: "google_maps_api_key", label: "API Key de Google Maps", type: "text", placeholder: "AIza...", description: "Habilita el selector de pin en el mapa. Restringe la key por dominio en Google Cloud." },
+      { key: "google_maps_api_key", label: "API Key de Google Maps", type: "password", placeholder: "AIza...", description: "Habilita el selector de pin en el mapa. Restringe la key por dominio en Google Cloud." },
       { key: "google_places_api_key", label: "API Key de Google Places (ratings)", type: "password", placeholder: "AIza... (sin restricción de dominio)", description: "Key de servidor con Places API habilitada, para traer el rating y reseñas de Google. Si se deja vacío se usa la de Maps." },
       { key: "google_maps_enabled", label: "Habilitar mapa en el registro", type: "toggle" },
     ],
@@ -248,3 +248,13 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
     ],
   },
 }
+
+// Claves cuyo valor es un secreto (API keys, tokens, contraseñas). Su valor
+// NUNCA se envía al navegador: la UI solo indica si ya hay uno guardado, y al
+// guardar un input vacío se conserva el existente (no se sobrescribe con "").
+export const SECRET_KEYS: ReadonlySet<string> = new Set(
+  Object.values(ADMIN_CONFIG_SECTIONS)
+    .flatMap((section) => section.fields)
+    .filter((field) => field.type === "password")
+    .map((field) => field.key)
+)

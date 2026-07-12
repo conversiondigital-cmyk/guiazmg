@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ADMIN_CONFIG_SECTIONS } from "@/lib/admin-config-fields"
+import { ADMIN_CONFIG_SECTIONS, SECRET_KEYS } from "@/lib/admin-config-fields"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 
 interface ConfigValue {
@@ -13,11 +13,16 @@ interface ConfigValue {
 export function ConfigurationSectionClient({
   section,
   initialValues,
+  savedSecrets = [],
 }: {
   section: string
   initialValues: ConfigValue
+  // Claves de secretos que YA tienen un valor guardado (el valor nunca llega
+  // al navegador; esto solo alimenta el placeholder "•••• guardado").
+  savedSecrets?: string[]
 }) {
   const config = ADMIN_CONFIG_SECTIONS[section as keyof typeof ADMIN_CONFIG_SECTIONS]
+  const savedSecretSet = new Set(savedSecrets)
 
   // Hooks must run unconditionally and before any early return.
   const [values, setValues] = useState<ConfigValue>(initialValues)
@@ -34,8 +39,14 @@ export function ConfigurationSectionClient({
     setLoading(true)
     setMessage(null)
     try {
+      // Un secreto con input vacío se OMITE: significa "conservar el actual",
+      // no borrarlo. Así evitamos sobreescribir la key guardada con "".
+      const fieldsToSave = config.fields.filter(
+        (field) => !(SECRET_KEYS.has(field.key) && !(values[field.key] || "").trim())
+      )
+
       const results = await Promise.all(
-        config.fields.map(async (field) => {
+        fieldsToSave.map(async (field) => {
           try {
             const res = await fetch("/api/admin/settings", {
               method: "PUT",
@@ -155,7 +166,12 @@ export function ConfigurationSectionClient({
                   type={field.type}
                   value={values[field.key] || ""}
                   onChange={(e) => handleChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={
+                    savedSecretSet.has(field.key)
+                      ? "•••••••••••• (guardado — escribe para reemplazar)"
+                      : field.placeholder
+                  }
+                  autoComplete={SECRET_KEYS.has(field.key) ? "new-password" : undefined}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder-slate-400 focus:border-slate-300 focus:outline-none"
                 />
               )}

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { ConfigurationSectionClient } from "@/components/admin/configuration-section-client"
-import { ADMIN_CONFIG_SECTIONS } from "@/lib/admin-config-fields"
+import { ADMIN_CONFIG_SECTIONS, SECRET_KEYS } from "@/lib/admin-config-fields"
 
 export const dynamic = "force-dynamic"
 
@@ -21,9 +21,17 @@ export default async function AdminConfigSectionPage({ params }: { params: Promi
   })
 
   const initialValues: Record<string, string> = {}
+  const savedSecrets: string[] = []
   config.fields.forEach((field) => {
     const setting = settings.find((s) => s.key === field.key)
-    initialValues[field.key] = setting?.value || ""
+    const stored = setting?.value || ""
+    if (SECRET_KEYS.has(field.key)) {
+      // El secreto no viaja al navegador; solo se marca que existe uno guardado.
+      initialValues[field.key] = ""
+      if (stored) savedSecrets.push(field.key)
+    } else {
+      initialValues[field.key] = stored
+    }
   })
 
   return (
@@ -34,7 +42,7 @@ export default async function AdminConfigSectionPage({ params }: { params: Promi
         <p className="text-sm text-slate-500">{config.description}</p>
       </div>
 
-      <ConfigurationSectionClient section={section} initialValues={initialValues} />
+      <ConfigurationSectionClient section={section} initialValues={initialValues} savedSecrets={savedSecrets} />
     </div>
   )
 }
