@@ -212,7 +212,11 @@ export function ListingsListClient({
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={currentStatus} onValueChange={handleStatusFilter}>
+          <Select
+            value={currentStatus}
+            onValueChange={handleStatusFilter}
+            items={Object.fromEntries(STATUS_OPTIONS.map((o) => [o.value, o.label]))}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue />
             </SelectTrigger>

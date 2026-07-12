@@ -66,7 +66,12 @@ export function FormField({
           )}
         />
       ) : type === "select" ? (
-        <Select value={String(value || "")} onValueChange={onChange} disabled={disabled}>
+        <Select
+          value={String(value || "")}
+          onValueChange={onChange}
+          disabled={disabled}
+          items={Object.fromEntries(options.map((o) => [String(o.value), o.label]))}
+        >
           <SelectTrigger className={error ? "border-red-500" : ""}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>

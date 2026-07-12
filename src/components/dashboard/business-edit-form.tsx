@@ -430,7 +430,11 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                 <ReadOnlyInput value={business.slug} />
               </Field>
               <Field label="Categoría">
-                <Select value={categoryId} onValueChange={handleCategoryChange}>
+                <Select
+                  value={categoryId}
+                  onValueChange={handleCategoryChange}
+                  items={Object.fromEntries(categories.map((c) => [c.id, c.name]))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar categoría" />
                   </SelectTrigger>
@@ -446,6 +450,7 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                   value={subcategoryId}
                   onValueChange={(v) => setSubcategoryId(v ?? "")}
                   disabled={subOptions.length === 0}
+                  items={Object.fromEntries(subOptions.map((s) => [s.id, s.name]))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={subOptions.length ? "Seleccionar subcategoría" : "Sin subcategorías"} />

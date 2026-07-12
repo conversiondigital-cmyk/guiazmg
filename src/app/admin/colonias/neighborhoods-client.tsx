@@ -236,7 +236,11 @@ export function NeighborhoodsClient({
             className="pl-8"
           />
         </div>
-        <Select value={filterMunId} onValueChange={handleFilterMunicipality}>
+        <Select
+          value={filterMunId}
+          onValueChange={handleFilterMunicipality}
+          items={{ ALL: "Todos los municipios", ...Object.fromEntries(municipalities.map((m) => [m.id, m.name])) }}
+        >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Todos los municipios" />
           </SelectTrigger>

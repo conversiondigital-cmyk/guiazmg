@@ -159,7 +159,11 @@ export function UserActions({ user }: { user: UserRow }) {
             <DialogTitle>Cambiar rol</DialogTitle>
             <DialogDescription>{user.name ?? user.email}</DialogDescription>
           </DialogHeader>
-          <Select value={role} onValueChange={(value) => setRole(value ?? user.role)}>
+          <Select
+            value={role}
+            onValueChange={(value) => setRole(value ?? user.role)}
+            items={Object.fromEntries(ROLES.map((r) => [r, ROLE_LABELS[r]]))}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

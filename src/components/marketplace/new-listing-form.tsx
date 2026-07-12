@@ -255,7 +255,11 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="category">Categoría *</Label>
-              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+              <Select
+                value={selectedCategory}
+                onValueChange={handleCategoryChange}
+                items={Object.fromEntries(categories.map((cat) => [cat.id, `${cat.icon || ""} ${cat.name}`.trim()]))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar categoría" />
                 </SelectTrigger>
@@ -270,7 +274,11 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
             </div>
             <div>
               <Label htmlFor="type">Tipo</Label>
-              <Select value={form.type} onValueChange={handleTypeChange}>
+              <Select
+                value={form.type}
+                onValueChange={handleTypeChange}
+                items={Object.fromEntries(LISTING_TYPES.map((t) => [t.value, t.label]))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
@@ -286,7 +294,11 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
           {currentCategory && currentCategory.children.length > 0 && (
             <div>
               <Label htmlFor="subcategory">Subcategoría</Label>
-              <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange}>
+              <Select
+                value={selectedSubcategory}
+                onValueChange={handleSubcategoryChange}
+                items={Object.fromEntries(currentCategory.children.map((sub) => [sub.id, sub.name]))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar subcategoría" />
                 </SelectTrigger>
@@ -367,7 +379,11 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio</Label>
-              <Select value={selectedMunicipio} onValueChange={handleMunicipioChange}>
+              <Select
+                value={selectedMunicipio}
+                onValueChange={handleMunicipioChange}
+                items={Object.fromEntries(municipalities.map((m) => [m.id, m.name]))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar municipio" />
                 </SelectTrigger>

@@ -245,7 +245,19 @@ export function BusinessListClient({
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusValue} onValueChange={handleStatusFilter}>
+          <Select
+            value={statusValue}
+            onValueChange={handleStatusFilter}
+            items={{
+              ALL: "Todos",
+              PENDING_REVIEW: "Pendientes",
+              ACTIVE: "Activos",
+              SUSPENDED: "Suspendidos",
+              REJECTED: "Rechazados",
+              ARCHIVED: "Archivados",
+              DRAFT: "Borradores",
+            }}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue />
             </SelectTrigger>
