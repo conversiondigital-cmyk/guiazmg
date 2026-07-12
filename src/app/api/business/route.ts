@@ -12,6 +12,15 @@ const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
 const optText = (max: number) => z.preprocess(blankToNull, z.string().trim().max(max).nullable().optional())
 const optUrl = z.preprocess(blankToNull, z.string().trim().url().max(500).nullable().optional())
 
+// URL de imagen: acepta http(s) absoluta (R2 en prod) o ruta relativa /uploads
+// (storage local en dev). El valor proviene de nuestro /api/upload, no es texto
+// libre; aun así se valida el formato.
+const imageUrl = z.string().trim().max(1000).refine(
+  (v) => /^https?:\/\//.test(v) || v.startsWith("/"),
+  "URL de imagen inválida"
+)
+const optImage = z.preprocess(blankToNull, imageUrl.nullable().optional())
+
 // Un renglón de horario (una fila por día de la semana).
 const hourSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
@@ -43,6 +52,9 @@ const businessUpdateSchema = z.object({
   categoryId: z.string().min(1).optional(),
   subcategoryId: z.preprocess(blankToNull, z.string().nullable().optional()),
   hours: z.array(hourSchema).max(7).optional(),
+  logoUrl: optImage,
+  coverImageUrl: optImage,
+  images: z.array(imageUrl).max(12).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -205,7 +217,7 @@ export async function PATCH(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
     }
-    const { categoryId, subcategoryId, hours, ...rest } = parsed.data
+    const { categoryId, subcategoryId, hours, images, ...rest } = parsed.data
 
     // Valida que la categoría exista y esté activa antes de reasignarla.
     if (categoryId) {
@@ -242,6 +254,18 @@ export async function PATCH(request: NextRequest) {
                     closesAt: h.isClosed ? null : h.closesAt ?? null,
                     isClosed: !!h.isClosed,
                   })),
+                },
+              },
+            }
+          : {}),
+        // Galería: se reemplaza completa (borra las anteriores, crea las nuevas
+        // en el orden recibido). logoUrl/coverImageUrl viajan como escalares en rest.
+        ...(images
+          ? {
+              images: {
+                deleteMany: {},
+                createMany: {
+                  data: images.map((url, i) => ({ imageUrl: url, sortOrder: i })),
                 },
               },
             }

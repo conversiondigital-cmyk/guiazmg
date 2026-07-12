@@ -20,6 +20,7 @@ export default async function MiNegocioPage() {
       subcategory: true,
       memberships: { include: { plan: true } },
       hours: { orderBy: { dayOfWeek: "asc" } },
+      images: { orderBy: { sortOrder: "asc" } },
       tags: { include: { tag: true } },
       coupons: true,
       _count: { select: { reviews: true } },

@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import NextImage from "next/image"
 import { toast } from "sonner"
-import { Store, MapPin, Phone, Clock, Shield, Tag, Globe, Star, Check, Loader2, Trash2 } from "@/lib/icons"
+import { Store, MapPin, Phone, Clock, Shield, Tag, Globe, Star, Check, Loader2, Trash2, Camera, Upload, X, Plus } from "@/lib/icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -108,6 +109,12 @@ type BusinessData = {
     opensAt: string | null
     closesAt: string | null
     isClosed: boolean
+    [key: string]: unknown
+  }>
+  images: Array<{
+    id: string
+    imageUrl: string
+    sortOrder: number
     [key: string]: unknown
   }>
   tags: Array<{
@@ -230,6 +237,73 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
   const setHour = (dayOfWeek: number, patch: Partial<HourRow>) =>
     setHours((prev) => prev.map((h) => (h.dayOfWeek === dayOfWeek ? { ...h, ...patch } : h)))
 
+  // Fotos: logo y portada (una c/u) + galería (varias). Se suben a R2 vía
+  // /api/upload y se guarda la URL persistente que devuelve.
+  const [logoUrl, setLogoUrl] = useState<string>(business.logoUrl ?? "")
+  const [coverImageUrl, setCoverImageUrl] = useState<string>(business.coverImageUrl ?? "")
+  const [gallery, setGallery] = useState<string[]>(() => business.images.map((im) => im.imageUrl))
+  const [uploading, setUploading] = useState(false)
+  const MAX_GALLERY = 12
+
+  const uploadOne = async (file: File): Promise<string | null> => {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if (!allowed.includes(file.type)) {
+      toast.error(`${file.name}: usa JPG, PNG, WebP o GIF`)
+      return null
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(`${file.name}: máximo 5MB`)
+      return null
+    }
+    const fd = new FormData()
+    fd.append("file", file)
+    fd.append("folder", "business")
+    const res = await fetch("/api/upload", { method: "POST", body: fd })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error(data.error || `No se pudo subir ${file.name}`)
+      return null
+    }
+    return data.url as string
+  }
+
+  const handleSingleUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (url: string) => void
+  ) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadOne(file)
+      if (url) setter(url)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ""
+    if (!files.length) return
+    const room = MAX_GALLERY - gallery.length
+    if (room <= 0) {
+      toast.error(`Máximo ${MAX_GALLERY} fotos en la galería`)
+      return
+    }
+    setUploading(true)
+    try {
+      for (const file of files.slice(0, room)) {
+        const url = await uploadOne(file)
+        if (url) setGallery((prev) => [...prev, url])
+      }
+      if (files.length > room) toast.error(`Solo caben ${MAX_GALLERY} fotos; algunas no se agregaron`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const statusColor = STATUS_VARIANTS[business.status] ?? "outline"
   const verificationColor = VERIFICATION_VARIANTS[business.verificationStatus] ?? "outline"
 
@@ -242,6 +316,10 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
       toast.error("Selecciona una categoría")
       return
     }
+    if (uploading) {
+      toast.error("Espera a que terminen de subir las fotos")
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch("/api/business", {
@@ -251,6 +329,9 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
           ...form,
           categoryId,
           subcategoryId: subcategoryId || null,
+          logoUrl: logoUrl || null,
+          coverImageUrl: coverImageUrl || null,
+          images: gallery,
           hours: hours.map((h) => ({
             dayOfWeek: h.dayOfWeek,
             opensAt: h.isClosed ? null : h.opensAt,
@@ -318,6 +399,10 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
           <TabsTrigger value="hours">
             <Clock className="size-4" />
             Horarios
+          </TabsTrigger>
+          <TabsTrigger value="fotos">
+            <Camera className="size-4" />
+            Fotos
           </TabsTrigger>
           <TabsTrigger value="status">
             <Shield className="size-4" />
@@ -522,6 +607,96 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
                   )}
                 </div>
               ))}
+            </div>
+          </SectionCard>
+        </TabsContent>
+
+        <TabsContent value="fotos" className="space-y-6">
+          <SectionCard title="Logo" icon={Camera}>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Imagen cuadrada de tu negocio (aparece en el perfil y en los resultados).
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="relative size-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                {logoUrl ? (
+                  <NextImage src={logoUrl} alt="Logo" fill className="object-cover" sizes="96px" unoptimized />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-muted-foreground">
+                    <Camera className="size-6" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent">
+                  <Upload className="size-4" />
+                  {logoUrl ? "Cambiar logo" : "Subir logo"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleUpload(e, setLogoUrl)} disabled={uploading} />
+                </label>
+                {logoUrl && (
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setLogoUrl("")}>
+                    <Trash2 className="size-4" />
+                    Quitar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Portada" icon={Camera}>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Imagen ancha que encabeza tu perfil (recomendado 1200×400).
+            </p>
+            <div className="space-y-3">
+              <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg border bg-muted">
+                {coverImageUrl ? (
+                  <NextImage src={coverImageUrl} alt="Portada" fill className="object-cover" sizes="(max-width: 768px) 100vw, 640px" unoptimized />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-muted-foreground">
+                    <Camera className="size-6" />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent">
+                  <Upload className="size-4" />
+                  {coverImageUrl ? "Cambiar portada" : "Subir portada"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSingleUpload(e, setCoverImageUrl)} disabled={uploading} />
+                </label>
+                {coverImageUrl && (
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setCoverImageUrl("")}>
+                    <Trash2 className="size-4" />
+                    Quitar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Galería" icon={Camera}>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Fotos de tu negocio, productos o servicios (hasta {MAX_GALLERY}).
+            </p>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {gallery.map((url, i) => (
+                <div key={`${url}-${i}`} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                  <NextImage src={url} alt={`Foto ${i + 1}`} fill className="object-cover" sizes="150px" unoptimized />
+                  <button
+                    type="button"
+                    onClick={() => setGallery((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    title="Quitar foto"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+              {gallery.length < MAX_GALLERY && (
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground hover:bg-accent">
+                  {uploading ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
+                  <span className="text-xs">Agregar</span>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryUpload} disabled={uploading} />
+                </label>
+              )}
             </div>
           </SectionCard>
         </TabsContent>
