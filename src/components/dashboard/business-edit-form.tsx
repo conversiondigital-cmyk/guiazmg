@@ -15,6 +15,7 @@ import { confirmDialog } from "@/components/ui/system-dialog"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { GoogleMapPicker } from "@/components/business/google-map-picker"
 
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
@@ -150,6 +151,7 @@ type HourRow = {
 interface BusinessEditFormProps {
   business: BusinessData
   categories: CategoryOption[]
+  mapsApiKey: string
 }
 
 // Orden de despliegue: Lunes → Domingo (dayOfWeek 0 = Domingo va al final).
@@ -195,7 +197,7 @@ function ReadOnlyInput({ value }: { value: string | null | undefined }) {
   )
 }
 
-export function BusinessEditForm({ business, categories }: BusinessEditFormProps) {
+export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessEditFormProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -244,6 +246,12 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
   const [gallery, setGallery] = useState<string[]>(() => business.images.map((im) => im.imageUrl))
   const [uploading, setUploading] = useState(false)
   const MAX_GALLERY = 12
+
+  // Ubicación en el mapa (pin arrastrable). null = sin ubicar aún.
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: business.latitude,
+    lng: business.longitude,
+  })
 
   const uploadOne = async (file: File): Promise<string | null> => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
@@ -332,6 +340,8 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
           logoUrl: logoUrl || null,
           coverImageUrl: coverImageUrl || null,
           images: gallery,
+          latitude: coords.lat,
+          longitude: coords.lng,
           hours: hours.map((h) => ({
             dayOfWeek: h.dayOfWeek,
             opensAt: h.isClosed ? null : h.opensAt,
@@ -549,12 +559,20 @@ export function BusinessEditForm({ business, categories }: BusinessEditFormProps
               <Field label="Código Postal">
                 <Input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} inputMode="numeric" />
               </Field>
-              <Field label="Latitud">
-                <ReadOnlyInput value={business.latitude?.toString()} />
-              </Field>
-              <Field label="Longitud">
-                <ReadOnlyInput value={business.longitude?.toString()} />
-              </Field>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label>Ubicación en el mapa</Label>
+              <GoogleMapPicker
+                apiKey={mapsApiKey}
+                lat={coords.lat}
+                lng={coords.lng}
+                onChange={(lat, lng) => setCoords({ lat, lng })}
+              />
+              <p className="text-xs text-muted-foreground">
+                {coords.lat != null && coords.lng != null
+                  ? `Coordenadas: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`
+                  : "Aún sin ubicación. Haz clic en el mapa o arrastra el pin."}
+              </p>
             </div>
           </SectionCard>
 

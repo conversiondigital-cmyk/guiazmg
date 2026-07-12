@@ -55,6 +55,8 @@ const businessUpdateSchema = z.object({
   logoUrl: optImage,
   coverImageUrl: optImage,
   images: z.array(imageUrl).max(12).optional(),
+  latitude: z.preprocess(blankToNull, z.coerce.number().min(-90).max(90).nullable().optional()),
+  longitude: z.preprocess(blankToNull, z.coerce.number().min(-180).max(180).nullable().optional()),
 })
 
 export async function POST(request: NextRequest) {

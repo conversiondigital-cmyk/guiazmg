@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { BusinessEditForm } from "@/components/dashboard/business-edit-form"
 import { VerificationCard } from "@/components/dashboard/verification-card"
 import { getVerificationMode } from "@/lib/verification-config"
+import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import Link from "next/link"
 
 export default async function MiNegocioPage() {
@@ -36,8 +37,9 @@ export default async function MiNegocioPage() {
     )
   }
 
-  const [verificationMode, categories] = await Promise.all([
+  const [verificationMode, mapsApiKey, categories] = await Promise.all([
     getVerificationMode(),
+    getGoogleMapsApiKey(),
     prisma.category.findMany({
       where: { isActive: true },
       select: {
@@ -73,7 +75,7 @@ export default async function MiNegocioPage() {
         isVerified={business.isVerified}
         mode={verificationMode}
       />
-      <BusinessEditForm business={business} categories={categories} />
+      <BusinessEditForm business={business} categories={categories} mapsApiKey={mapsApiKey} />
     </div>
   )
 }
