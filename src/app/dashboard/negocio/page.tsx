@@ -69,16 +69,32 @@ export default async function MiNegocioPage() {
           Ver perfil público
         </Link>
       </div>
-      {business.status !== "ACTIVE" && (
-        <div className="flex flex-col gap-1 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-semibold">Tu negocio está en revisión.</span>
-          <span>
-            Aún no aparece en el directorio público (por eso su enlace da 404 a otras personas). Un administrador
-            lo revisará y, al aprobarlo, será visible para todos. Puedes ver cómo quedará en{" "}
-            <Link href={`/perfil/${business.slug}`} className="font-medium underline">tu perfil (vista previa)</Link>.
-          </span>
-        </div>
-      )}
+      {business.status !== "ACTIVE" && (() => {
+        // Mensaje según el estado real: en revisión ≠ rechazado ≠ suspendido.
+        const isReview = business.status === "PENDING_REVIEW" || business.status === "DRAFT"
+        const isRejected = business.status === "REJECTED"
+        const tone = isReview ? "amber" : "red"
+        const title = isReview
+          ? "Tu negocio está en revisión."
+          : isRejected
+            ? "Tu negocio fue rechazado."
+            : "Tu negocio no está publicado."
+        const body = isReview
+          ? "Aún no aparece en el directorio público (por eso su enlace da 404 a otras personas). Un administrador lo revisará y, al aprobarlo, será visible para todos."
+          : isRejected
+            ? "No pasó la revisión. Ajusta la información para que cumpla las normas de la comunidad y vuelve a enviarlo, o contacta a soporte."
+            : "Está suspendido o inactivo, así que no aparece en el directorio. Contacta a soporte si crees que es un error."
+        return (
+          <div className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-sm ${tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-900"}`}>
+            <span className="font-semibold">{title}</span>
+            <span>
+              {body}{" "}
+              Puedes verlo en{" "}
+              <Link href={`/perfil/${business.slug}`} className="font-medium underline">tu perfil (vista previa)</Link>.
+            </span>
+          </div>
+        )
+      })()}
       <VerificationCard
         businessId={business.id}
         status={business.verificationStatus}

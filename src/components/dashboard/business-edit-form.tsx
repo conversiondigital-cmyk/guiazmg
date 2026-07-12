@@ -393,7 +393,7 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="w-full justify-start mb-6">
+        <TabsList className="w-full justify-start mb-6 overflow-x-auto">
           <TabsTrigger value="general">
             <Store className="size-4" />
             Información General

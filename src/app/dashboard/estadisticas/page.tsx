@@ -113,7 +113,6 @@ export default async function EstadisticasPage() {
     map: analytics.reduce((s, r) => s + r.mapClicks + r.wazeClicks, 0),
     social: analytics.reduce((s, r) => s + r.facebookClicks + r.instagramClicks, 0),
   }
-  const maxContact = Math.max(1, ...Object.values(contactTotals))
 
   const contactsMap = new Map<string, { whatsapp: number; phone: number; website: number; map: number; social: number }>()
   for (const r of analytics) {
@@ -276,7 +275,7 @@ export default async function EstadisticasPage() {
                       <div className="mt-1.5 h-2 rounded-full bg-gray-100">
                         <div
                           className="h-2 rounded-full"
-                          style={{ width: `${Math.round((val / maxContact) * 100)}%`, backgroundColor: s.color }}
+                          style={{ width: `${pct}%`, backgroundColor: s.color }}
                         />
                       </div>
                     </div>

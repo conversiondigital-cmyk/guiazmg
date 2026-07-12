@@ -67,7 +67,7 @@ export function ContactsChart({ data }: { data: ContactsDatum[] }) {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" fontSize={12} />
+        <XAxis dataKey="date" fontSize={12} interval="preserveStartEnd" minTickGap={16} />
         <YAxis fontSize={12} allowDecimals={false} />
         <Tooltip />
         <Legend />

@@ -43,8 +43,10 @@ export async function getProfileById(id: string) {
 
 export async function getProfileBySlug(slug: string) {
   try {
-    return await prisma.profile.findUnique({
-    where: { slug },
+    // findFirst (no findUnique) para poder filtrar deletedAt: un negocio con
+    // soft-delete NO debe ser accesible por slug (perfil ni metadatos).
+    return await prisma.profile.findFirst({
+    where: { slug, deletedAt: null },
     include: {
       municipality: true,
       neighborhood: true,

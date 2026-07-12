@@ -311,7 +311,12 @@ export async function DELETE() {
       return NextResponse.json({ error: "No tienes un negocio registrado" }, { status: 404 })
     }
 
-    await prisma.profile.update({ where: { id: business.id }, data: { deletedAt: new Date() } })
+    // Soft-delete: marca deletedAt Y saca de ACTIVE, para que ninguna vista
+    // pública (búsqueda, "similares", que filtran status='ACTIVE') lo muestre.
+    await prisma.profile.update({
+      where: { id: business.id },
+      data: { deletedAt: new Date(), status: "INACTIVE" },
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[BUSINESS_DELETE]", error instanceof Error ? error.message : error)

@@ -23,7 +23,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Archivo muy grande. Máximo 5MB" }, { status: 400 })
   }
 
-  const folder = String(formData.get("folder") || "general")
+  // Saneo: solo alfanumérico/guion/guion_bajo. Evita path traversal (../) en el
+  // proveedor de almacenamiento local (dev), donde folder es parte de la ruta.
+  const folder = String(formData.get("folder") || "general").replace(/[^a-z0-9_-]/gi, "") || "general"
   try {
     const result = await uploadFile(file, {
       folder,
