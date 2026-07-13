@@ -38,6 +38,27 @@ export async function POST(request: NextRequest) {
     ])
     if (rateLimited) return rateLimited
 
+    // Anti-abuso: marketplace es para ventas puntuales, no una tienda permanente.
+    // Tope de publicaciones VIGENTES por usuario (PENDING/ACTIVE/HIDDEN, sin borrar).
+    // Al llenarse, se orienta a crear un Perfil Emprendedor (catálogo sin límite).
+    const MAX_ACTIVE_LISTINGS = 3
+    const activeCount = await prisma.marketplaceListing.count({
+      where: {
+        userId: session.user.id,
+        deletedAt: null,
+        status: { in: ["PENDING", "ACTIVE", "HIDDEN"] },
+      },
+    })
+    if (activeCount >= MAX_ACTIVE_LISTINGS) {
+      return NextResponse.json(
+        {
+          error: `Alcanzaste el máximo de ${MAX_ACTIVE_LISTINGS} publicaciones activas. Marca alguna como vendida o elimínala, o crea tu Perfil Emprendedor para tener catálogo sin límite.`,
+          code: "MAX_ACTIVE_LISTINGS",
+        },
+        { status: 409 }
+      )
+    }
+
     const { title, description, price, type, categoryId, municipalityId, neighborhood, phone, whatsapp, contactEmail, images } = listingSchema.parse(await request.json())
 
     const slug = await generateUniqueSlug(slugify(title), async (s) =>
