@@ -112,7 +112,7 @@ export function DashboardSidebar({ profileType = "NEGOCIO" }: DashboardSidebarPr
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-white transition-transform lg:translate-x-0 lg:static lg:z-auto",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-white transition-transform lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:z-auto",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

@@ -94,3 +94,10 @@ body {
   @apply bg-background text-foreground;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Reserva SIEMPRE el ancho de la barra de scroll. Sin esto, al pasar de una
+   página sin scroll a una con scroll, el contenido centrado se recorre unos
+   px hacia un lado (el "descuadre" al hacer scroll). */
+html {
+  scrollbar-gutter: stable;
+}
