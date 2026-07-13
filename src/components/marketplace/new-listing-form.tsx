@@ -334,7 +334,10 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
               placeholder="Ej: 250"
               required
             />
-            <p className="mt-1 text-xs text-gray-500">Mínimo $20. No se permiten publicaciones gratis.</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Mínimo $20; de ahí en adelante pones el precio que quieras. Los precios falsos o
+              &ldquo;gancho&rdquo; pueden hacer que tu publicación se despublique o elimine.
+            </p>
           </div>
 
           <div>

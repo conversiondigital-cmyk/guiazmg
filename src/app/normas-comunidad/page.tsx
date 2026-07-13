@@ -91,6 +91,8 @@ Las publicaciones de marketplace deben describir claramente qué se vende, compr
 
 Está prohibido publicar productos robados, falsificados, ilegales, peligrosos o que infrinjan derechos de terceros. Recomendamos a los usuarios tomar precauciones antes de pagar, entregar productos o reunirse con desconocidos.
 
+El precio publicado debe ser real. Está prohibido usar precios falsos, simbólicos o "gancho" (por ejemplo, poner \$1 o un precio irreal para atraer y luego cobrar otra cosa). El precio mínimo por publicación es de \$20. Guía ZMG podrá **despublicar o eliminar** cualquier publicación con precios falsos o engañosos, sin previo aviso.
+
 ## 8. Reglas para reseñas
 
 Las reseñas deben reflejar experiencias reales, honestas y relevantes. Está prohibido publicar reseñas falsas, comprar o vender reseñas, pedir reseñas engañosas, amenazar con reseñas negativas para obtener beneficios, publicar reseñas de competidores con mala fe, usar lenguaje discriminatorio, amenazante o difamatorio, revelar datos personales de empleados, clientes o terceros, y publicar información que no tenga relación con la experiencia.
