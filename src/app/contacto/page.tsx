@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Mail, MapPin, Phone, Clock } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function ContactoPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +17,26 @@ export default function ContactoPage() {
     mensaje: "",
   })
   const [submitted, setSubmitted] = useState(false)
+
+  // Datos de contacto públicos que el admin edita en Configuración → Contacto y
+  // redes. Se leen del endpoint público; si están vacíos se usan estos por defecto.
+  const [contact, setContact] = useState({
+    email: "contacto@guiazmg.com",
+    phone: "(33) 4884-3477",
+    address: "Guadalajara, Jalisco",
+  })
+  useEffect(() => {
+    fetch("/api/public/site-config")
+      .then((r) => r.json())
+      .then((d) =>
+        setContact((prev) => ({
+          email: d?.contact?.email || prev.email,
+          phone: d?.contact?.phone || prev.phone,
+          address: d?.contact?.address || prev.address,
+        }))
+      )
+      .catch(() => {})
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -64,7 +84,7 @@ export default function ContactoPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold">Email</h3>
-                <p className="mt-2 text-sm text-gray-600">contacto@guiazmg.com</p>
+                <p className="mt-2 text-sm text-gray-600">{contact.email}</p>
                 <p className="text-xs text-gray-500">Respuesta en 24 horas</p>
               </CardContent>
             </Card>
@@ -75,7 +95,7 @@ export default function ContactoPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold">Teléfono</h3>
-                <p className="mt-2 text-sm text-gray-600">(33) 4884-3477</p>
+                <p className="mt-2 text-sm text-gray-600">{contact.phone}</p>
                 <p className="text-xs text-gray-500">Lunes a Viernes 9am-6pm</p>
               </CardContent>
             </Card>
@@ -86,7 +106,7 @@ export default function ContactoPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold">Ubicación</h3>
-                <p className="mt-2 text-sm text-gray-600">Guadalajara, Jalisco</p>
+                <p className="mt-2 text-sm text-gray-600">{contact.address}</p>
                 <p className="text-xs text-gray-500">Zona Metropolitana</p>
               </CardContent>
             </Card>

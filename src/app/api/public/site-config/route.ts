@@ -7,7 +7,7 @@ import { getSetting } from "@/lib/settings"
 // Configuración → Contacto y redes. La consume el footer (componente cliente).
 // Vacío = usar el valor por defecto en el cliente.
 export async function GET() {
-  const [facebook, instagram, tiktok, youtube, x, linkedin, whatsapp, email, phone] = await Promise.all([
+  const [facebook, instagram, tiktok, youtube, x, linkedin, whatsapp, email, phone, address] = await Promise.all([
     getSetting("social_facebook"),
     getSetting("social_instagram"),
     getSetting("social_tiktok"),
@@ -17,12 +17,13 @@ export async function GET() {
     getSetting("contact_whatsapp"),
     getSetting("contact_email"),
     getSetting("contact_phone"),
+    getSetting("contact_address"),
   ])
 
   return NextResponse.json(
     {
       socials: { facebook, instagram, tiktok, youtube, x, linkedin },
-      contact: { whatsapp, email, phone },
+      contact: { whatsapp, email, phone, address },
     },
     { headers: { "Cache-Control": "public, max-age=300" } },
   )
