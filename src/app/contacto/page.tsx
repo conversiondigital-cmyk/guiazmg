@@ -64,7 +64,7 @@ export default function ContactoPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold">Email</h3>
-                <p className="mt-2 text-sm text-gray-600">info@guiazmg.com</p>
+                <p className="mt-2 text-sm text-gray-600">contacto@guiazmg.com</p>
                 <p className="text-xs text-gray-500">Respuesta en 24 horas</p>
               </CardContent>
             </Card>
