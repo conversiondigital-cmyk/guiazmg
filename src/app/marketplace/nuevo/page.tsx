@@ -11,8 +11,11 @@ export default async function NewListingPage() {
   const session = await auth()
   if (!session?.user) redirect("/auth/login")
 
+  // Solo categorías PRINCIPALES (parentId: null) en el dropdown superior; sus
+  // subcategorías van en el segundo select. Antes se traían todas juntas y el
+  // dropdown principal mezclaba categorías con subcategorías.
   const categories = await prisma.marketplaceCategory.findMany({
-    where: { isActive: true },
+    where: { isActive: true, parentId: null },
     include: { children: { where: { isActive: true }, orderBy: { sortOrder: "asc" } } },
     orderBy: { sortOrder: "asc" },
   })

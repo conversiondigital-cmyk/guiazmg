@@ -24,7 +24,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ ca
 
   const [categories, municipalities] = await Promise.all([
     prisma.marketplaceCategory.findMany({
-      where: { isActive: true },
+      where: { isActive: true, parentId: null },
       include: { children: { where: { isActive: true }, orderBy: { sortOrder: "asc" } } },
       orderBy: { sortOrder: "asc" },
     }),
