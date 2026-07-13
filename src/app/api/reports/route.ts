@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const schema = z.object({
-  type: z.enum(["marketplace", "business", "listing"]).optional(),
+  type: z.enum(["marketplace", "business", "listing", "review"]).optional(),
   id: z.string().optional(),
   reason: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
@@ -43,6 +43,17 @@ export async function POST(req: Request) {
     data.businessId = id
   } else if (type === "listing" && id) {
     data.listingId = id
+  } else if (type === "review" && id) {
+    // Report de una reseña: se enlaza al negocio de la reseña (para que el admin
+    // lo ubique) y se guarda el id + un extracto del texto en la descripción,
+    // ya que el modelo Report no tiene relación directa con Review.
+    const review = await prisma.review.findUnique({
+      where: { id },
+      select: { businessId: true, comment: true },
+    })
+    if (review?.businessId) data.businessId = review.businessId
+    const snippet = review?.comment ? ` — "${review.comment.slice(0, 200)}"` : ""
+    data.description = `[reseña:${id}]${snippet} ${description ?? ""}`.trim()
   } else if (id) {
     data.description = `[${type ?? "ref"}:${id}] ${description ?? ""}`.trim()
   }

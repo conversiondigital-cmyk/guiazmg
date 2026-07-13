@@ -30,12 +30,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Las reseñas se publican SIN moderación previa (APPROVED). El control es
+    // posterior: cualquiera puede reportar una reseña que viole las políticas y
+    // el admin la revisa/oculta desde el panel de reportes.
     const review = await prisma.review.create({
       data: {
         businessId,
         userId: session.user.id,
         rating,
         comment: comment || null,
+        status: "APPROVED",
       },
     })
 
