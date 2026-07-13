@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
+import { fulfillMarketplaceBoost } from "@/lib/payments/fulfill"
 import { getSetting } from "@/lib/settings"
 import crypto from "node:crypto"
 
@@ -385,5 +386,34 @@ async function processApprovedPayment(
       title: "Boost activado",
       message: `Tu boost "${boostDef.name}" quedó activo por ${boostDef.durationDays} días.`,
     })
+  }
+
+  // Boost de una publicación de MARKETPLACE: mktboost:<boostDefId>:<userId>:<listingId>
+  if (type === "mktboost") {
+    const [boostDefinitionId, userId, marketplaceListingId] = rest
+    const amount = paymentData.transaction_amount || 0
+    const boostDef = boostDefinitionId
+      ? await prisma.boostDefinition.findUnique({ where: { id: boostDefinitionId }, select: { durationDays: true } })
+      : null
+    if (!boostDef || !userId || !marketplaceListingId) return
+
+    const result = await fulfillMarketplaceBoost({
+      marketplaceListingId,
+      userId,
+      durationDays: boostDef.durationDays,
+      provider: "MERCADO_PAGO",
+      providerPaymentId: paymentId,
+      amount,
+      metadata: paymentData,
+    })
+
+    if (result.ok && !result.alreadyProcessed) {
+      await createNotification({
+        userId,
+        type: "PAYMENT",
+        title: "Publicación destacada",
+        message: `Tu publicación quedó destacada por ${boostDef.durationDays} días.`,
+      }).catch(() => {})
+    }
   }
 }

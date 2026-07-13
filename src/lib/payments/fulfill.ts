@@ -72,3 +72,60 @@ export async function fulfillMembership(opts: {
 
   return { ok: true, alreadyProcessed: !activated }
 }
+
+// Activa un BOOST de una publicación de MARKETPLACE a partir de un pago aprobado.
+// Marca la publicación como destacada (isBoosted) con vencimiento a N días.
+// IDEMPOTENTE con la misma guardia de "claim" que la membresía. Reutilizable por
+// cualquier proveedor (Stripe / Mercado Pago).
+export async function fulfillMarketplaceBoost(opts: {
+  marketplaceListingId: string
+  userId: string
+  durationDays: number
+  provider: Provider
+  providerPaymentId: string
+  amount: number
+  metadata?: unknown
+}): Promise<{ ok: boolean; reason?: string; alreadyProcessed?: boolean }> {
+  const now = new Date()
+  const db = prisma as any
+
+  const applied: boolean = await db.$transaction(async (tx: any) => {
+    await tx.payment.upsert({
+      where: { providerPaymentId: opts.providerPaymentId },
+      create: {
+        userId: opts.userId,
+        amount: opts.amount,
+        currency: "MXN",
+        provider: opts.provider,
+        providerPaymentId: opts.providerPaymentId,
+        type: "BOOST",
+        status: "PENDING",
+        metadata: opts.metadata ?? undefined,
+      },
+      update: {},
+    })
+
+    // Solo el primer webhook (processedAt aún null) aplica el boost.
+    const claim = await tx.payment.updateMany({
+      where: { providerPaymentId: opts.providerPaymentId, processedAt: null },
+      data: { processedAt: now, status: "APPROVED", amount: opts.amount },
+    })
+    if (claim.count === 0) return false
+
+    // Extiende sobre el vencimiento vigente si aún no expira (compra encadenada).
+    const current = await tx.marketplaceListing.findUnique({
+      where: { id: opts.marketplaceListingId },
+      select: { boostExpiresAt: true },
+    })
+    const base = current?.boostExpiresAt && current.boostExpiresAt > now ? current.boostExpiresAt : now
+    const newExpiry = new Date(base.getTime() + opts.durationDays * 24 * 60 * 60 * 1000)
+
+    await tx.marketplaceListing.update({
+      where: { id: opts.marketplaceListingId },
+      data: { isBoosted: true, boostExpiresAt: newExpiry },
+    })
+    return true
+  })
+
+  return { ok: true, alreadyProcessed: !applied }
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe"
-import { fulfillMembership } from "@/lib/payments/fulfill"
+import { fulfillMembership, fulfillMarketplaceBoost } from "@/lib/payments/fulfill"
 import { createNotification } from "@/lib/notifications/create"
 
 export const dynamic = "force-dynamic"
@@ -50,8 +50,36 @@ export async function POST(request: Request) {
         metadata?: Record<string, string> | null
       }
       const externalRef = s.metadata?.externalReference || ""
-      const [kind, planSlug, userId, businessId] = externalRef.split(":")
+      const parts = externalRef.split(":")
+      const [kind, planSlug, userId, businessId] = parts
       const amount = (s.amount_total ?? 0) / 100
+
+      // Boost de una publicación de marketplace: mktboost:<boostDefId>:<userId>:<listingId>
+      if (kind === "mktboost") {
+        const [, boostDefinitionId, boostUserId, marketplaceListingId] = parts
+        const boostDef = boostDefinitionId
+          ? await prisma.boostDefinition.findUnique({ where: { id: boostDefinitionId }, select: { durationDays: true, name: true } })
+          : null
+        if (boostDef && boostUserId && marketplaceListingId) {
+          const result = await fulfillMarketplaceBoost({
+            marketplaceListingId,
+            userId: boostUserId,
+            durationDays: boostDef.durationDays,
+            provider: "STRIPE",
+            providerPaymentId: s.id,
+            amount,
+            metadata: { source: "stripe", sessionId: s.id },
+          })
+          if (result.ok && !result.alreadyProcessed) {
+            await createNotification({
+              userId: boostUserId,
+              type: "PAYMENT",
+              title: "Publicación destacada",
+              message: `Tu publicación quedó destacada por ${boostDef.durationDays} días.`,
+            }).catch(() => {})
+          }
+        }
+      }
 
       if (kind === "membership" && planSlug && userId && businessId) {
         const result = await fulfillMembership({

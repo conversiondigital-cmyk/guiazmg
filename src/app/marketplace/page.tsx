@@ -57,7 +57,8 @@ export default async function MarketplacePage({
         images: { orderBy: { sortOrder: "asc" }, take: 1 },
         _count: { select: { favorites: true } },
       },
-      orderBy: { createdAt: "desc" },
+      // Las publicaciones destacadas (boost vigente) aparecen primero.
+      orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -133,7 +134,12 @@ export default async function MarketplacePage({
                 return (
                   <Link key={listing.id} href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
                     <Card className="group h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
-                      <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+                      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                        {listing.isBoosted && (
+                          <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                            Destacado
+                          </span>
+                        )}
                         {thumb ? (
                           <div className="relative h-full w-full">
                             <Image src={thumb.url} alt={listing.title} fill className="object-cover transition-transform group-hover:scale-105" />

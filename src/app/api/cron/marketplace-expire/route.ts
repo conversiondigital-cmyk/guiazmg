@@ -21,10 +21,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
+  const now = new Date()
+
   const result = await prisma.marketplaceListing.updateMany({
-    where: { status: "ACTIVE", expiresAt: { not: null, lt: new Date() }, deletedAt: null },
+    where: { status: "ACTIVE", expiresAt: { not: null, lt: now }, deletedAt: null },
     data: { status: "EXPIRED" },
   })
 
-  return NextResponse.json({ expired: result.count })
+  // Apaga los "destacado" cuyo boost ya venció (así el orden y el badge quedan
+  // honestos aunque la publicación siga activa).
+  const unboosted = await prisma.marketplaceListing.updateMany({
+    where: { isBoosted: true, boostExpiresAt: { not: null, lt: now } },
+    data: { isBoosted: false },
+  })
+
+  return NextResponse.json({ expired: result.count, unboosted: unboosted.count })
 }

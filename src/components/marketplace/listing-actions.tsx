@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Eye, Edit3, Trash2, Loader2, Check, Pause, Play } from "@/lib/icons"
+import { Eye, Edit3, Trash2, Loader2, Check, Pause, Play, Rocket } from "@/lib/icons"
 import { confirmDialog } from "@/components/ui/system-dialog"
 import { toast } from "sonner"
 
@@ -81,6 +81,9 @@ export function ListingActions({
       </Link>
       {status === "ACTIVE" && (
         <>
+          <Link href={`/dashboard/marketplace/${id}/destacar`} title="Destacar" className={cn(buttonVariants({ variant: "ghost", size: "icon-xs" }))}>
+            <Rocket className="h-3.5 w-3.5 text-amber-500" />
+          </Link>
           <Button variant="ghost" size="icon-xs" title="Marcar como vendido" onClick={() => applyStatus("SOLD", "Marcada como vendida")} disabled={busy}>
             <Check className="h-3.5 w-3.5 text-green-600" />
           </Button>
