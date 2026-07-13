@@ -4,12 +4,11 @@ import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Settings, Bell, Shield, Globe } from "@/lib/icons"
 import { redirect } from "next/navigation"
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences"
 import { SecuritySection } from "@/components/dashboard/security-section"
+import { PersonalInfoForm } from "@/components/dashboard/personal-info-form"
 
 export default async function ConfiguracionPage() {
   const session = await auth()
@@ -39,17 +38,20 @@ export default async function ConfiguracionPage() {
             Datos de la cuenta
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label>Nombre</Label>
-              <Input defaultValue={user?.name || ""} disabled />
-            </div>
-            <div>
-              <Label>Correo electrónico</Label>
-              <Input defaultValue={user?.email || ""} disabled />
-            </div>
-          </div>
+        <CardContent>
+          <PersonalInfoForm
+            initialName={user?.name ?? ""}
+            email={user?.email ?? ""}
+            memberSince={
+              user
+                ? new Date(user.createdAt).toLocaleDateString("es-MX", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })
+                : ""
+            }
+          />
         </CardContent>
       </Card>
 
