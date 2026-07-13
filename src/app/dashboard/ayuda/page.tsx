@@ -59,14 +59,14 @@ export default function AyudaPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="mailto:soporte@guiazmg.com"
+              href="mailto:contacto@guiazmg.com"
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:border-green-200 hover:text-green-700 transition-colors"
             >
               <Mail className="h-4 w-4" />
-              soporte@guiazmg.com
+              contacto@guiazmg.com
             </Link>
             <Link
-              href="https://wa.me/523312345678"
+              href="https://wa.me/523348843477"
               target="_blank"
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:border-green-200 hover:text-green-600 transition-colors"
             >

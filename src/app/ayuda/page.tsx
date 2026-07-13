@@ -268,7 +268,7 @@ export default function AyudaPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600">
-                    Envía tu pregunta a support@guiazmg.com. Responderemos dentro de 24 horas.
+                    Envía tu pregunta a contacto@guiazmg.com. Responderemos dentro de 24 horas.
                   </p>
                   <Button className="mt-4 w-full" variant="outline">
                     Enviar Email
@@ -285,7 +285,7 @@ export default function AyudaPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600">
-                    Llámanos al (33) 0000-0000. Estamos disponibles de lunes a viernes.
+                    Llámanos al (33) 4884-3477. Estamos disponibles de lunes a viernes.
                   </p>
                   <Button className="mt-4 w-full" variant="outline">
                     Ver Horarios

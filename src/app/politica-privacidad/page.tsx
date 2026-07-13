@@ -44,10 +44,10 @@ export default function PoliticaPrivacidadPage() {
                   <strong>Domicilio:</strong> Guadalajara, Jalisco, México
                 </p>
                 <p>
-                  <strong>Email:</strong> privacidad@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p>
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
               </div>
             </div>
@@ -254,10 +254,10 @@ export default function PoliticaPrivacidadPage() {
               </p>
               <div className="mt-3 space-y-2 text-sm">
                 <p>
-                  <strong>Email:</strong> privacidad@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p>
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
                 <p>
                   <strong>Formulario en línea:</strong> Panel de control &gt; Configuración &gt; Privacidad
@@ -296,10 +296,10 @@ export default function PoliticaPrivacidadPage() {
               </p>
               <div className="mt-3 space-y-1 text-sm">
                 <p>
-                  <strong>Email:</strong> privacidad@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p>
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
               </div>
             </div>

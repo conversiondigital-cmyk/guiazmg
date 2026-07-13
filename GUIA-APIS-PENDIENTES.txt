@@ -1,0 +1,217 @@
+========================================================================
+ GUÍA ZMG — APIS / INTEGRACIONES PENDIENTES Y CÓMO CONSEGUIRLAS
+ Generado: 2026-07-04
+========================================================================
+
+Este archivo lista las credenciales externas que faltan para el proyecto,
+para qué sirve cada una, DÓNDE conseguirla y DÓNDE pegarla.
+
+Hay dos lugares donde se pegan:
+  • PANEL  = el sitio, en /admin/configuracion/<sección>  (se guardan en la
+             base de datos; se activan solas al pegarlas, sin redeploy).
+  • VERCEL = Vercel → Project → Settings → Environment Variables
+             (requieren REDEPLOY después de guardarlas).
+
+------------------------------------------------------------------------
+ YA CONFIGURADAS (no tocar)
+------------------------------------------------------------------------
+  - Base de datos ........ Neon (DATABASE_URL, pooler)
+  - Auth secret .......... AUTH_SECRET
+  - Rate limit ........... Redis / Upstash (REDIS_URL, rediss://)
+  - Storage .............. Cloudflare R2 (S3_* )
+  - Cron ................. CRON_SECRET
+  - Dominio .............. NEXT_PUBLIC_APP_URL
+
+
+========================================================================
+ RESUMEN (por prioridad)
+========================================================================
+ #  Integración           Para qué                         Dónde     Prioridad
+ -- --------------------- -------------------------------- --------- -----------
+ 1  SMTP / correo         Activación de cuenta, newsletter, PANEL     CRÍTICA
+                          notificaciones por email
+ 2  Google OAuth          Login "con Google"               VERCEL    ALTA
+ 3  Google Maps           Mapa + pin al registrar negocio  PANEL     ALTA
+ 4  Mercado Pago          Cobrar membresías/boosts (MX)    PANEL     PARA COBRAR
+ 5  Stripe                Cobrar tarjeta internacional     PANEL     PARA COBRAR
+                          (opcional si solo usas MP)
+ 6  Google Places         Rating/reseñas reales de Google  PANEL     OPCIONAL
+ 7  Twilio (SMS)          Códigos de verificación por SMS  PANEL     OPCIONAL
+ 8  Sentry                Monitoreo de errores en prod     VERCEL    OPCIONAL
+ 9  Google Search Console Keywords reales en /admin/analytics PANEL   OPCIONAL
+ 10 Web Push (VAPID)      Notificaciones push              (n/a)     FUTURO
+
+
+========================================================================
+ CÓMO CONSEGUIR CADA UNA
+========================================================================
+
+------------------------------------------------------------------------
+ 1) SMTP / CORREO   [CRÍTICA — hazla primero]
+------------------------------------------------------------------------
+Sin esto NO funcionan: activación de cuenta por email, el newsletter del
+footer, ni las notificaciones por correo.
+
+Recomendado: un proveedor transaccional (mejor entregabilidad que Gmail):
+   Resend · Brevo (Sendinblue) · SendGrid · Mailgun · Amazon SES
+   (casi todos tienen plan gratis).
+
+Pasos:
+   1. Crea cuenta en el proveedor.
+   2. Verifica tu dominio (te dan registros SPF/DKIM para tu DNS).
+   3. Copia: host, puerto (587), usuario, contraseña/API key, email remitente.
+
+Dónde pegar:  PANEL → /admin/configuracion/correo
+   smtp_host        (ej. smtp.resend.com)
+   smtp_port        (587)
+   smtp_username
+   smtp_password
+   smtp_from_email  (remitente, ej. hola@tudominio.com)
+
+Nota (Gmail para probar): activa 2FA en la cuenta, genera una
+   "Contraseña de aplicación" → host smtp.gmail.com, puerto 587.
+
+
+------------------------------------------------------------------------
+ 2) GOOGLE OAUTH (login con Google)   [ALTA]
+------------------------------------------------------------------------
+Pasos:
+   1. https://console.cloud.google.com
+   2. APIs y servicios → Pantalla de consentimiento OAuth (configúrala).
+   3. Credenciales → Crear credenciales → ID de cliente OAuth →
+      Aplicación web.
+   4. URIs de redireccionamiento autorizados:
+        https://TU-DOMINIO/api/auth/callback/google
+   5. Copia Client ID y Client Secret.
+
+Dónde pegar:  VERCEL (env)  →  luego REDEPLOY
+   AUTH_GOOGLE_ID
+   AUTH_GOOGLE_SECRET
+   (El botón de Google aparece solo cuando existen estas dos variables.)
+
+
+------------------------------------------------------------------------
+ 3) GOOGLE MAPS   [ALTA]
+------------------------------------------------------------------------
+Pasos:
+   1. Google Cloud Console → Habilitar APIs:
+        - Maps JavaScript API
+        - (Geocoding API si usas búsqueda por dirección)
+   2. Credenciales → Crear API Key.
+   3. Restríngela por "Referente HTTP" (tu dominio) por seguridad.
+
+Dónde pegar:  PANEL → /admin/configuracion/mapas
+   google_maps_api_key
+   + prende el toggle "Habilitar mapa en el registro".
+
+
+------------------------------------------------------------------------
+ 4) MERCADO PAGO   [PARA COBRAR]
+------------------------------------------------------------------------
+Pasos:
+   1. https://www.mercadopago.com.mx/developers → crea una aplicación.
+   2. Credenciales de PRODUCCIÓN: copia Access Token y Public Key.
+   3. Webhooks → registra:
+        https://TU-DOMINIO/api/payments/webhook
+      y copia el "secret" del webhook.
+
+Dónde pegar:  PANEL → /admin/configuracion/pagos
+   mercado_pago_access_token
+   mercado_pago_public_key
+   mercado_pago_webhook_secret
+   (Para probar: usa credenciales de prueba y prende "Modo sandbox".)
+
+
+------------------------------------------------------------------------
+ 5) STRIPE   [PARA COBRAR — opcional si solo usas Mercado Pago]
+------------------------------------------------------------------------
+Pasos:
+   1. https://dashboard.stripe.com → Developers → API keys:
+        Secret key (sk_live_…) y Publishable (pk_live_…).
+   2. Developers → Webhooks → Add endpoint:
+        https://TU-DOMINIO/api/payments/stripe/webhook
+      copia el Signing secret (whsec_…).
+
+Dónde pegar:  PANEL → /admin/configuracion/pagos
+   stripe_api_key         (sk_live_…)
+   stripe_public_key      (pk_live_…)
+   stripe_webhook_secret  (whsec_…)
+
+
+------------------------------------------------------------------------
+ 6) GOOGLE PLACES (ratings de Google)   [OPCIONAL]
+------------------------------------------------------------------------
+Pasos:
+   1. Google Cloud Console → habilita "Places API".
+   2. Crea una API Key de SERVIDOR (sin restricción de referente;
+      restríngela por API a Places).
+
+Dónde pegar:  PANEL → /admin/configuracion/mapas
+   google_places_api_key
+   (Si la dejas vacía, usa la de Google Maps.)
+
+
+------------------------------------------------------------------------
+ 7) TWILIO (SMS)   [OPCIONAL]
+------------------------------------------------------------------------
+Pasos:
+   1. https://www.twilio.com → Console:
+        copia Account SID (empieza con AC…) y Auth Token.
+   2. Compra un número (o crea un Messaging Service).
+
+Dónde pegar:  PANEL → /admin/configuracion/sms
+   sms_provider = twilio
+   sms_account_sid   (AC…)
+   sms_api_key       (Auth Token)
+   sms_from_number   (formato E.164, ej. +52…)
+
+
+------------------------------------------------------------------------
+ 8) SENTRY (monitoreo de errores)   [OPCIONAL]
+------------------------------------------------------------------------
+Pasos:
+   1. https://sentry.io → nuevo proyecto tipo Next.js.
+   2. Copia el DSN.
+
+Dónde pegar:  VERCEL (env)  →  luego REDEPLOY
+   SENTRY_DSN
+   NEXT_PUBLIC_SENTRY_DSN
+   (El SDK ya está instalado en el proyecto; solo falta el DSN.)
+
+
+------------------------------------------------------------------------
+ 9) GOOGLE SEARCH CONSOLE (keywords reales)   [OPCIONAL]
+------------------------------------------------------------------------
+Pasos:
+   1. https://search.google.com/search-console → agrega y verifica
+      tu propiedad.
+   2. En Google Cloud crea una CUENTA DE SERVICIO, dale acceso a la
+      propiedad en Search Console, y descarga el JSON.
+
+Dónde pegar:  PANEL → /admin/configuracion/seo
+   gsc_site_url          (URL de la propiedad)
+   gsc_service_account   (pega el JSON completo)
+
+
+------------------------------------------------------------------------
+ 10) WEB PUSH (VAPID)   [FUTURO]
+------------------------------------------------------------------------
+No es una API que "consigas": las llaves VAPID se generan tú mismo con
+   npx web-push generate-vapid-keys
+Además la función de push todavía NO está construida (quedó diferida),
+así que por ahora no hay nada que pegar.
+
+
+========================================================================
+ AVISOS IMPORTANTES (GATES)
+========================================================================
+  • Antes de prender "Verificación de email requerida" (Panel → Auth):
+      1. El SMTP (#1) debe estar funcionando (si no, nadie podrá activarse).
+      2. Hay que marcar como verificadas las cuentas que YA existen, o
+         quedarían bloqueadas. (Ese UPDATE puede correrlo el desarrollador.)
+
+  • Seguridad: las credenciales las pegas TÚ (en el panel o en Vercel).
+    El código ya está listo para "enganchar" cada integración en cuanto
+    pegues sus llaves — no requiere cambios de código adicionales.
+
+========================================================================

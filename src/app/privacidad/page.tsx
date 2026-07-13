@@ -99,7 +99,7 @@ Los usuarios deberán evitar publicar datos sensibles propios o de terceros en p
 - Mejorar SEO, rendimiento, experiencia de usuario y funcionalidades; realizar encuestas o investigación de mercado.
 - Personalizar contenido, recomendaciones o anuncios internos.
 
-Puedes oponerte al uso de tus datos para finalidades secundarias escribiendo a privacidad@guiazmg.com.
+Puedes oponerte al uso de tus datos para finalidades secundarias escribiendo a contacto@guiazmg.com.
 
 ## 5. Base de legitimación y consentimiento
 
@@ -162,7 +162,7 @@ También puedes solicitar revocación del consentimiento, limitación de uso o d
 
 ## 14. Procedimiento para ejercer derechos ARCO
 
-Para ejercer tus derechos, envía una solicitud a **privacidad@guiazmg.com**. La solicitud deberá incluir tu nombre completo, el correo asociado a la cuenta, el derecho que deseas ejercer, una descripción clara de la solicitud, la información necesaria para localizar tus datos, un medio razonable para acreditar identidad cuando sea necesario y, en caso de representante legal, el documento que acredite representación.
+Para ejercer tus derechos, envía una solicitud a **contacto@guiazmg.com**. La solicitud deberá incluir tu nombre completo, el correo asociado a la cuenta, el derecho que deseas ejercer, una descripción clara de la solicitud, la información necesaria para localizar tus datos, un medio razonable para acreditar identidad cuando sea necesario y, en caso de representante legal, el documento que acredite representación.
 
 Guía ZMG responderá dentro de los plazos previstos por la legislación aplicable. Si la solicitud es incompleta, podremos pedir información adicional.
 
@@ -182,7 +182,7 @@ Si publicas datos de terceros, declaras que cuentas con base legal o autorizaci�
 
 Podemos enviarte comunicaciones sobre novedades, promociones, consejos, estadísticas, mejoras de perfil, membresías, boosts, contenido editorial o información relacionada con Guía ZMG.
 
-Podrás darte de baja de comunicaciones promocionales mediante los mecanismos disponibles o escribiendo a privacidad@guiazmg.com. Las comunicaciones operativas, legales, de seguridad, soporte, pagos o cambios importantes pueden seguir enviándose aunque canceles comunicaciones promocionales.
+Podrás darte de baja de comunicaciones promocionales mediante los mecanismos disponibles o escribiendo a contacto@guiazmg.com. Las comunicaciones operativas, legales, de seguridad, soporte, pagos o cambios importantes pueden seguir enviándose aunque canceles comunicaciones promocionales.
 
 ## 18. Cambios a la política
 
@@ -192,7 +192,7 @@ Guía ZMG podrá modificar esta Política de Privacidad para reflejar cambios le
 
 Para dudas, solicitudes, quejas o ejercicio de derechos relacionados con tus datos personales:
 
-- **Correo:** privacidad@guiazmg.com
+- **Correo:** contacto@guiazmg.com
 - **Soporte:** contacto@guiazmg.com
 - **Sitio:** www.guiazmg.com
 `

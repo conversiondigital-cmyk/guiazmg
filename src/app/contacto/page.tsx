@@ -75,7 +75,7 @@ export default function ContactoPage() {
               </CardHeader>
               <CardContent>
                 <h3 className="font-semibold">Teléfono</h3>
-                <p className="mt-2 text-sm text-gray-600">(33) 0000-0000</p>
+                <p className="mt-2 text-sm text-gray-600">(33) 4884-3477</p>
                 <p className="text-xs text-gray-500">Lunes a Viernes 9am-6pm</p>
               </CardContent>
             </Card>

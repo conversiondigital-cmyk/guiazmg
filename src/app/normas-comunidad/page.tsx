@@ -160,8 +160,8 @@ Guía ZMG podrá actualizar estas Normas de Comunidad para adaptarlas a nuevos r
 Para reportes, dudas, apelaciones o solicitudes relacionadas con estas normas:
 
 - **Soporte:** contacto@guiazmg.com
-- **Legal:** legal@guiazmg.com
-- **Privacidad:** privacidad@guiazmg.com
+- **Legal:** contacto@guiazmg.com
+- **Privacidad:** contacto@guiazmg.com
 - **Sitio:** www.guiazmg.com
 `
 

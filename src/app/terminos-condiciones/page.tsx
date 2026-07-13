@@ -208,10 +208,10 @@ export default function TerminosCondicionesPage() {
               </p>
               <div className="mt-3 space-y-1 text-sm">
                 <p>
-                  <strong>Email:</strong> legal@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p>
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
                 <p>
                   <strong>Dirección:</strong> Guadalajara, Jalisco, México

@@ -69,7 +69,7 @@ const SOCIAL_DEFS: SocialDef[] = [
   { key: "x", icon: IconX, label: "X", defaultHref: "" },
   { key: "linkedin", icon: IconLinkedin, label: "LinkedIn", defaultHref: "" },
 ]
-const DEFAULT_WHATSAPP = "523300000000"
+const DEFAULT_WHATSAPP = "523348843477"
 
 const NAV = [
   { label: "Inicio", href: "/" },

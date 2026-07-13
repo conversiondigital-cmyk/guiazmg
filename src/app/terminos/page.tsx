@@ -221,8 +221,8 @@ En caso de controversia, las partes procurarán resolverla de buena fe mediante 
 
 Para dudas, aclaraciones, reportes, solicitudes legales, reclamaciones de perfil, quejas o ejercicio de derechos relacionados con la plataforma, puedes escribir a:
 
-- **Correo:** legal@guiazmg.com
-- **Privacidad:** privacidad@guiazmg.com
+- **Correo:** contacto@guiazmg.com
+- **Privacidad:** contacto@guiazmg.com
 - **Soporte:** contacto@guiazmg.com
 - **Sitio:** www.guiazmg.com
 `

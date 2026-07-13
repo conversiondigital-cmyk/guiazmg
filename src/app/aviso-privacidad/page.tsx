@@ -53,10 +53,10 @@ export default function AvisoPrivacidadPage() {
                   <strong>Domicilio:</strong> Guadalajara, Jalisco, México
                 </p>
                 <p className="mt-1">
-                  <strong>Correo Electrónico:</strong> privacidad@guiazmg.com
+                  <strong>Correo Electrónico:</strong> contacto@guiazmg.com
                 </p>
                 <p className="mt-1">
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
               </div>
             </div>
@@ -177,10 +177,10 @@ export default function AvisoPrivacidadPage() {
               </p>
               <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
                 <p>
-                  <strong>Email:</strong> privacidad@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p className="mt-2">
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
                 <p className="mt-2">
                   <strong>En línea:</strong> Panel de control &gt; Configuración &gt; Privacidad
@@ -247,10 +247,10 @@ export default function AvisoPrivacidadPage() {
               </p>
               <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
                 <p>
-                  <strong>Email:</strong> privacidad@guiazmg.com
+                  <strong>Email:</strong> contacto@guiazmg.com
                 </p>
                 <p className="mt-2">
-                  <strong>Teléfono:</strong> (33) 0000-0000
+                  <strong>Teléfono:</strong> (33) 4884-3477
                 </p>
                 <p className="mt-2">
                   <strong>Autoridad Competente:</strong> Si consideras que tus derechos han sido vulnerados, puedes
@@ -276,7 +276,7 @@ export default function AvisoPrivacidadPage() {
                     <div>¿Qué datos tienes de mí?</div>
                     <div>Nombre, email, datos del negocio, pagos</div>
                     <div>
-                      <a href="mailto:privacidad@guiazmg.com" className="text-blue-600 hover:underline">
+                      <a href="mailto:contacto@guiazmg.com" className="text-blue-600 hover:underline">
                         Solicitar Acceso
                       </a>
                     </div>
@@ -301,7 +301,7 @@ export default function AvisoPrivacidadPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-4 border-t pt-3">
                     <div>¿Cómo dejo de recibir promociones?</div>
-                    <div>Panel de control o email a privacidad@guiazmg.com</div>
+                    <div>Panel de control o email a contacto@guiazmg.com</div>
                     <div>
                       <a href="#" className="text-blue-600 hover:underline">
                         Actualizar Preferencias

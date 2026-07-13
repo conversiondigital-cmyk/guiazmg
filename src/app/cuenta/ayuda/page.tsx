@@ -28,7 +28,7 @@ export default function AyudaPage() {
         {[
           { label: "Preguntas frecuentes", href: "/preguntas", icon: BookOpen, desc: "Respuestas a las dudas más comunes" },
           { label: "Contáctanos",          href: "/contacto",  icon: MessageCircle, desc: "Escríbenos por cualquier motivo" },
-          { label: "WhatsApp",             href: "https://wa.me/523312345678", icon: Phone, desc: "Soporte directo por WhatsApp" },
+          { label: "WhatsApp",             href: "https://wa.me/523348843477", icon: Phone, desc: "Soporte directo por WhatsApp" },
         ].map(({ label, href, icon: Icon, desc }) => (
           <Link key={href} href={href} className="rounded-2xl bg-white border border-gray-100 p-5 hover:border-green-200 hover:shadow-md transition-all group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-700 mb-3 group-hover:bg-green-100 transition-colors">
