@@ -17,6 +17,9 @@ export const businessSchema = z.object({
   // NEGOCIO = comercio/servicio más establecido. Ambos son Profile; el tipo
   // adapta el onboarding, el perfil público y el dashboard.
   profileType: z.enum(["EMPRENDEDOR", "NEGOCIO"]).optional(),
+  hasPhysicalLocation: z.boolean().optional(),
+  serviceModes: z.array(z.string().max(40)).max(10).optional(),
+  coverageArea: z.string().max(300).optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   description: z.string().optional(),
   shortDescription: z.string().max(200).optional(),

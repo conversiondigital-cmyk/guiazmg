@@ -99,6 +99,11 @@ export async function POST(request: NextRequest) {
       data: {
         // EMPRENDEDOR o NEGOCIO (default NEGOCIO si no viene, para compatibilidad).
         profileType: data.profileType ?? "NEGOCIO",
+        // Emprendedor: por defecto sin local; Negocio: con local. El wizard puede
+        // sobreescribirlo. Modalidades y zona de cobertura (sobre todo emprendedor).
+        hasPhysicalLocation: data.hasPhysicalLocation ?? data.profileType !== "EMPRENDEDOR",
+        serviceModes: data.serviceModes ?? [],
+        coverageArea: data.coverageArea || null,
         name: data.name,
         shortDescription: data.shortDescription,
         description: data.description,

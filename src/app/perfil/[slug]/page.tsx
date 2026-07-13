@@ -15,6 +15,7 @@ import { BusinessPromotions } from "@/components/business/business-promotions"
 import { BusinessReviews } from "@/components/business/business-reviews"
 import { BusinessGallery } from "@/components/business/business-gallery"
 import { BusinessCatalog } from "@/components/business/business-catalog"
+import { BusinessModality } from "@/components/business/business-modality"
 import { BusinessHours } from "@/components/business/business-hours"
 import { SimilarBusinesses } from "@/components/business/similar-businesses"
 import { getBusinessBySlug } from "@/lib/queries"
@@ -176,6 +177,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <BusinessDetail business={business} avgRating={avgRating} reviewCount={reviewCount} />
+              <BusinessModality
+                profileType={business.profileType}
+                serviceModes={business.serviceModes}
+                coverageArea={business.coverageArea}
+                hasPhysicalLocation={business.hasPhysicalLocation}
+              />
               <BusinessCatalog items={catalogItems} />
               <BusinessPromotions promotions={business.coupons} />
               {business.hours && business.hours.length > 0 && (

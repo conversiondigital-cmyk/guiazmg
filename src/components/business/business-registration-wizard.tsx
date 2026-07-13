@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon } from "@/lib/icons"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
+import { SERVICE_MODES } from "@/lib/profile-modality"
 
 interface Municipality {
   id: string
@@ -66,6 +67,8 @@ export function BusinessRegistrationWizard({
   const [selectedMunicipio, setSelectedMunicipio] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
+  const [serviceModes, setServiceModes] = useState<string[]>([])
+  const [coverageArea, setCoverageArea] = useState("")
   const [hours, setHours] = useState<Record<number, DayHour>>(
     Object.fromEntries(DAYS.map((d) => [d.key, { isClosed: false, openTime: "09:00", closeTime: "18:00" }]))
   )
@@ -125,6 +128,9 @@ export function BusinessRegistrationWizard({
 
       const body = {
         profileType,
+        hasPhysicalLocation: !isEmprendedor,
+        serviceModes,
+        coverageArea: coverageArea || undefined,
         name: form.name,
         description: form.description,
         shortDescription: form.shortDescription,
@@ -326,6 +332,50 @@ export function BusinessRegistrationWizard({
               dirección exacta y el mapa son opcionales.
             </p>
           )}
+
+          {isEmprendedor && (
+            <div className="space-y-3 rounded-lg border border-green-100 bg-green-50/40 p-4">
+              <div>
+                <Label>¿Cómo vendes o atiendes?</Label>
+                <p className="text-xs text-gray-500">Elige una o varias.</p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {SERVICE_MODES.map((m) => {
+                  const checked = serviceModes.includes(m.code)
+                  return (
+                    <label
+                      key={m.code}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                        checked ? "border-green-500 bg-white" : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          setServiceModes((prev) =>
+                            prev.includes(m.code) ? prev.filter((c) => c !== m.code) : [...prev, m.code]
+                          )
+                        }
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      {m.label}
+                    </label>
+                  )
+                })}
+              </div>
+              <div>
+                <Label htmlFor="coverageArea">Zona de entrega / cobertura</Label>
+                <Input
+                  id="coverageArea"
+                  value={coverageArea}
+                  onChange={(e) => setCoverageArea(e.target.value)}
+                  placeholder="Ej: Zapopan, Chapalita y colonias cercanas"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio *</Label>

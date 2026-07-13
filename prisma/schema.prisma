@@ -465,6 +465,12 @@ model Profile {
   logoUrl           String?
   coverImageUrl     String?
   profileType       ProfileType  @default(NEGOCIO)
+  // Operativa diferenciada Emprendedor/Negocio: si tiene local físico, cómo
+  // atiende (modalidades) y su zona de cobertura/entrega. El Emprendedor suele
+  // no tener local (hasPhysicalLocation=false) y opera por pedido/domicilio/WhatsApp.
+  hasPhysicalLocation Boolean?
+  serviceModes       String[]           @default([])
+  coverageArea       String?
   status            ProfileStatus      @default(PENDING_REVIEW)
   verificationStatus VerificationStatus @default(UNVERIFIED)
   visibilityScore   Int                 @default(0)
