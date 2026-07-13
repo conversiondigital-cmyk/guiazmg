@@ -7,6 +7,7 @@ import { Settings, User, Bell, Shield } from "lucide-react"
 import { Metadata } from "next"
 import { SecuritySection } from "@/components/dashboard/security-section"
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences"
+import { PersonalInfoForm } from "@/components/dashboard/personal-info-form"
 
 export const metadata: Metadata = { title: "Configuración | Guía ZMG" }
 
@@ -20,8 +21,14 @@ export default async function ConfiguracionPage() {
   })
   if (!user) redirect("/auth/login")
 
+  const memberSince = new Date(user.createdAt).toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  })
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
           <Settings className="h-6 w-6 text-green-700" />
@@ -36,26 +43,11 @@ export default async function ConfiguracionPage() {
           <User className="h-4 w-4 text-green-700" />
           <h2 className="font-bold text-gray-900">Información personal</h2>
         </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Nombre</label>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
-              {user.name ?? "—"}
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Correo electrónico</label>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
-              {user.email}
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Miembro desde</label>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-400">
-              {new Date(user.createdAt).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" })}
-            </div>
-          </div>
-        </div>
+        <PersonalInfoForm
+          initialName={user.name ?? ""}
+          email={user.email ?? ""}
+          memberSince={memberSince}
+        />
       </div>
 
       {/* Notifications */}
