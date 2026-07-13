@@ -193,7 +193,6 @@ Guía ZMG podrá modificar esta Política de Privacidad para reflejar cambios le
 Para dudas, solicitudes, quejas o ejercicio de derechos relacionados con tus datos personales:
 
 - **Correo:** contacto@guiazmg.com
-- **Soporte:** contacto@guiazmg.com
 - **Sitio:** www.guiazmg.com
 `
 
