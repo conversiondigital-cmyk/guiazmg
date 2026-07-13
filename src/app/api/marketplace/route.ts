@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
+import { getSetting, getSettingNumber } from "@/lib/settings"
 import { z } from "zod"
 
 const blankToNull = (value: unknown) => (value === "" || value === undefined ? null : value)
@@ -41,7 +42,8 @@ export async function POST(request: NextRequest) {
     // Anti-abuso: marketplace es para ventas puntuales, no una tienda permanente.
     // Tope de publicaciones VIGENTES por usuario (PENDING/ACTIVE/HIDDEN, sin borrar).
     // Al llenarse, se orienta a crear un Perfil Emprendedor (catálogo sin límite).
-    const MAX_ACTIVE_LISTINGS = 3
+    // Tope configurable desde Admin → Configuración → Marketplace (default 3).
+    const MAX_ACTIVE_LISTINGS = await getSettingNumber("marketplace_max_active_listings", 3)
     const activeCount = await prisma.marketplaceListing.count({
       where: {
         userId: session.user.id,
@@ -50,9 +52,12 @@ export async function POST(request: NextRequest) {
       },
     })
     if (activeCount >= MAX_ACTIVE_LISTINGS) {
+      const customMsg = await getSetting("onboarding_recurrence_message")
       return NextResponse.json(
         {
-          error: `Alcanzaste el máximo de ${MAX_ACTIVE_LISTINGS} publicaciones activas. Marca alguna como vendida o elimínala, o crea tu Perfil Emprendedor para tener catálogo sin límite.`,
+          error:
+            customMsg ||
+            `Alcanzaste el máximo de ${MAX_ACTIVE_LISTINGS} publicaciones activas. Marca alguna como vendida o elimínala, o crea tu Perfil Emprendedor para tener catálogo sin límite.`,
           code: "MAX_ACTIVE_LISTINGS",
         },
         { status: 409 }
@@ -75,8 +80,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
     }
 
-    // Marketplace es temporal: la publicación vence en 30 días (renovable).
-    const MARKETPLACE_TTL_DAYS = 30
+    // Marketplace es temporal: duración configurable (Admin → Marketplace, default 30 días).
+    const MARKETPLACE_TTL_DAYS = await getSettingNumber("marketplace_listing_ttl_days", 30)
     const expiresAt = new Date(Date.now() + MARKETPLACE_TTL_DAYS * 24 * 60 * 60 * 1000)
 
     const listing = await prisma.marketplaceListing.create({

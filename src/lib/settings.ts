@@ -23,3 +23,11 @@ export async function getSettingBool(key: string, envFallback?: string): Promise
   const v = (await getSetting(key, envFallback)).toLowerCase()
   return v === "true" || v === "1" || v === "on"
 }
+
+// Variante numérica. Devuelve `fallback` si está vacío o no es un número válido.
+export async function getSettingNumber(key: string, fallback: number): Promise<number> {
+  const v = (await getSetting(key)).trim()
+  if (!v) return fallback
+  const n = Number(v)
+  return Number.isFinite(n) ? n : fallback
+}

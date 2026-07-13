@@ -239,6 +239,22 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "min_account_age_days", label: "Antigüedad mínima cuenta (días)", type: "number" },
     ],
   },
+  marketplace: {
+    title: "Marketplace",
+    description: "Reglas de las publicaciones temporales (topes y duración).",
+    fields: [
+      { key: "marketplace_max_active_listings", label: "Máx. publicaciones activas por usuario", type: "number" },
+      { key: "marketplace_listing_ttl_days", label: "Duración de la publicación (días)", type: "number" },
+    ],
+  },
+  onboarding: {
+    title: "Onboarding",
+    description: "Textos de la pantalla de intención y mensajes de conversión.",
+    fields: [
+      { key: "onboarding_intent_title", label: "Título de la pantalla de intención", type: "text" },
+      { key: "onboarding_recurrence_message", label: "Mensaje al alcanzar el tope de marketplace", type: "textarea" },
+    ],
+  },
   legal: {
     title: "Legal",
     description: "Términos, privacidad, cookies y aviso legal.",

@@ -3,6 +3,9 @@ import { Metadata } from "next"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Search, Store, Tag, ArrowRight } from "lucide-react"
+import { getSetting } from "@/lib/settings"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "¿Qué quieres hacer? | Guía ZMG",
@@ -37,14 +40,15 @@ const options = [
   },
 ]
 
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const title = (await getSetting("onboarding_intent_title")) || "¿Qué quieres hacer en Guía ZMG?"
   return (
     <>
       <Header />
       <main className="flex-1 bg-gray-50">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
           <div className="mb-10 text-center">
-            <h1 className="text-3xl font-bold text-gray-900">¿Qué quieres hacer en Guía ZMG?</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
             <p className="mt-2 text-gray-500">Elige una opción para empezar. Puedes cambiar más adelante.</p>
           </div>
 
