@@ -87,6 +87,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             // nadie agregue permisos que compliquen la verificación de Google o
             // expongan datos del usuario sin necesidad (principio de mínimo privilegio).
             authorization: { params: { scope: "openid email profile" } },
+            // Vincula el login de Google a una cuenta EXISTENTE con el mismo correo
+            // (p. ej. creada antes con contraseña) en vez de fallar con
+            // OAuthAccountNotLinked. Es seguro SOLO porque Google verifica la
+            // propiedad del correo; jamás se activaría para un proveedor que no lo
+            // verifique. Así "Entrar con Google" funciona aunque ya exista la cuenta.
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
