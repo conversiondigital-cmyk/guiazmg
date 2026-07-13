@@ -63,6 +63,21 @@ export async function POST(request: NextRequest) {
       if (!sub) return NextResponse.json({ error: "Subcategoría inválida" }, { status: 400 })
     }
 
+    // Límite de productos según el plan (maxListings). Sin membresía activa se usa
+    // un tope generoso por defecto para no bloquear durante el lanzamiento.
+    const membership = await prisma.profileMembership.findUnique({
+      where: { businessId: business.id },
+      select: { status: true, plan: { select: { maxListings: true } } },
+    })
+    const maxListings = membership?.status === "ACTIVE" ? membership.plan.maxListings ?? 100 : 100
+    const listingCount = await prisma.listing.count({ where: { businessId: business.id, deletedAt: null } })
+    if (listingCount >= maxListings) {
+      return NextResponse.json(
+        { error: `Alcanzaste el límite de ${maxListings} productos de tu plan. Mejora tu plan para agregar más.`, code: "MAX_LISTINGS" },
+        { status: 409 }
+      )
+    }
+
     // Slug único DENTRO del negocio (el modelo tiene @@unique([businessId, slug])).
     const slug = await generateUniqueSlug(slugify(title), async (s) =>
       Boolean(
