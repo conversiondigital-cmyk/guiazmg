@@ -29,6 +29,22 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "maintenance_mode", label: "Modo mantenimiento", type: "toggle" },
     ],
   },
+  contacto: {
+    title: "Contacto y redes",
+    description: "Datos de contacto públicos y enlaces de redes sociales. Se muestran en el pie de página y en la página de contacto.",
+    fields: [
+      { key: "contact_email", label: "Correo de contacto público", type: "email", placeholder: "contacto@guiazmg.com" },
+      { key: "contact_phone", label: "Teléfono de contacto", type: "text", placeholder: "33 1234 5678" },
+      { key: "contact_whatsapp", label: "WhatsApp (número, formato internacional)", type: "text", placeholder: "5213312345678", description: "Solo números, con lada de país. Ej. 5213312345678 para +52 1 33 1234 5678." },
+      { key: "contact_address", label: "Dirección / ciudad de contacto", type: "text", placeholder: "Guadalajara, Jalisco, México" },
+      { key: "social_facebook", label: "Facebook (URL)", type: "url", placeholder: "https://www.facebook.com/guiazmg" },
+      { key: "social_instagram", label: "Instagram (URL)", type: "url", placeholder: "https://www.instagram.com/guiazmg" },
+      { key: "social_tiktok", label: "TikTok (URL)", type: "url", placeholder: "https://www.tiktok.com/@guiazmg" },
+      { key: "social_youtube", label: "YouTube (URL)", type: "url", placeholder: "https://www.youtube.com/@guiazmg" },
+      { key: "social_x", label: "X / Twitter (URL)", type: "url", placeholder: "https://x.com/guiazmg" },
+      { key: "social_linkedin", label: "LinkedIn (URL)", type: "url", placeholder: "https://www.linkedin.com/company/guiazmg" },
+    ],
+  },
   mapas: {
     title: "Google Maps",
     description: "API key para el mapa y el selector de ubicación (pin) al registrar un negocio.",
