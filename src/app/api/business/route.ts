@@ -97,6 +97,8 @@ export async function POST(request: NextRequest) {
 
     const business = await prisma.profile.create({
       data: {
+        // EMPRENDEDOR o NEGOCIO (default NEGOCIO si no viene, para compatibilidad).
+        profileType: data.profileType ?? "NEGOCIO",
         name: data.name,
         shortDescription: data.shortDescription,
         description: data.description,

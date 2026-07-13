@@ -130,7 +130,7 @@ export function Header() {
           ) : (
             <>
               <Link
-                href="/registrar-negocio"
+                href="/onboarding/vendedor"
                 className="rounded-lg border border-green-800 px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-50 transition-colors"
               >
                 Agregar negocio

@@ -154,7 +154,7 @@ export function MobileNav() {
             {!user && (
               <div className="border-t border-gray-100 p-4">
                 <Link
-                  href="/registrar-negocio"
+                  href="/onboarding/vendedor"
                   onClick={close}
                   className="block w-full rounded-xl bg-green-800 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-green-900"
                 >

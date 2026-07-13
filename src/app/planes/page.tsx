@@ -192,7 +192,7 @@ export default function PlansPage() {
             <h2 className="text-3xl font-bold text-white">¿Listo para aparecer en la ZMG?</h2>
             <p className="mt-3 text-lg text-white/80">Registra tu negocio y elige tu plan hoy mismo.</p>
             <div className="mt-8">
-              <Link href="/registrar-negocio">
+              <Link href="/onboarding/vendedor">
                 <Button size="lg" className="bg-[#6ffbbe] px-8 font-bold text-[#003527] hover:bg-[#4edea3]">
                   Registrar mi negocio
                 </Button>

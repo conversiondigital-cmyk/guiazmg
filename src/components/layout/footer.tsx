@@ -80,7 +80,7 @@ const NAV = [
 ]
 
 const FOR_BUSINESS = [
-  { label: "Agregar negocio", href: "/registrar-negocio" },
+  { label: "Agregar negocio", href: "/onboarding/vendedor" },
   { label: "Planes y precios", href: "/planes" },
   { label: "Beneficios", href: "/planes" },
   { label: "Guía para negocios", href: "/blog" },

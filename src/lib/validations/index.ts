@@ -13,6 +13,10 @@ export const registerSchema = z.object({
 })
 
 export const businessSchema = z.object({
+  // EMPRENDEDOR = vendedor recurrente sin local (por pedido/catálogo/domicilio);
+  // NEGOCIO = comercio/servicio más establecido. Ambos son Profile; el tipo
+  // adapta el onboarding, el perfil público y el dashboard.
+  profileType: z.enum(["EMPRENDEDOR", "NEGOCIO"]).optional(),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   description: z.string().optional(),
   shortDescription: z.string().max(200).optional(),

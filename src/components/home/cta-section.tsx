@@ -16,7 +16,7 @@ export function CTASection() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/registrar-negocio"
+              href="/onboarding/vendedor"
               className="rounded-xl bg-[#6ffbbe] px-8 py-4 font-bold text-[#002113] transition-transform hover:scale-105 active:scale-95"
             >
               Registrar mi Negocio

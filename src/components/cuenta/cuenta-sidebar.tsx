@@ -115,7 +115,7 @@ export function CuentaSidebar() {
 
           <div className="border-t pt-4 space-y-1">
             <Link
-              href="/registrar-negocio"
+              href="/onboarding/vendedor"
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"
             >
               <Store className="h-4 w-4" />

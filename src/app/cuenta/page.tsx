@@ -105,7 +105,7 @@ export default async function CuentaPage() {
             Únete a la red de negocios más grande de la Zona Metropolitana de Guadalajara y conecta con miles de clientes potenciales cada día.
           </p>
           <Link
-            href="/registrar-negocio"
+            href="/onboarding/vendedor"
             className="inline-flex items-center gap-2 rounded-2xl bg-[#4edea3] px-8 py-4 font-semibold text-[#003527] transition-all hover:-translate-y-1 hover:shadow-2xl"
           >
             Registrar mi negocio ahora <Rocket className="h-5 w-5" />

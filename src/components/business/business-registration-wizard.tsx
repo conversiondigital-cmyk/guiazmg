@@ -48,8 +48,17 @@ const steps = [
   { id: 4, label: "Horarios", icon: Clock },
 ]
 
-export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: string }) {
+export function BusinessRegistrationWizard({
+  mapsApiKey = "",
+  profileType = "NEGOCIO",
+}: {
+  mapsApiKey?: string
+  profileType?: "EMPRENDEDOR" | "NEGOCIO"
+}) {
   const router = useRouter()
+  // El Emprendedor puede no tener local físico: la dirección exacta y el mapa
+  // son opcionales; basta el municipio/zona base.
+  const isEmprendedor = profileType === "EMPRENDEDOR"
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
@@ -97,7 +106,9 @@ export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: s
   const canProceed = () => {
     if (step === 1) return form.name.trim().length > 0
     if (step === 2) return form.phone.trim().length >= 10 && form.whatsapp.trim().length >= 10
-    if (step === 3) return form.addressText.trim().length > 0 && !!selectedMunicipio
+    // Emprendedor: solo pide municipio/zona base (sin dirección exacta).
+    // Negocio: dirección + municipio.
+    if (step === 3) return isEmprendedor ? !!selectedMunicipio : form.addressText.trim().length > 0 && !!selectedMunicipio
     return true
   }
 
@@ -113,6 +124,7 @@ export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: s
         }))
 
       const body = {
+        profileType,
         name: form.name,
         description: form.description,
         shortDescription: form.shortDescription,
@@ -307,7 +319,13 @@ export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: s
       {/* Step 3: Location */}
       {step === 3 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Ubicación</h2>
+          <h2 className="text-xl font-semibold">{isEmprendedor ? "Zona" : "Ubicación"}</h2>
+          {isEmprendedor && (
+            <p className="text-sm text-gray-500">
+              Como emprendedor no necesitas local físico. Indica tu municipio y colonia base; la
+              dirección exacta y el mapa son opcionales.
+            </p>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio *</Label>
@@ -339,7 +357,7 @@ export function BusinessRegistrationWizard({ mapsApiKey = "" }: { mapsApiKey?: s
             )}
           </div>
           <div>
-            <Label htmlFor="addressText">Dirección *</Label>
+            <Label htmlFor="addressText">{isEmprendedor ? "Dirección (opcional)" : "Dirección *"}</Label>
             <AddressAutocomplete
               id="addressText"
               apiKey={mapsApiKey}
