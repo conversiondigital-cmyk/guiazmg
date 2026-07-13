@@ -19,6 +19,8 @@ const updateSchema = z.object({
   whatsapp: z.preprocess(blankToNull, z.string().trim().max(30).nullable().optional()),
   contactEmail: z.preprocess(blankToNull, z.string().email().nullable().optional()),
   images: z.array(z.object({ url: z.string().url(), sortOrder: z.number().int().nonnegative().optional() })).max(10).optional(),
+  // Acción de estado que el dueño puede aplicar a su publicación temporal.
+  statusAction: z.enum(["SOLD", "PAUSE", "ACTIVATE", "RENEW"]).optional(),
 })
 
 // Devuelve el listing solo si es del usuario y no está borrado (ownership).
@@ -43,17 +45,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos" }, { status: 400 })
     }
-    const { images, categoryId, ...rest } = parsed.data
+    const { images, categoryId, statusAction, ...rest } = parsed.data
 
     if (categoryId) {
       const cat = await prisma.marketplaceCategory.findFirst({ where: { id: categoryId, isActive: true }, select: { id: true } })
       if (!cat) return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
     }
 
+    // Acciones de estado del dueño: vender, pausar, reactivar o renovar (renovar
+    // y reactivar refrescan la ventana de 30 días).
+    let statusData: { status?: "SOLD" | "HIDDEN" | "ACTIVE"; expiresAt?: Date } = {}
+    if (statusAction) {
+      const in30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      if (statusAction === "SOLD") statusData = { status: "SOLD" }
+      else if (statusAction === "PAUSE") statusData = { status: "HIDDEN" }
+      else statusData = { status: "ACTIVE", expiresAt: in30 } // ACTIVATE | RENEW
+    }
+
     await prisma.marketplaceListing.update({
       where: { id },
       data: {
         ...rest,
+        ...statusData,
         ...(categoryId ? { categoryId } : {}),
         // Si vienen imágenes, se reemplazan todas (borra las anteriores y crea las nuevas).
         ...(images

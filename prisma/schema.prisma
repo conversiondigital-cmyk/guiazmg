@@ -1210,6 +1210,9 @@ model MarketplaceListing {
   contactEmail  String?
   isBoosted     Boolean                    @default(false)
   boostExpiresAt DateTime?
+  // Marketplace es TEMPORAL: la publicación expira (por defecto 30 días). Un cron
+  // pasa a EXPIRED las ACTIVE vencidas; el dueño puede renovar para extenderla.
+  expiresAt     DateTime?
   views         Int                        @default(0)
   whatsappClicks Int                       @default(0)
   phoneClicks   Int                        @default(0)

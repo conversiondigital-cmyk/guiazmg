@@ -141,6 +141,7 @@ export default async function MisPublicacionesPage() {
                     <TableCell>
                       <ListingActions
                         id={listing.id}
+                        status={listing.status}
                         viewHref={`/marketplace/${listing.category.slug}/${listing.slug}`}
                         editHref={`/marketplace/${listing.category.slug}/${listing.slug}/editar`}
                       />

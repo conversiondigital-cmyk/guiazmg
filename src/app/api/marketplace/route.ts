@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
     }
 
+    // Marketplace es temporal: la publicación vence en 30 días (renovable).
+    const MARKETPLACE_TTL_DAYS = 30
+    const expiresAt = new Date(Date.now() + MARKETPLACE_TTL_DAYS * 24 * 60 * 60 * 1000)
+
     const listing = await prisma.marketplaceListing.create({
       data: {
         title,
@@ -61,6 +65,7 @@ export async function POST(request: NextRequest) {
         description,
         price,
         type,
+        expiresAt,
         status: "PENDING", // entra a la cola de moderación; el admin aprueba
         categoryId,
         municipalityId,
