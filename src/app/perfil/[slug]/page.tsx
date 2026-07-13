@@ -14,6 +14,7 @@ import { ClaimButton } from "@/components/business/claim-button"
 import { BusinessPromotions } from "@/components/business/business-promotions"
 import { BusinessReviews } from "@/components/business/business-reviews"
 import { BusinessGallery } from "@/components/business/business-gallery"
+import { BusinessCatalog } from "@/components/business/business-catalog"
 import { BusinessHours } from "@/components/business/business-hours"
 import { SimilarBusinesses } from "@/components/business/similar-businesses"
 import { getBusinessBySlug } from "@/lib/queries"
@@ -89,6 +90,28 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
       })
     : []
 
+  // Catálogo de productos del negocio (modelo Listing). Solo activos; se muestra
+  // en el perfil público. Se toma la primera imagen de cada producto como portada.
+  const catalog = await prisma.listing.findMany({
+    where: { businessId: business.id, status: "ACTIVE", deletedAt: null },
+    orderBy: { createdAt: "desc" },
+    take: 60,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      price: true,
+      images: { orderBy: { sortOrder: "asc" }, take: 1, select: { imageUrl: true } },
+    },
+  })
+  const catalogItems = catalog.map((p) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    price: p.price != null ? Number(p.price) : null,
+    image: p.images[0]?.imageUrl ?? null,
+  }))
+
   const similarBusinesses = business.categoryId
     ? await prisma.profile.findMany({
         where: {
@@ -153,6 +176,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <BusinessDetail business={business} avgRating={avgRating} reviewCount={reviewCount} />
+              <BusinessCatalog items={catalogItems} />
               <BusinessPromotions promotions={business.coupons} />
               {business.hours && business.hours.length > 0 && (
                 <BusinessHours hours={business.hours as any} />

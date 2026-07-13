@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Table,
   TableHeader,
@@ -19,8 +19,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
-import { ShoppingBag, Plus, Eye, Edit3, Trash2, Play, Pause } from "@/lib/icons"
-import { cn } from "@/lib/utils"
+import { ShoppingBag, Plus } from "@/lib/icons"
+import { cn, formatCurrency } from "@/lib/utils"
+import { ProductActions } from "@/components/dashboard/product-actions"
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador",
@@ -99,7 +100,7 @@ export default async function ProductosPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Categoría</TableHead>
+                  <TableHead>Precio</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Vistas</TableHead>
                   <TableHead>Leads</TableHead>
@@ -112,7 +113,7 @@ export default async function ProductosPage() {
                   <TableRow key={listing.id}>
                     <TableCell className="font-medium">{listing.title}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {listing.category.name}
+                      {listing.price != null ? formatCurrency(Number(listing.price)) : "A preguntar"}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -128,23 +129,7 @@ export default async function ProductosPage() {
                       {listing.createdAt.toLocaleDateString("es-MX")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Play className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Pause className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      <ProductActions id={listing.id} status={listing.status} />
                     </TableCell>
                   </TableRow>
                 ))}
