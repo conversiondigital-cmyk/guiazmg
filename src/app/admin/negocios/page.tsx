@@ -11,6 +11,7 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
   const page = Math.max(1, Number(searchParams.page) || 1)
   const limit = Math.min(100, Math.max(1, Number(searchParams.limit) || 20))
   const status = typeof searchParams.status === "string" ? searchParams.status : undefined
+  const tipo = typeof searchParams.tipo === "string" ? searchParams.tipo : undefined
   const search = typeof searchParams.search === "string" ? searchParams.search.trim() : undefined
 
   const where: Prisma.ProfileWhereInput = {
@@ -19,6 +20,10 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
 
   if (status && status !== "ALL") {
     where.status = status as any
+  }
+
+  if (tipo && (tipo === "EMPRENDEDOR" || tipo === "NEGOCIO")) {
+    where.profileType = tipo
   }
 
   if (search) {
@@ -51,10 +56,12 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
     prisma.profile.count({ where }),
   ])
 
-  const [pendingCount, activeCount, suspendedCount] = await Promise.all([
+  const [pendingCount, activeCount, suspendedCount, emprendedorCount, negocioCount] = await Promise.all([
     prisma.profile.count({ where: { deletedAt: null, status: "PENDING_REVIEW" } }),
     prisma.profile.count({ where: { deletedAt: null, status: "ACTIVE" } }),
     prisma.profile.count({ where: { deletedAt: null, status: "SUSPENDED" } }),
+    prisma.profile.count({ where: { deletedAt: null, profileType: "EMPRENDEDOR" } }),
+    prisma.profile.count({ where: { deletedAt: null, profileType: "NEGOCIO" } }),
   ])
 
   const totalCount = await prisma.profile.count({ where: { deletedAt: null } })
@@ -67,6 +74,8 @@ async function getBusinesses(searchParams: Record<string, string | string[] | un
       pending: pendingCount,
       active: activeCount,
       suspended: suspendedCount,
+      emprendedor: emprendedorCount,
+      negocio: negocioCount,
     },
   }
 }

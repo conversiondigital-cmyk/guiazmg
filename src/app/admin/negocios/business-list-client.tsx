@@ -60,6 +60,7 @@ type BusinessRow = {
   phone: string | null
   email: string | null
   status: string
+  profileType: string
   verificationStatus: string
   isVerified: boolean
   isFeatured: boolean
@@ -72,7 +73,7 @@ type BusinessRow = {
   _count: BusinessCount
 }
 
-type Stats = { total: number; pending: number; active: number; suspended: number }
+type Stats = { total: number; pending: number; active: number; suspended: number; emprendedor: number; negocio: number }
 type Pagination = { page: number; limit: number; total: number; totalPages: number }
 
 export function BusinessListClient({
@@ -88,6 +89,7 @@ export function BusinessListClient({
   const searchParams = useSearchParams()
   const [searchValue, setSearchValue] = useState(searchParams.get("search") || "")
   const statusValue = searchParams.get("status") || "ALL"
+  const tipoValue = searchParams.get("tipo") || "ALL"
 
   const createQueryString = useCallback(
     (params: Record<string, string | undefined>) => {
@@ -117,6 +119,15 @@ export function BusinessListClient({
     (value: string | null) => {
       const nextValue = value ?? ""
       const qs = createQueryString({ status: nextValue === "ALL" ? undefined : nextValue, page: "1" })
+      router.push(`/admin/negocios?${qs}`)
+    },
+    [createQueryString, router]
+  )
+
+  const handleTipoFilter = useCallback(
+    (value: string | null) => {
+      const nextValue = value ?? ""
+      const qs = createQueryString({ tipo: nextValue === "ALL" ? undefined : nextValue, page: "1" })
       router.push(`/admin/negocios?${qs}`)
     },
     [createQueryString, router]
@@ -185,6 +196,13 @@ export function BusinessListClient({
     return <Badge variant={(variants[status] || "ghost") as any}>{labels[status] || status}</Badge>
   }
 
+  const tipoBadge = (t: string) =>
+    t === "EMPRENDEDOR" ? (
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Emprendedor</Badge>
+    ) : (
+      <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">Negocio</Badge>
+    )
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -246,6 +264,24 @@ export function BusinessListClient({
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select
+            value={tipoValue}
+            onValueChange={handleTipoFilter}
+            items={{
+              ALL: `Tipo: todos (${stats.emprendedor + stats.negocio})`,
+              EMPRENDEDOR: `Emprendedores (${stats.emprendedor})`,
+              NEGOCIO: `Negocios (${stats.negocio})`,
+            }}
+          >
+            <SelectTrigger className="w-[190px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tipo: todos</SelectItem>
+              <SelectItem value="EMPRENDEDOR">Emprendedores</SelectItem>
+              <SelectItem value="NEGOCIO">Negocios</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
             value={statusValue}
             onValueChange={handleStatusFilter}
             items={{
@@ -279,6 +315,7 @@ export function BusinessListClient({
           <TableHeader>
             <TableRow>
               <TableHead>Negocio</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead>Dueño</TableHead>
               <TableHead>Categoría</TableHead>
               <TableHead>Municipio</TableHead>
@@ -292,7 +329,7 @@ export function BusinessListClient({
           <TableBody>
             {businesses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   No se encontraron negocios
                 </TableCell>
               </TableRow>
@@ -306,6 +343,7 @@ export function BusinessListClient({
                       {biz.isFeatured && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                     </div>
                   </TableCell>
+                  <TableCell>{tipoBadge(biz.profileType)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm">{biz.owner.name}</span>
