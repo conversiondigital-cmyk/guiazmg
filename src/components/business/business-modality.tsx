@@ -9,18 +9,22 @@ export function BusinessModality({
   serviceModes,
   coverageArea,
   hasPhysicalLocation,
+  isFounder = false,
+  isBoosted = false,
 }: {
   profileType: string
   serviceModes: string[]
   coverageArea: string | null
   hasPhysicalLocation: boolean | null
+  isFounder?: boolean
+  isBoosted?: boolean
 }) {
   const isEmprendedor = profileType === "EMPRENDEDOR"
   const modes = serviceModes ?? []
   const noLocal = hasPhysicalLocation === false
-  const hasExtra = modes.length > 0 || !!coverageArea || noLocal
+  const hasExtra = modes.length > 0 || !!coverageArea || noLocal || isFounder || isBoosted
 
-  // Para un Negocio con local y sin modalidades no hay nada útil que agregar aquí.
+  // Para un Negocio con local y sin distintivos no hay nada útil que agregar aquí.
   if (!isEmprendedor && !hasExtra) return null
 
   return (
@@ -34,6 +38,16 @@ export function BusinessModality({
           {isEmprendedor ? <Sparkles className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
           {isEmprendedor ? "Emprendedor" : "Negocio"}
         </span>
+        {isBoosted && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
+            Destacado
+          </span>
+        )}
+        {isFounder && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+            ⭐ Fundador
+          </span>
+        )}
         {noLocal && (
           <span className="inline-flex items-center gap-1 text-xs text-gray-500">
             <PackageCheck className="h-3.5 w-3.5" /> Sin local físico

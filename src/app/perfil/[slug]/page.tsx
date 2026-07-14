@@ -95,13 +95,14 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
   // en el perfil público. Se toma la primera imagen de cada producto como portada.
   const catalog = await prisma.listing.findMany({
     where: { businessId: business.id, status: "ACTIVE", deletedAt: null },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
     take: 60,
     select: {
       id: true,
       title: true,
       description: true,
       price: true,
+      isBoosted: true,
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { imageUrl: true } },
     },
   })
@@ -111,6 +112,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     description: p.description,
     price: p.price != null ? Number(p.price) : null,
     image: p.images[0]?.imageUrl ?? null,
+    isBoosted: p.isBoosted,
   }))
 
   const similarBusinesses = business.categoryId
@@ -182,6 +184,8 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 serviceModes={business.serviceModes}
                 coverageArea={business.coverageArea}
                 hasPhysicalLocation={business.hasPhysicalLocation}
+                isFounder={business.isFounder}
+                isBoosted={business.isBoosted}
               />
               <BusinessCatalog items={catalogItems} />
               <BusinessPromotions promotions={business.coupons} />

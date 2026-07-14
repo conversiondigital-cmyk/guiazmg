@@ -363,6 +363,14 @@ async function processApprovedPayment(
         },
       })
 
+      // Marca el impulso en el perfil (o en el producto de catálogo) para que el
+      // ranking lo priorice. El cron lo apaga al vencer.
+      if (listingId) {
+        await tx.listing.update({ where: { id: listingId }, data: { isBoosted: true, boostedUntil: endsAt } })
+      } else {
+        await tx.profile.update({ where: { id: businessId }, data: { isBoosted: true, boostedUntil: endsAt } })
+      }
+
       await upsertPaymentByProviderId(tx, {
         userId,
         businessId,

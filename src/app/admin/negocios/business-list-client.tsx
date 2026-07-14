@@ -65,6 +65,8 @@ type BusinessRow = {
   isVerified: boolean
   isFeatured: boolean
   isPremium: boolean
+  isFounder: boolean
+  isBoosted: boolean
   createdAt: Date
   owner: BusinessUser
   category: BusinessCategory | null
@@ -343,7 +345,17 @@ export function BusinessListClient({
                       {biz.isFeatured && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                     </div>
                   </TableCell>
-                  <TableCell>{tipoBadge(biz.profileType)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {tipoBadge(biz.profileType)}
+                      {biz.isFounder && (
+                        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Fundador</Badge>
+                      )}
+                      {biz.isBoosted && (
+                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Boost</Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm">{biz.owner.name}</span>
@@ -437,6 +449,10 @@ export function BusinessListClient({
                         >
                           <CheckCircle className="h-4 w-4" />
                           {biz.isVerified ? "Quitar verificación" : "Verificar"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction(biz.id, "FOUNDER")}>
+                          <Star className="h-4 w-4 text-amber-500" />
+                          {biz.isFounder ? "Quitar fundador" : "Marcar como fundador"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

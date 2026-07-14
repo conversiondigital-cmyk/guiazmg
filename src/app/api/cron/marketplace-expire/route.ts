@@ -35,5 +35,23 @@ export async function GET(req: NextRequest) {
     data: { isBoosted: false },
   })
 
-  return NextResponse.json({ expired: result.count, unboosted: unboosted.count })
+  // Igual para perfiles (negocios/emprendedores) y productos de catálogo cuyo
+  // impulso pagado ya expiró.
+  const [profilesOff, listingsOff] = await Promise.all([
+    prisma.profile.updateMany({
+      where: { isBoosted: true, boostedUntil: { not: null, lt: now } },
+      data: { isBoosted: false },
+    }),
+    prisma.listing.updateMany({
+      where: { isBoosted: true, boostedUntil: { not: null, lt: now } },
+      data: { isBoosted: false },
+    }),
+  ])
+
+  return NextResponse.json({
+    expired: result.count,
+    unboosted: unboosted.count,
+    profilesUnboosted: profilesOff.count,
+    listingsUnboosted: listingsOff.count,
+  })
 }

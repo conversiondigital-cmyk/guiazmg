@@ -198,8 +198,10 @@ export async function search(params: SearchParams): Promise<SearchResponse> {
   if (sort === "distance" && hasLoc) orderSql = `dist ASC NULLS LAST, rank DESC`
   else if (sort === "newest") orderSql = `b."createdAt" DESC`
   else if (sort === "rating") orderSql = `avg_rating DESC NULLS LAST, rank DESC`
-  else if (hasLoc) orderSql = `rank DESC, dist ASC NULLS LAST`
-  else orderSql = `rank DESC, b."isFeatured" DESC, b."createdAt" DESC`
+  // En el orden por relevancia (el más usado), los perfiles con boost vigente van
+  // primero. Los ordenamientos explícitos (distancia/nuevos/rating) se respetan.
+  else if (hasLoc) orderSql = `b."isBoosted" DESC, rank DESC, dist ASC NULLS LAST`
+  else orderSql = `b."isBoosted" DESC, rank DESC, b."isFeatured" DESC, b."createdAt" DESC`
 
   const offset = (safePage - 1) * safeLimit
   const limitP = param(safeLimit)

@@ -117,6 +117,10 @@ export async function PUT(
           updateData = { isFeatured: !business.isFeatured }
           actionLabel = business.isFeatured ? "UNFEATURE" : "FEATURE"
           break
+        case "FOUNDER":
+          updateData = { isFounder: !business.isFounder }
+          actionLabel = business.isFounder ? "UNFOUNDER" : "FOUNDER"
+          break
         default:
           return NextResponse.json({ error: "Acción no válida" }, { status: 400 })
       }

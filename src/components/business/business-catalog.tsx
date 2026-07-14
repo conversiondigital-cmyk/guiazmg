@@ -8,6 +8,7 @@ export interface CatalogItem {
   description: string | null
   price: number | null
   image: string | null
+  isBoosted?: boolean
 }
 
 // Catálogo de productos del negocio en su perfil público. Se muestra solo si el
@@ -22,6 +23,11 @@ export function BusinessCatalog({ items }: { items: CatalogItem[] }) {
         {items.map((item) => (
           <div key={item.id} className="overflow-hidden rounded-lg border border-gray-200">
             <div className="relative aspect-square bg-gray-50">
+              {item.isBoosted && (
+                <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                  Destacado
+                </span>
+              )}
               {item.image ? (
                 <Image src={item.image} alt={item.title} fill className="object-cover" unoptimized />
               ) : (
