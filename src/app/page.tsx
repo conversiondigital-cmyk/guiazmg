@@ -5,6 +5,7 @@ export const revalidate = 300
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { HeroCarousel } from "@/components/home/hero-carousel"
+import { HomeHighlights } from "@/components/home/home-highlights"
 import { CategoryGrid } from "@/components/home/category-grid"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 import { CTASection } from "@/components/home/cta-section"
@@ -45,6 +46,7 @@ export default async function HomePage() {
         style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
       >
         <HeroCarousel images={heroImages} config={heroConfig} />
+        <HomeHighlights />
         <CategoryGrid categories={categories as any} />
         <FeaturedBusinesses businesses={businesses} />
         {/* Prueba social ANTES del CTA final (patrón Marketplace/Directory): los

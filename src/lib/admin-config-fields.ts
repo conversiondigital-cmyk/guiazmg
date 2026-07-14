@@ -255,6 +255,22 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "onboarding_recurrence_message", label: "Mensaje al alcanzar el tope de marketplace", type: "textarea" },
     ],
   },
+  landing: {
+    title: "Landing (destacados)",
+    description: "Sección administrable de la portada: anuncios o top de negocios/emprendedores.",
+    fields: [
+      { key: "home_highlights_enabled", label: "Mostrar la sección en la portada", type: "toggle" },
+      { key: "home_highlights_title", label: "Título", type: "text", placeholder: "Top 5 de la semana" },
+      { key: "home_highlights_subtitle", label: "Subtítulo (opcional)", type: "text", placeholder: "Los favoritos de la comunidad" },
+      {
+        key: "home_highlights_items",
+        label: "Elementos (uno por línea)",
+        type: "textarea",
+        description: "Formato por línea: Título | Descripción | enlace. El enlace es opcional (ruta interna como /perfil/mi-negocio o URL http). Máx. 8.",
+        placeholder: "Pastelería Lupita | Los mejores pasteles caseros | /perfil/pasteleria-lupita",
+      },
+    ],
+  },
   legal: {
     title: "Legal",
     description: "Términos, privacidad, cookies y aviso legal.",
