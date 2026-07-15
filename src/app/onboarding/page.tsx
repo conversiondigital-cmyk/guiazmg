@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const options = [
   {
-    href: "/cuenta",
+    href: "/search",
     icon: Search,
     title: "Quiero buscar negocios, productos o servicios",
     desc: "Encuentra negocios locales, guarda favoritos, contacta por WhatsApp, deja reseñas o compra en marketplace.",

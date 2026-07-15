@@ -51,9 +51,15 @@ const typeLabels: Record<string, string> = {
   PROMOTION: "Promoción",
 }
 
-export default async function MisPublicacionesPage() {
+export default async function MisPublicacionesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ boost?: string }>
+}) {
   const session = await auth()
   if (!session?.user?.id) return null
+
+  const { boost } = await searchParams
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { userId: session.user.id, deletedAt: null },
@@ -66,6 +72,16 @@ export default async function MisPublicacionesPage() {
 
   return (
     <div className="space-y-6">
+      {boost === "exitoso" && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          ¡Pago recibido! Tu publicación quedará <strong>destacada</strong> en unos segundos (en cuanto se confirme el pago).
+        </div>
+      )}
+      {boost === "cancelado" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Cancelaste el pago. Tu publicación no se destacó; puedes intentarlo de nuevo cuando quieras.
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mis publicaciones</h1>

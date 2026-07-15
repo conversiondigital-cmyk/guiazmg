@@ -38,7 +38,13 @@ export default async function MarketplaceCategoryPage({ params }: CategoryPagePr
   if (!cat) notFound()
 
   const listings = await prisma.marketplaceListing.findMany({
-    where: { categoryId: cat.id, status: "ACTIVE", deletedAt: null },
+    // Incluye las publicaciones de la categoría Y de sus subcategorías (una
+    // publicación se guarda bajo la subcategoría elegida).
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      OR: [{ categoryId: cat.id }, { category: { parentId: cat.id } }],
+    },
     include: {
       category: { select: { name: true, slug: true } },
       user: { select: { name: true, image: true } },

@@ -32,6 +32,7 @@ export default async function MarketplacePage({
   const params = await searchParams
   const q = typeof params.q === "string" ? params.q : ""
   const category = typeof params.categoria === "string" ? params.categoria : ""
+  const subcategoria = typeof params.subcategoria === "string" ? params.subcategoria : ""
   const municipio = typeof params.municipio === "string" ? params.municipio : ""
   const page = Math.max(1, parseInt(typeof params.page === "string" ? params.page : "1"))
   const limit = 20
@@ -44,7 +45,14 @@ export default async function MarketplacePage({
 
   const where: any = { status: "ACTIVE", deletedAt: null }
   if (q) where.title = { contains: q, mode: "insensitive" }
-  if (category) where.category = { slug: category }
+  // Si se pide una subcategoría, se filtra exacto por ella. Si se pide una
+  // categoría, se incluyen también sus subcategorías (roll-up), porque una
+  // publicación se guarda bajo la subcategoría elegida.
+  if (subcategoria) {
+    where.category = { slug: subcategoria }
+  } else if (category) {
+    where.category = { OR: [{ slug: category }, { parent: { slug: category } }] }
+  }
   if (municipio) where.municipalityId = municipio
 
   const [listings, total] = await Promise.all([
@@ -136,7 +144,7 @@ export default async function MarketplacePage({
                     <Card className="group h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                         {listing.isBoosted && (
-                          <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                          <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-amber-950 shadow">
                             Destacado
                           </span>
                         )}

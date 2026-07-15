@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { confirmDialog } from "@/components/ui/system-dialog"
+import { toast } from "sonner"
 import {
   Store,
   Eye,
@@ -151,9 +152,10 @@ export function BusinessListClient({
         body: JSON.stringify({ action }),
       })
       if (!res.ok) throw new Error("Error")
+      toast.success("Negocio actualizado")
       router.refresh()
     } catch {
-      console.error("Action failed")
+      toast.error("No se pudo completar la acción")
     }
   }
 
@@ -170,9 +172,10 @@ export function BusinessListClient({
         body: JSON.stringify({ action: "ARCHIVE" }),
       })
       if (!res.ok) throw new Error("Error")
+      toast.success("Negocio eliminado")
       router.refresh()
     } catch {
-      console.error("Delete failed")
+      toast.error("No se pudo eliminar")
     }
   }
 

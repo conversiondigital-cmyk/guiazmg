@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getSettingNumber } from "@/lib/settings"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -53,13 +54,33 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Acciones de estado del dueño: vender, pausar, reactivar o renovar (renovar
-    // y reactivar refrescan la ventana de 30 días).
+    // y reactivar refrescan la ventana de expiración configurable).
     let statusData: { status?: "SOLD" | "HIDDEN" | "ACTIVE"; expiresAt?: Date } = {}
     if (statusAction) {
-      const in30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      // Reactivar/renovar deja la publicación ACTIVE: revalida el tope de activas
+      // para que no se evada reactivando vendidas/expiradas.
+      if (statusAction === "ACTIVATE" || statusAction === "RENEW") {
+        const max = await getSettingNumber("marketplace_max_active_listings", 3)
+        const others = await prisma.marketplaceListing.count({
+          where: {
+            userId: session.user.id,
+            id: { not: id },
+            deletedAt: null,
+            status: { in: ["PENDING", "ACTIVE", "HIDDEN"] },
+          },
+        })
+        if (others >= max) {
+          return NextResponse.json(
+            { error: `Alcanzaste el máximo de ${max} publicaciones activas. Marca alguna como vendida o elimínala antes de reactivar esta.`, code: "MAX_ACTIVE_LISTINGS" },
+            { status: 409 }
+          )
+        }
+      }
+      const ttlDays = await getSettingNumber("marketplace_listing_ttl_days", 30)
+      const fresh = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000)
       if (statusAction === "SOLD") statusData = { status: "SOLD" }
       else if (statusAction === "PAUSE") statusData = { status: "HIDDEN" }
-      else statusData = { status: "ACTIVE", expiresAt: in30 } // ACTIVATE | RENEW
+      else statusData = { status: "ACTIVE", expiresAt: fresh } // ACTIVATE | RENEW
     }
 
     await prisma.marketplaceListing.update({

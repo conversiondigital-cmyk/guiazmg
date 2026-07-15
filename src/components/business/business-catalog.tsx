@@ -24,7 +24,7 @@ export function BusinessCatalog({ items }: { items: CatalogItem[] }) {
           <div key={item.id} className="overflow-hidden rounded-lg border border-gray-200">
             <div className="relative aspect-square bg-gray-50">
               {item.isBoosted && (
-                <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-amber-950 shadow">
                   Destacado
                 </span>
               )}
