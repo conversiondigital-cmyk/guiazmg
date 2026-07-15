@@ -70,8 +70,9 @@ export function CuentaSidebar() {
         )}
       >
         <div className="flex h-16 items-center justify-between border-b px-6">
-          <Link href="/" className="text-xl font-bold">
-            <span className="text-green-700">Guía</span> ZMG
+          <Link href="/" className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Guía ZMG" className="h-7 w-auto" />
           </Link>
           <button onClick={() => setOpen(false)} className="lg:hidden">
             <X className="h-5 w-5 text-gray-500" />

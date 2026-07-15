@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react"
 import { UserNav } from "@/components/layout/user-nav"
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown"
 import { MobileNav } from "@/components/layout/mobile-nav"
-import { MapPin, ChevronDown, User } from "lucide-react"
+import { ChevronDown, User } from "lucide-react"
 import { useState, useEffect } from "react"
 import { NAV_LINKS } from "@/lib/nav-links"
 
@@ -63,14 +63,9 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-1.5 shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-800 text-white">
-            <MapPin className="h-4 w-4 fill-current" />
-          </div>
-          <div className="leading-none">
-            <span className="text-lg font-black text-green-800">Guía ZMG</span>
-            <p className="text-[9px] text-gray-400 font-medium -mt-0.5">Tu guía local de negocios</p>
-          </div>
+        <Link href="/" className="flex items-center shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Guía ZMG" className="h-9 w-auto" />
         </Link>
 
         {/* Nav desktop */}
