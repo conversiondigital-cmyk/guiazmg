@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Star, Loader2, Flag } from "lucide-react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { toast } from "sonner"
 import { timeAgo, getInitials } from "@/lib/utils"
 import type { Review } from "@/types"
@@ -21,6 +21,8 @@ interface BusinessReviewsProps {
 export function BusinessReviews({ reviews, businessId, totalCount }: BusinessReviewsProps) {
   const { data: session } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
+  const loginHref = `/auth/login?callbackUrl=${encodeURIComponent(pathname)}`
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState("")
   const [loading, setLoading] = useState(false)
@@ -42,7 +44,7 @@ export function BusinessReviews({ reviews, businessId, totalCount }: BusinessRev
 
   const openReport = (reviewId: string) => {
     if (!session) {
-      router.push("/auth/login")
+      router.push(loginHref)
       return
     }
     setReportingId((prev) => (prev === reviewId ? null : reviewId))
@@ -79,7 +81,7 @@ export function BusinessReviews({ reviews, businessId, totalCount }: BusinessRev
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!session) {
-      router.push("/auth/login")
+      router.push(loginHref)
       return
     }
     if (rating === 0) {

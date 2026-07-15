@@ -70,13 +70,7 @@ export async function POST(request: NextRequest) {
       select: { status: true, plan: { select: { maxListings: true } } },
     })
     const maxListings = membership?.status === "ACTIVE" ? membership.plan.maxListings ?? 100 : 100
-    const listingCount = await prisma.listing.count({ where: { businessId: business.id, deletedAt: null } })
-    if (listingCount >= maxListings) {
-      return NextResponse.json(
-        { error: `Alcanzaste el límite de ${maxListings} productos de tu plan. Mejora tu plan para agregar más.`, code: "MAX_LISTINGS" },
-        { status: 409 }
-      )
-    }
+    // El conteo definitivo va dentro de la transacción con lock por negocio (abajo).
 
     // Slug único DENTRO del negocio (el modelo tiene @@unique([businessId, slug])).
     const slug = await generateUniqueSlug(slugify(title), async (s) =>
@@ -88,23 +82,42 @@ export async function POST(request: NextRequest) {
       )
     )
 
-    const listing = await prisma.listing.create({
-      data: {
-        businessId: business.id,
-        categoryId: business.categoryId,
-        subcategoryId: subcategoryId ?? null,
-        title,
-        slug,
-        description: description ?? null,
-        price: price ?? null,
-        // El negocio ya pasó moderación; sus productos entran visibles de una vez.
-        status: "ACTIVE",
-        images: images?.length
-          ? { createMany: { data: images.map((url, i) => ({ imageUrl: url, sortOrder: i })) } }
-          : undefined,
-      },
-      select: { id: true },
-    })
+    let listing
+    try {
+      listing = await prisma.$transaction(async (tx) => {
+        // Lock por negocio: serializa creaciones concurrentes del mismo negocio
+        // para que el límite del plan no se evada por carrera.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`cat:${business.id}`}))`
+        const listingCount = await tx.listing.count({ where: { businessId: business.id, deletedAt: null } })
+        if (listingCount >= maxListings) throw new Error("MAX_LISTINGS")
+
+        return tx.listing.create({
+          data: {
+            businessId: business.id,
+            categoryId: business.categoryId!, // validado arriba (no null)
+            subcategoryId: subcategoryId ?? null,
+            title,
+            slug,
+            description: description ?? null,
+            price: price ?? null,
+            // El negocio ya pasó moderación; sus productos entran visibles de una vez.
+            status: "ACTIVE",
+            images: images?.length
+              ? { createMany: { data: images.map((url, i) => ({ imageUrl: url, sortOrder: i })) } }
+              : undefined,
+          },
+          select: { id: true },
+        })
+      })
+    } catch (e) {
+      if (e instanceof Error && e.message === "MAX_LISTINGS") {
+        return NextResponse.json(
+          { error: `Alcanzaste el límite de ${maxListings} productos de tu plan. Mejora tu plan para agregar más.`, code: "MAX_LISTINGS" },
+          { status: 409 }
+        )
+      }
+      throw e
+    }
 
     revalidatePath(`/perfil/${business.slug}`)
     return NextResponse.json({ id: listing.id }, { status: 201 })

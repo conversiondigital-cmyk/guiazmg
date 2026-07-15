@@ -39,9 +39,20 @@ export default async function MarketplacePage({
 
   const categories = await prisma.marketplaceCategory.findMany({
     where: { isActive: true, parentId: null },
-    include: { _count: { select: { listings: { where: { status: "ACTIVE", deletedAt: null } } } } },
+    include: { children: { select: { id: true } } },
     orderBy: { sortOrder: "asc" },
   })
+
+  // Conteo por categoría INCLUYENDO sus subcategorías (una publicación se guarda
+  // bajo la subcategoría, así que el conteo del padre debe sumar a sus hijos).
+  const listingCounts = await prisma.marketplaceListing.groupBy({
+    by: ["categoryId"],
+    where: { status: "ACTIVE", deletedAt: null },
+    _count: true,
+  })
+  const countByCat = new Map(listingCounts.map((c) => [c.categoryId, c._count]))
+  const catTotal = (c: (typeof categories)[number]) =>
+    (countByCat.get(c.id) ?? 0) + c.children.reduce((s, ch) => s + (countByCat.get(ch.id) ?? 0), 0)
 
   const where: any = { status: "ACTIVE", deletedAt: null }
   if (q) where.title = { contains: q, mode: "insensitive" }
@@ -119,7 +130,7 @@ export default async function MarketplacePage({
               >
                 <span className="text-2xl">{CATEGORY_ICONS[cat.slug.toUpperCase()] || cat.icon || "📌"}</span>
                 <span className="text-xs font-medium text-gray-700">{cat.name}</span>
-                <span className="text-[10px] text-gray-400">{cat._count.listings}</span>
+                <span className="text-[10px] text-gray-400">{catTotal(cat)}</span>
               </Link>
             ))}
           </div>

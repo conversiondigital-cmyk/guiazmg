@@ -40,29 +40,11 @@ export async function POST(request: NextRequest) {
     if (rateLimited) return rateLimited
 
     // Anti-abuso: marketplace es para ventas puntuales, no una tienda permanente.
-    // Tope de publicaciones VIGENTES por usuario (PENDING/ACTIVE/HIDDEN, sin borrar).
-    // Al llenarse, se orienta a crear un Perfil Emprendedor (catálogo sin límite).
-    // Tope configurable desde Admin → Configuración → Marketplace (default 3).
+    // Tope de publicaciones VIGENTES por usuario (PENDING/ACTIVE/HIDDEN). Configurable
+    // (default 3). El conteo DEFINITIVO va dentro de la transacción con lock por
+    // usuario (abajo), para que no se evada con requests concurrentes.
     const MAX_ACTIVE_LISTINGS = await getSettingNumber("marketplace_max_active_listings", 3)
-    const activeCount = await prisma.marketplaceListing.count({
-      where: {
-        userId: session.user.id,
-        deletedAt: null,
-        status: { in: ["PENDING", "ACTIVE", "HIDDEN"] },
-      },
-    })
-    if (activeCount >= MAX_ACTIVE_LISTINGS) {
-      const customMsg = await getSetting("onboarding_recurrence_message")
-      return NextResponse.json(
-        {
-          error:
-            customMsg ||
-            `Alcanzaste el máximo de ${MAX_ACTIVE_LISTINGS} publicaciones activas. Marca alguna como vendida o elimínala, o crea tu Perfil Emprendedor para tener catálogo sin límite.`,
-          code: "MAX_ACTIVE_LISTINGS",
-        },
-        { status: 409 }
-      )
-    }
+    const userId = session.user.id
 
     const { title, description, price, type, categoryId, municipalityId, neighborhood, phone, whatsapp, contactEmail, images } = listingSchema.parse(await request.json())
 
@@ -84,31 +66,58 @@ export async function POST(request: NextRequest) {
     const MARKETPLACE_TTL_DAYS = await getSettingNumber("marketplace_listing_ttl_days", 30)
     const expiresAt = new Date(Date.now() + MARKETPLACE_TTL_DAYS * 24 * 60 * 60 * 1000)
 
-    const listing = await prisma.marketplaceListing.create({
-      data: {
-        title,
-        slug,
-        description,
-        price,
-        type,
-        expiresAt,
-        status: "PENDING", // entra a la cola de moderación; el admin aprueba
-        categoryId,
-        municipalityId,
-        neighborhood,
-        phone,
-        whatsapp,
-        contactEmail,
-        userId: session.user.id,
-        images: images?.length
-          ? { createMany: { data: images.map((img, i) => ({ url: img.url, sortOrder: img.sortOrder ?? i })) } }
-          : undefined,
-      },
-      include: {
-        images: { orderBy: { sortOrder: "asc" } },
-        category: { select: { name: true, slug: true, icon: true } },
-      },
-    })
+    let listing
+    try {
+      listing = await prisma.$transaction(async (tx) => {
+        // Lock por usuario: serializa los "create" concurrentes del MISMO usuario
+        // (otros usuarios no se bloquean) para que el tope no se evada por carrera.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`mkt:${userId}`}))`
+        const activeCount = await tx.marketplaceListing.count({
+          where: { userId, deletedAt: null, status: { in: ["PENDING", "ACTIVE", "HIDDEN"] } },
+        })
+        if (activeCount >= MAX_ACTIVE_LISTINGS) throw new Error("MAX_ACTIVE_LISTINGS")
+
+        return tx.marketplaceListing.create({
+          data: {
+            title,
+            slug,
+            description,
+            price,
+            type,
+            expiresAt,
+            status: "PENDING", // entra a la cola de moderación; el admin aprueba
+            categoryId,
+            municipalityId,
+            neighborhood,
+            phone,
+            whatsapp,
+            contactEmail,
+            userId,
+            images: images?.length
+              ? { createMany: { data: images.map((img, i) => ({ url: img.url, sortOrder: img.sortOrder ?? i })) } }
+              : undefined,
+          },
+          include: {
+            images: { orderBy: { sortOrder: "asc" } },
+            category: { select: { name: true, slug: true, icon: true } },
+          },
+        })
+      })
+    } catch (e) {
+      if (e instanceof Error && e.message === "MAX_ACTIVE_LISTINGS") {
+        const customMsg = await getSetting("onboarding_recurrence_message")
+        return NextResponse.json(
+          {
+            error:
+              customMsg ||
+              `Alcanzaste el máximo de ${MAX_ACTIVE_LISTINGS} publicaciones activas. Marca alguna como vendida o elimínala, o crea tu Perfil Emprendedor para tener catálogo sin límite.`,
+            code: "MAX_ACTIVE_LISTINGS",
+          },
+          { status: 409 }
+        )
+      }
+      throw e
+    }
 
     return NextResponse.json({ slug: listing.slug, category: listing.category?.slug }, { status: 201 })
   } catch (error) {
