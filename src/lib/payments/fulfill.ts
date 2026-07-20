@@ -67,6 +67,13 @@ export async function fulfillMembership(opts: {
         currentPeriodEnd: periodEnd,
       },
     })
+
+    // Reactiva el negocio si estaba oculto por vencimiento (INACTIVE → ACTIVE).
+    // No toca perfiles suspendidos/rechazados por el admin ni borrados.
+    await tx.profile.updateMany({
+      where: { id: opts.businessId, status: "INACTIVE", deletedAt: null },
+      data: { status: "ACTIVE" },
+    })
     return true
   })
 

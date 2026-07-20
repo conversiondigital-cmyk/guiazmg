@@ -127,6 +127,12 @@ export async function POST(req: NextRequest) {
         },
       })
 
+      // Reactiva el negocio si estaba oculto por vencimiento (INACTIVE → ACTIVE).
+      await tx.profile.updateMany({
+        where: { id: businessId, status: "INACTIVE", deletedAt: null },
+        data: { status: "ACTIVE" },
+      })
+
       return { planName: coupon.plan.name, days: coupon.days, endsAt: end }
     })
 

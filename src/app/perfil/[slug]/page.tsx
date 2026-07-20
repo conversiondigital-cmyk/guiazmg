@@ -145,12 +145,25 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {!isPublished && (
             <div className="mb-6 flex flex-col gap-1 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <span className="font-semibold">Este perfil está en revisión — solo tú puedes verlo.</span>
-              <span>
-                Tu negocio aún no aparece en el directorio público. Un administrador lo revisará y, al aprobarlo,
-                será visible para todos. Mientras tanto puedes seguir completándolo desde{" "}
-                <Link href="/dashboard/negocio" className="font-medium underline">Mi negocio</Link>.
-              </span>
+              {business.status === "INACTIVE" ? (
+                <>
+                  <span className="font-semibold">Tu membresía venció — tu negocio no aparece en el directorio.</span>
+                  <span>
+                    Tu cuenta sigue activa, pero tu perfil solo eres visible para ti. Renueva tu plan o canjea un
+                    cupón para volver a aparecer:{" "}
+                    <Link href="/dashboard/membresia" className="font-medium underline">Renovar membresía</Link>.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold">Este perfil está en revisión — solo tú puedes verlo.</span>
+                  <span>
+                    Tu negocio aún no aparece en el directorio público. Un administrador lo revisará y, al aprobarlo,
+                    será visible para todos. Mientras tanto puedes seguir completándolo desde{" "}
+                    <Link href="/dashboard/negocio" className="font-medium underline">Mi negocio</Link>.
+                  </span>
+                </>
+              )}
             </div>
           )}
           <nav className="mb-6 text-sm text-gray-500">
