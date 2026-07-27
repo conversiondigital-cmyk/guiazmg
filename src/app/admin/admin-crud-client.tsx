@@ -171,10 +171,63 @@ export function AdminCRUDClient({
     setSelectedItem(item)
     const newFormData: Record<string, any> = {}
     formFields.forEach((field) => {
-      newFormData[field.name] = item[field.name] || ""
+      const v = item[field.name]
+      if (field.type === "toggle") newFormData[field.name] = Boolean(v)
+      else if (Array.isArray(v)) newFormData[field.name] = v.join(", ")
+      else newFormData[field.name] = v ?? ""
     })
     setFormData(newFormData)
     setIsEditOpen(true)
+  }
+
+  // Render de un campo del formulario (compartido por crear/editar).
+  const renderField = (field: FormFieldDef) => {
+    const val = formData[field.name]
+    return (
+      <div key={field.name}>
+        <label className="text-sm font-medium text-slate-900">{field.label}</label>
+        {field.type === "select" ? (
+          <select
+            value={val || ""}
+            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            required={field.required}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+          >
+            <option value="">Seleccionar...</option>
+            {field.options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        ) : field.type === "toggle" ? (
+          <label className="mt-1 flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={!!val}
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.checked })}
+              className="h-4 w-4 rounded border-slate-300"
+            />
+            {val ? "Sí" : "No"}
+          </label>
+        ) : field.type === "textarea" ? (
+          <textarea
+            value={val || ""}
+            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            required={field.required}
+            rows={3}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
+          />
+        ) : (
+          <Input
+            type={field.type || "text"}
+            value={val ?? ""}
+            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            required={field.required}
+          />
+        )}
+      </div>
+    )
   }
 
   const openDeleteDialog = (item: any) => {
@@ -309,42 +362,7 @@ export function AdminCRUDClient({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {formFields.map((field) => (
-              <div key={field.name}>
-                <label className="text-sm font-medium text-slate-900">
-                  {field.label}
-                </label>
-                {field.type === "select" ? (
-                  <select
-                    value={formData[field.name] || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [field.name]: e.target.value })
-                    }
-                    required={field.required}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  >
-                    <option value="">Seleccionar...</option>
-                    {field.options?.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <Input
-                    type={field.type || "text"}
-                    value={formData[field.name] || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        [field.name]: e.target.value,
-                      })
-                    }
-                    required={field.required}
-                  />
-                )}
-              </div>
-            ))}
+            {formFields.map(renderField)}
           </div>
           <div className="flex gap-3 justify-end">
             <Button
@@ -374,40 +392,7 @@ export function AdminCRUDClient({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {formFields.map((field) => (
-              <div key={field.name}>
-                <label className="text-sm font-medium text-slate-900">
-                  {field.label}
-                </label>
-                {field.type === "select" ? (
-                  <select
-                    value={formData[field.name] || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, [field.name]: e.target.value })
-                    }
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  >
-                    <option value="">Seleccionar...</option>
-                    {field.options?.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <Input
-                    type={field.type || "text"}
-                    value={formData[field.name] || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        [field.name]: e.target.value,
-                      })
-                    }
-                  />
-                )}
-              </div>
-            ))}
+            {formFields.map(renderField)}
           </div>
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>

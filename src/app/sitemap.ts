@@ -84,11 +84,31 @@ export default async function sitemap() {
       priority: 0.8,
     }))
 
+    // Zonas hiperlocales que REALMENTE se indexan (activa + indexable + ≥ umbral de
+    // perfiles). Mismo cálculo que el dashboard y la landing, para que el sitemap no
+    // anuncie páginas que luego salen noindex. En su propio try por si falta la tabla.
+    let zoneUrls: { url: string; lastModified: Date; changeFrequency: "weekly"; priority: number }[] = []
+    try {
+      const { getZoneSeoStats } = await import("@/lib/seo/opportunities")
+      const stats = await getZoneSeoStats()
+      zoneUrls = stats
+        .filter((z) => z.eligible)
+        .map((z) => ({
+          url: `${baseUrl}/${z.municipioSlug}/${z.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "weekly" as const,
+          priority: 0.75,
+        }))
+    } catch {
+      // tabla `zones` no migrada todavía
+    }
+
     return [
       ...staticRoutes,
       ...categoryUrls,
       ...municipalityUrls,
       ...seoLandingUrls,
+      ...zoneUrls,
       ...businessUrls,
       ...marketplaceUrls,
       ...blogUrls,

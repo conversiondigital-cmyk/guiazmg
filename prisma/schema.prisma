@@ -354,6 +354,7 @@ model Municipality {
 
   region      State?     @relation(fields: [stateId], references: [id])
   neighborhoods Neighborhood[]
+  zones         Zone[]
    businesses    Profile[]
   marketplaceListings MarketplaceListing[]
   serviceRequests     ServiceRequest[]
@@ -361,21 +362,57 @@ model Municipality {
   @@map("municipalities")
 }
 
-model Neighborhood {
+/// Zona comercial/habitacional que AGRUPA colonias cercanas para SEO hiperlocal
+/// (p. ej. "Zona Real" agrupa Valle Real, Solares, Santa Margarita…). Es la unidad
+/// intermedia entre Municipio y Colonia. `heroImageUrl` es la imagen característica
+/// de la zona; si es null la landing usa /zonas/{municipio}/{slug}.jpg y, si falta,
+/// un degradado. `nearbyZoneSlugs` alimenta el bloque "zonas cercanas".
+model Zone {
   id             String   @id @default(cuid())
   municipalityId String
   name           String
   slug           String
-  postalCode     String?
+  description    String?
+  heroImageUrl   String?
+  priority       Int      @default(0)
   isActive       Boolean  @default(true)
+  isSeoIndexable Boolean  @default(true)
+  nearbyZoneSlugs String[] @default([])
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  municipality  Municipality   @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  neighborhoods Neighborhood[]
+
+  @@unique([municipalityId, slug])
+  @@index([municipalityId])
+  @@map("zones")
+}
+
+model Neighborhood {
+  id             String   @id @default(cuid())
+  municipalityId String
+  zoneId         String?
+  name           String
+  slug           String
+  postalCode     String?
+  heroImageUrl   String?
+  isActive       Boolean  @default(true)
+  isSeoIndexable Boolean  @default(true)
   sortOrder      Int      @default(0)
+  seoTitle       String?
+  seoDescription String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  zone         Zone?        @relation(fields: [zoneId], references: [id], onDelete: SetNull)
    businesses   Profile[]
 
   @@unique([municipalityId, slug])
+  @@index([zoneId])
   @@map("neighborhoods")
 }
 

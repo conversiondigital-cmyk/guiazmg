@@ -256,6 +256,74 @@ export async function getProfilesByType(profileType: "EMPRENDEDOR" | "NEGOCIO", 
   return { profiles: businesses, businesses, total, page, totalPages: Math.ceil(total / limit) }
 }
 
+// Listado hiperlocal para las landings de zona/colonia (con o sin categoría).
+// Filtra por municipio + (zona | colonia) + categoría opcional. Mismo shape que
+// getCategoryListing para reutilizar el componente SearchResults. Boosted primero.
+export async function getLocalListing(opts: {
+  municipalityId?: string
+  zoneId?: string
+  neighborhoodId?: string
+  categoryId?: string
+  page?: number
+  limit?: number
+}) {
+  const { municipalityId, zoneId, neighborhoodId, categoryId, page = 1, limit = 24 } = opts
+  const skip = (page - 1) * limit
+
+  const where: any = { status: "ACTIVE", deletedAt: null }
+  if (municipalityId) where.municipalityId = municipalityId
+  if (categoryId) where.categoryId = categoryId
+  // La colonia es más específica que la zona: si viene, manda.
+  if (neighborhoodId) where.neighborhoodId = neighborhoodId
+  else if (zoneId) where.neighborhood = { is: { zoneId } }
+
+  const [profiles, total] = await Promise.all([
+    prisma.profile.findMany({
+      where,
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        phone: true,
+        whatsapp: true,
+        websiteUrl: true,
+        latitude: true,
+        longitude: true,
+        isVerified: true,
+        isFeatured: true,
+        isBoosted: true,
+        isFounder: true,
+        municipality: { select: { name: true } },
+        neighborhood: { select: { name: true } },
+        category: { select: { name: true } },
+        memberships: {
+          where: { status: "ACTIVE" },
+          select: { status: true, plan: { select: { priorityLevel: true } } },
+        },
+        _count: { select: { reviews: true } },
+      },
+      orderBy: [{ isBoosted: "desc" }, { isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: limit,
+    }),
+    prisma.profile.count({ where }),
+  ])
+
+  const businesses = profiles
+    .map((b) => {
+      let score = 0
+      const active = b.memberships?.find((m) => m.status === "ACTIVE")
+      if (active) score += (active.plan.priorityLevel || 0) * 10
+      if (b.isVerified) score += 30
+      if (b._count.reviews) score += Math.min(b._count.reviews * 2, 20)
+      return { ...b, score }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  return { profiles: businesses, businesses, total, page, totalPages: Math.ceil(total / limit) }
+}
+
 export async function searchProfiles(params: {
   q?: string
   category?: string

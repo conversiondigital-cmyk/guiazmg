@@ -138,7 +138,27 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next({ headers: securityHeaders })
   }
 
-  if (!isLoggedIn) {
+  // Áreas PRIVADas (requieren sesión). Todo lo demás es contenido público SEO:
+  // en particular las landings de municipio/zona/colonia viven en /{municipio}/…
+  // con slug dinámico y NO pueden allowlistarse por prefijo estático, así que el
+  // proxy solo bloquea estas rutas conocidas y deja pasar el resto. Sin esto,
+  // Googlebot recibía un 307 a /auth/login en cada landing (no indexable).
+  const privatePrefixes = [
+    "/dashboard",
+    "/cuenta",
+    "/admin",
+    "/agente",
+    "/editor",
+    "/checkout",
+    "/registrar-negocio",
+    "/reportar",
+    "/marketplace/nuevo",
+  ]
+  const requiresAuth =
+    pathname.startsWith("/api/") ||
+    privatePrefixes.some((p) => pathname === p || pathname.startsWith(p + "/"))
+
+  if (requiresAuth && !isLoggedIn) {
     const loginUrl = new URL("/auth/login", req.url)
     loginUrl.searchParams.set("callbackUrl", pathname)
     return redirectWith(loginUrl)

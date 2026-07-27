@@ -75,6 +75,7 @@ const sections: SidebarSection[] = [
       { label: "Etiquetas / tags", href: "/admin/etiquetas", icon: Tags },
       { label: "Municipios", href: "/admin/municipios", icon: MapPinned },
       { label: "Colonias", href: "/admin/colonias", icon: Globe },
+      { label: "Zonas (SEO local)", href: "/admin/zonas", icon: MapPinned },
     ],
   },
   {
@@ -106,6 +107,7 @@ const sections: SidebarSection[] = [
     title: "Crecimiento",
     items: [
       { label: "SEO y landing pages", href: "/admin/seo", icon: Search },
+      { label: "SEO local — oportunidades", href: "/admin/seo/oportunidades", icon: TrendingUp },
       { label: "Búsquedas populares", href: "/admin/busquedas", icon: TrendingUp },
       { label: "Carrusel del inicio", href: "/admin/hero", icon: Images },
     ],

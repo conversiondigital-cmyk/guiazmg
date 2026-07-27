@@ -44,6 +44,18 @@ export default async function SeoCityPage({ params }: Props) {
 
   if (!municipio) notFound()
 
+  // Zonas del municipio (SEO hiperlocal). Tolerante a que la tabla aún no exista.
+  let zones: { name: string; slug: string }[] = []
+  try {
+    zones = await prisma.zone.findMany({
+      where: { municipality: { slug: munSlug }, isActive: true },
+      orderBy: [{ priority: "desc" }, { name: "asc" }],
+      select: { name: true, slug: true },
+    })
+  } catch {
+    // tabla `zones` no migrada todavía → sin sección de zonas
+  }
+
   const results = await search({ municipality: munSlug, limit: 24 })
 
   return (
@@ -87,16 +99,35 @@ export default async function SeoCityPage({ params }: Props) {
             </div>
           </div>
 
+          {zones.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Zonas de {municipio.name}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {zones.map((z) => (
+                  <Link
+                    key={z.slug}
+                    href={`/${munSlug}/${z.slug}`}
+                    className="inline-flex items-center rounded-full bg-green-50 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors"
+                  >
+                    {z.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {neighborhoods.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Colonias en {municipio.name}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {neighborhoods.map((n) => (
+                {neighborhoods.slice(0, 60).map((n) => (
                   <Link
                     key={n.id}
-                    href={`/search?municipio=${munSlug}&colonia=${n.slug}`}
+                    href={`/${munSlug}/${n.slug}`}
                     className="inline-flex items-center rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   >
                     {n.name}

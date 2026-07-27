@@ -24,7 +24,9 @@ export function generateMeta({
   const canonicalUrl = canonical || url || BASE_URL
 
   return {
-    title: siteTitle,
+    // `absolute` evita que el template "%s | Guía ZMG" del layout raíz vuelva a
+    // añadir el sufijo (si no, quedaba "… | Guía ZMG | Guía ZMG").
+    title: { absolute: siteTitle },
     description,
     alternates: {
       canonical: canonicalUrl,
@@ -51,8 +53,10 @@ export function generateMeta({
       description,
       images: [ogImage],
     },
+    // Página "delgada": noindex pero SÍ follow, para que Google siga los enlaces
+    // internos (colonias/categorías cercanas) y reparta autoridad.
     robots: noindex
-      ? { index: false, follow: false }
+      ? { index: false, follow: true }
       : { index: true, follow: true },
   }
 }

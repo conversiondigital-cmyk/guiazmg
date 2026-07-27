@@ -243,6 +243,34 @@ export function breadcrumbSchema(items: { name: string; url: string }[]) {
   })
 }
 
+// ItemList para listados (categorías, zonas, colonias). `items` en orden de aparición.
+export function itemListSchema(name: string, items: { name: string; url: string }[]) {
+  return cleanSchema({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    itemListElement: items.map((it, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: it.url,
+      name: it.name,
+    })),
+  })
+}
+
+// FAQPage para el bloque de preguntas frecuentes de una landing.
+export function faqSchema(faqs: { question: string; answer: string }[]) {
+  return cleanSchema({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  })
+}
+
 export function safeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c")
 }
