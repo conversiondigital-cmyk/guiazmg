@@ -44,18 +44,26 @@ export function LocalLanding({
     <>
       <Header />
       <main className="flex-1">
-        {/* Hero con imagen característica de la zona (o degradado de respaldo). */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-green-700 to-emerald-900">
-          {heroImage && (
-            <div
-              className="absolute inset-0 bg-cover bg-center opacity-35"
-              style={{ backgroundImage: `url(${heroImage})` }}
-              aria-hidden
-            />
+        {/* Hero con foto representativa de la zona (o degradado de respaldo). */}
+        <div className="relative overflow-hidden bg-emerald-950">
+          {heroImage ? (
+            <>
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${heroImage})` }}
+                aria-hidden
+              />
+              {/* Scrim para legibilidad: oscuro a la izquierda (donde va el texto) y
+                  abajo, con un toque de verde de marca. */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20" aria-hidden />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" aria-hidden />
+              <div className="absolute inset-0 bg-emerald-950/25 mix-blend-multiply" aria-hidden />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-green-700 to-emerald-900" aria-hidden />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" aria-hidden />
-          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-green-100">
+          <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-green-100/90">
               {breadcrumb.map((b, i) => (
                 <span key={i} className="flex items-center gap-2">
                   {b.href ? (
@@ -65,12 +73,22 @@ export function LocalLanding({
                   ) : (
                     <span className="font-medium text-white">{b.name}</span>
                   )}
-                  {i < breadcrumb.length - 1 && <span className="text-green-300">/</span>}
+                  {i < breadcrumb.length - 1 && <span className="text-green-300/80">/</span>}
                 </span>
               ))}
             </nav>
-            <h1 className="max-w-3xl text-3xl font-bold text-white sm:text-4xl">{h1}</h1>
-            <p className="mt-3 max-w-2xl text-lg text-green-50">{intro}</p>
+            <h1
+              className="max-w-3xl text-3xl font-bold text-white sm:text-4xl lg:text-5xl"
+              style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
+            >
+              {h1}
+            </h1>
+            <p
+              className="mt-3 max-w-2xl text-lg text-green-50"
+              style={{ textShadow: "0 1px 10px rgba(0,0,0,0.4)" }}
+            >
+              {intro}
+            </p>
 
             {/* Buscador local */}
             <form action="/search" method="get" className="mt-6 flex max-w-xl overflow-hidden rounded-xl bg-white shadow-lg">

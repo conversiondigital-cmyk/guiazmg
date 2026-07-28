@@ -84,18 +84,27 @@ export default async function ZonasIndexPage() {
                       <Link
                         key={z.slug}
                         href={`/${g.slug}/${z.slug}`}
-                        className="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:border-green-200 hover:shadow-md"
+                        className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:border-green-200 hover:shadow-md"
                       >
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-gray-900 group-hover:text-green-700">{z.name}</span>
+                        <div
+                          className="relative h-32 bg-emerald-900 bg-cover bg-center"
+                          style={{ backgroundImage: `url(/zonas/${g.slug}/${z.slug}.jpg)` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" aria-hidden />
+                          <span
+                            className="absolute inset-x-3 bottom-2.5 flex items-center gap-1.5 text-base font-semibold text-white"
+                            style={{ textShadow: "0 1px 8px rgba(0,0,0,.55)" }}
+                          >
+                            <MapPin className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{z.name}</span>
+                          </span>
                         </div>
-                        {z.description && (
-                          <p className="mt-2 line-clamp-2 text-sm text-gray-500">{z.description}</p>
-                        )}
-                        <span className="mt-3 text-xs text-gray-400">
-                          {z._count.neighborhoods} colonia{z._count.neighborhoods !== 1 ? "s" : ""}
-                        </span>
+                        <div className="flex flex-1 flex-col p-4">
+                          {z.description && <p className="line-clamp-2 text-sm text-gray-500">{z.description}</p>}
+                          <span className="mt-3 text-xs text-gray-400">
+                            {z._count.neighborhoods} colonia{z._count.neighborhoods !== 1 ? "s" : ""}
+                          </span>
+                        </div>
                       </Link>
                     ))}
                   </div>
