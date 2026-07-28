@@ -17,3 +17,4 @@ Fotos de referentes de cada zona — Wikimedia Commons (licencia libre).
 - **tonala/zona-artesanal-tonala** — MuseoNacionalCeramicaTonala06. Autor: AlejandroLinaresGarcia. Licencia: CC BY-SA 3.0. Fuente: https://commons.wikimedia.org/wiki/File:MuseoNacionalCeramicaTonala06.JPG
 - **tlajomulco/lopez-mateos-sur** — Paisaje del centro de Tlajomulco - panoramio. Autor: e ku to ru Daíz. Licencia: CC BY-SA 3.0. Fuente: https://commons.wikimedia.org/wiki/File:Paisaje_del_centro_de_Tlajomulco_-_panoramio.jpg
 - **tlajomulco/tlajomulco-centro** — Paisaje del centro de Tlajomulco - panoramio. Autor: e ku to ru Daíz. Licencia: CC BY-SA 3.0. Fuente: https://commons.wikimedia.org/wiki/File:Paisaje_del_centro_de_Tlajomulco_-_panoramio.jpg
+- **portada (/zonas)** — Skyline Guadalajara. Autor: Allenpivot. Licencia: CC BY-SA 3.0. Fuente: https://commons.wikimedia.org/wiki/File:Skyline_Guadalajara.jpg

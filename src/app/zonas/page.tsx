@@ -50,15 +50,31 @@ export default async function ZonasIndexPage() {
     <>
       <Header />
       <main className="flex-1">
-        <div className="bg-gradient-to-br from-green-700 to-emerald-900 py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <nav className="mb-3 text-sm text-green-100">
+        <div className="relative overflow-hidden bg-emerald-950 py-16">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url(/zonas/portada.jpg)" }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/25" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-emerald-950/25 mix-blend-multiply" aria-hidden />
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <nav className="mb-3 text-sm text-green-100/90">
               <Link href="/" className="hover:text-white transition-colors">Inicio</Link>
               <span className="mx-2">/</span>
               <span className="font-medium text-white">Zonas</span>
             </nav>
-            <h1 className="text-3xl font-bold text-white sm:text-4xl">Explora por zona</h1>
-            <p className="mt-2 max-w-2xl text-lg text-green-50">
+            <h1
+              className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl"
+              style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
+            >
+              Explora por zona
+            </h1>
+            <p
+              className="mt-2 max-w-2xl text-lg text-green-50"
+              style={{ textShadow: "0 1px 10px rgba(0,0,0,0.4)" }}
+            >
               Encuentra negocios, servicios y emprendedores cerca de ti, por zona de la Zona Metropolitana de Guadalajara.
             </p>
           </div>
