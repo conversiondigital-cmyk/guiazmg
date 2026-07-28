@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/footer"
 import { HeroCarousel } from "@/components/home/hero-carousel"
 import { HomeHighlights } from "@/components/home/home-highlights"
 import { CategoryGrid } from "@/components/home/category-grid"
+import { ZonesSection } from "@/components/home/zones-section"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 import { CTASection } from "@/components/home/cta-section"
 import { TestimonialsCarousel } from "@/components/home/testimonials-carousel"
@@ -48,6 +49,7 @@ export default async function HomePage() {
         <HeroCarousel images={heroImages} config={heroConfig} />
         <HomeHighlights />
         <CategoryGrid categories={categories as any} />
+        <ZonesSection />
         <FeaturedBusinesses businesses={businesses} />
         {/* Prueba social ANTES del CTA final (patrón Marketplace/Directory): los
             testimonios empujan al cierre "Registrar mi negocio". */}
