@@ -13,7 +13,6 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
   const [location, setLocation] = useState("")
   const [imgError, setImgError] = useState(false)
   const [current, setCurrent] = useState(0)
-  const [paused, setPaused] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
   // Qué imágenes del carrusel ya se pueden descargar. Empieza solo con la 1ª (el LCP);
   // las demás están apiladas en el viewport, así que loading="lazy" NO las difiere y se
@@ -31,12 +30,14 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
     return () => mq.removeEventListener("change", sync)
   }, [])
 
-  // Auto-avance del carrusel (pausa al pasar el cursor/enfocar y con movimiento reducido).
+  // Auto-avance del carrusel. Se detiene solo con movimiento reducido (a11y); ya
+  // NO se pausa al pasar el cursor ni al enfocar el buscador (antes se quedaba
+  // pausado y parecía que "no cambiaba").
   useEffect(() => {
-    if (images.length < 2 || paused || reduceMotion) return
+    if (images.length < 2 || reduceMotion) return
     const t = setInterval(() => setCurrent((c) => (c + 1) % images.length), config.intervalMs)
     return () => clearInterval(t)
-  }, [images.length, config.intervalMs, paused, reduceMotion])
+  }, [images.length, config.intervalMs, reduceMotion])
 
   // Precarga la imagen actual y la siguiente (para que la transición no parpadee),
   // dejando el resto para cuando el carrusel llegue a ellas.
@@ -61,13 +62,7 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
   }
 
   return (
-    <section
-      className="relative flex min-h-[440px] items-center justify-center overflow-hidden py-14 sm:min-h-[500px] sm:py-16"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-    >
+    <section className="relative flex min-h-[440px] items-center justify-center overflow-hidden py-14 sm:min-h-[500px] sm:py-16">
       {/* Fondo: carrusel de imágenes (admin) o imagen por defecto */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49]">
         {hasCarousel ? (

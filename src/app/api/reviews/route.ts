@@ -48,14 +48,33 @@ export async function POST(request: NextRequest) {
       where: { id: businessId },
       select: { ownerId: true, name: true },
     })
+    const negocio = profile?.name ?? "un negocio"
     if (profile && profile.ownerId !== session.user.id) {
       await createNotification({
         userId: profile.ownerId,
         type: "REVIEW",
-        title: `Nueva reseña de ${rating}★ en ${profile.name}`,
+        title: `Nueva reseña de ${rating}★ en ${negocio}`,
         message: comment ? comment.slice(0, 140) : "Recibiste una nueva reseña.",
       })
     }
+
+    // Notifica TAMBIÉN a los administradores para que vean la reseña desde su
+    // panel. Se excluye al autor y al dueño (ya avisado) para no duplicar.
+    const excluded = [session.user.id, profile?.ownerId].filter((x): x is string => !!x)
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN", isActive: true, deletedAt: null, id: { notIn: excluded } },
+      select: { id: true },
+    })
+    await Promise.all(
+      admins.map((a) =>
+        createNotification({
+          userId: a.id,
+          type: "REVIEW",
+          title: `Nueva reseña de ${rating}★ en ${negocio}`,
+          message: comment ? comment.slice(0, 140) : "Se publicó una nueva reseña. Revísala en el panel.",
+        }),
+      ),
+    )
 
     return NextResponse.json(review, { status: 201 })
   } catch (error) {
