@@ -30,14 +30,15 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
     return () => mq.removeEventListener("change", sync)
   }, [])
 
-  // Auto-avance del carrusel. Se detiene solo con movimiento reducido (a11y); ya
-  // NO se pausa al pasar el cursor ni al enfocar el buscador (antes se quedaba
-  // pausado y parecía que "no cambiaba").
+  // Auto-avance del carrusel: SIEMPRE gira (no se pausa por hover/foco ni por
+  // prefers-reduced-motion — antes eso lo dejaba estático y parecía roto). El
+  // respeto a movimiento reducido se conserva en la transición (cambio instantáneo
+  // en vez de disolvencia), más abajo.
   useEffect(() => {
-    if (images.length < 2 || reduceMotion) return
+    if (images.length < 2) return
     const t = setInterval(() => setCurrent((c) => (c + 1) % images.length), config.intervalMs)
     return () => clearInterval(t)
-  }, [images.length, config.intervalMs, reduceMotion])
+  }, [images.length, config.intervalMs])
 
   // Precarga la imagen actual y la siguiente (para que la transición no parpadee),
   // dejando el resto para cuando el carrusel llegue a ellas.
