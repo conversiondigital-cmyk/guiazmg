@@ -13,7 +13,6 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
   const [location, setLocation] = useState("")
   const [imgError, setImgError] = useState(false)
   const [current, setCurrent] = useState(0)
-  const [reduceMotion, setReduceMotion] = useState(false)
   // Qué imágenes del carrusel ya se pueden descargar. Empieza solo con la 1ª (el LCP);
   // las demás están apiladas en el viewport, así que loading="lazy" NO las difiere y se
   // bajaban las 4 de golpe. Se cargan bajo demanda: la actual y la siguiente.
@@ -21,19 +20,8 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
 
   const hasCarousel = images.length > 0
 
-  // Respeta prefers-reduced-motion: sin auto-avance ni disolvencia.
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const sync = () => setReduceMotion(mq.matches)
-    sync()
-    mq.addEventListener("change", sync)
-    return () => mq.removeEventListener("change", sync)
-  }, [])
-
   // Auto-avance del carrusel: SIEMPRE gira (no se pausa por hover/foco ni por
-  // prefers-reduced-motion — antes eso lo dejaba estático y parecía roto). El
-  // respeto a movimiento reducido se conserva en la transición (cambio instantáneo
-  // en vez de disolvencia), más abajo.
+  // prefers-reduced-motion) y con disolvencia suave entre imágenes.
   useEffect(() => {
     if (images.length < 2) return
     const t = setInterval(() => setCurrent((c) => (c + 1) % images.length), config.intervalMs)
@@ -80,9 +68,9 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
                 fill
                 sizes="100vw"
                 priority={i === 0}
-                className={`object-cover object-center transition-opacity motion-reduce:transition-none ${
-                  reduceMotion ? "duration-0" : "duration-700"
-                } ${i === current ? "opacity-100" : "opacity-0"}`}
+                className={`object-cover object-center transition-opacity duration-700 ease-in-out ${
+                  i === current ? "opacity-100" : "opacity-0"
+                }`}
               />
             ) : (
               <div key={src} aria-hidden className="absolute inset-0" />
