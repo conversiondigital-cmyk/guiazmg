@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { touchRedis } from "@/lib/redis-keepalive"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -15,6 +16,11 @@ const GRACE_DAYS = 3
 // La CUENTA del dueño no se toca: sigue entrando al dashboard (acceso por propiedad)
 // y puede renovar/canjear cupón para reactivar. Autorizado por CRON_SECRET o ADMIN.
 export async function GET(req: NextRequest) {
+  // Latido diario para mantener despierta la Redis (Upstash la archiva por
+  // inactividad). Va antes del auth para que corra siempre que Vercel dispare el
+  // cron; nunca lanza.
+  await touchRedis()
+
   const secret = process.env.CRON_SECRET
   const authHeader = req.headers.get("authorization")
   let allowed = !!secret && authHeader === `Bearer ${secret}`
