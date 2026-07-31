@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Calendar, User, Clock, ArrowLeft, Tag } from "lucide-react"
 import { Metadata } from "next"
 import { safeJsonLd } from "@/lib/seo/schema"
+import { sanitizePostHtml } from "@/lib/sanitize"
 import { ViewCounter } from "@/components/blog/view-counter"
 import { ReadingProgress } from "@/components/blog/reading-progress"
 
@@ -145,7 +146,7 @@ export default async function BlogPostPage({ params }: Props) {
               prose-blockquote:border-green-700 prose-blockquote:bg-green-50 prose-blockquote:rounded-xl prose-blockquote:py-2 prose-blockquote:not-italic
               prose-code:bg-gray-100 prose-code:rounded prose-code:px-1 prose-code:text-green-800 prose-code:text-sm
               prose-img:rounded-xl prose-img:shadow-md"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizePostHtml(post.content) }}
           />
 
           {/* Tags */}
