@@ -33,7 +33,7 @@ function loadCategories(): Promise<NavCategory[]> {
 }
 
 export function Header() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
   const [categories, setCategories] = useState<NavCategory[]>(categoriesCache ?? [])
   const [showCategories, setShowCategories] = useState(false)
@@ -117,7 +117,11 @@ export function Header() {
 
         {/* Actions */}
         <div className="ml-auto hidden lg:flex items-center gap-3">
-          {session ? (
+          {status === "loading" ? (
+            // Placeholder mientras la sesión hidrata: evita el parpadeo de mostrar
+            // "Iniciar sesión" un instante antes de resolver que sí hay sesión.
+            <div className="h-9 w-9 animate-pulse rounded-full bg-gray-100" aria-hidden />
+          ) : session ? (
             <>
               <NotificationDropdown />
               <UserNav user={session.user} />
@@ -143,7 +147,11 @@ export function Header() {
 
         {/* Mobile */}
         <div className="ml-auto flex items-center gap-2 lg:hidden">
-          {session && <NotificationDropdown />}
+          {status === "loading" ? (
+            <div className="h-8 w-8 animate-pulse rounded-full bg-gray-100" aria-hidden />
+          ) : (
+            session && <NotificationDropdown />
+          )}
           <MobileNav />
         </div>
       </div>
