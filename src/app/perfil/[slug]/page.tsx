@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
 import { BusinessActions } from "@/components/business/business-actions"
 import { BusinessMap } from "@/components/business/business-map"
+import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import { TrackBusinessView } from "@/components/business/track-business-view"
 import { ClaimButton } from "@/components/business/claim-button"
 import { BusinessPromotions } from "@/components/business/business-promotions"
@@ -199,6 +200,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                   lng={business.longitude}
                   name={business.name}
                   businessId={business.id}
+                  apiKey={await getGoogleMapsApiKey()}
                 />
               )}
               <BusinessModality
