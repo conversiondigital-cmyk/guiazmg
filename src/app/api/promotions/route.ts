@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { withApiMiddleware } from "@/lib/security/api-middleware"
 import { prisma } from "@/lib/prisma"
 
@@ -30,6 +31,11 @@ export const POST = withApiMiddleware(
         isActive: true,
       },
     })
+
+    // Invalida la caché de las páginas públicas para que la promo aparezca de
+    // inmediato (sin esperar la revalidación por tiempo).
+    revalidatePath("/promociones")
+    if (business.slug) revalidatePath(`/perfil/${business.slug}`)
 
     return NextResponse.json({ coupon })
   },
