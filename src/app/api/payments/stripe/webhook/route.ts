@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe"
-import { fulfillMembership, fulfillMarketplaceBoost } from "@/lib/payments/fulfill"
+import { fulfillMembership, fulfillMarketplaceBoost, fulfillBusinessBoost } from "@/lib/payments/fulfill"
 import { createNotification } from "@/lib/notifications/create"
 import { incrementCouponUsage } from "@/lib/coupons"
 
@@ -77,6 +77,31 @@ export async function POST(request: Request) {
               type: "PAYMENT",
               title: "Publicación destacada",
               message: `Tu publicación quedó destacada por ${boostDef.durationDays} días.`,
+            }).catch(() => {})
+          }
+        }
+      }
+
+      // Boost de un NEGOCIO o producto: boost:<boostDefId>:<businessId>:<userId>[:<listingId>]
+      if (kind === "boost") {
+        const [, boostDefinitionId, boostBusinessId, boostUserId, boostListingId] = parts
+        if (boostDefinitionId && boostBusinessId && boostUserId) {
+          const result = await fulfillBusinessBoost({
+            boostDefinitionId,
+            businessId: boostBusinessId,
+            userId: boostUserId,
+            listingId: boostListingId || null,
+            provider: "STRIPE",
+            providerPaymentId: s.id,
+            amount,
+            metadata: { source: "stripe", sessionId: s.id },
+          })
+          if (result.ok && !result.alreadyProcessed) {
+            await createNotification({
+              userId: boostUserId,
+              type: "PAYMENT",
+              title: "Boost activado",
+              message: `Tu boost "${result.boostName}" quedó activo por ${result.durationDays} días.`,
             }).catch(() => {})
           }
         }

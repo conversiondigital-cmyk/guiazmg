@@ -136,3 +136,81 @@ export async function fulfillMarketplaceBoost(opts: {
 
   return { ok: true, alreadyProcessed: !applied }
 }
+
+// Activa un BOOST de NEGOCIO (el perfil, o un producto del catálogo si viene
+// listingId) a partir de un pago aprobado. Crea el registro Boost y marca
+// isBoosted/boostedUntil por N días. IDEMPOTENTE con la misma guardia de "claim".
+// Reutilizable por cualquier proveedor (Stripe / Mercado Pago).
+export async function fulfillBusinessBoost(opts: {
+  boostDefinitionId: string
+  businessId: string
+  userId: string
+  listingId?: string | null
+  provider: Provider
+  providerPaymentId: string
+  amount: number
+  metadata?: unknown
+}): Promise<{ ok: boolean; reason?: string; alreadyProcessed?: boolean; boostName?: string; durationDays?: number }> {
+  const boostDef = await prisma.boostDefinition.findUnique({ where: { id: opts.boostDefinitionId } })
+  if (!boostDef) return { ok: false, reason: "boost-def-not-found" }
+
+  const now = new Date()
+  const db = prisma as any
+
+  const applied: boolean = await db.$transaction(async (tx: any) => {
+    const payment = await tx.payment.upsert({
+      where: { providerPaymentId: opts.providerPaymentId },
+      create: {
+        userId: opts.userId,
+        businessId: opts.businessId,
+        amount: opts.amount,
+        currency: "MXN",
+        provider: opts.provider,
+        providerPaymentId: opts.providerPaymentId,
+        type: "BOOST",
+        status: "PENDING",
+        metadata: opts.metadata ?? undefined,
+      },
+      update: {},
+    })
+
+    const claim = await tx.payment.updateMany({
+      where: { providerPaymentId: opts.providerPaymentId, processedAt: null },
+      data: { processedAt: now, status: "APPROVED", amount: opts.amount },
+    })
+    if (claim.count === 0) return false
+
+    const endsAt = new Date(now.getTime() + boostDef.durationDays * 24 * 60 * 60 * 1000)
+    await tx.boost.create({
+      data: {
+        businessId: opts.businessId,
+        listingId: opts.listingId ?? null,
+        paymentId: payment.id,
+        pricePaid: boostDef.price,
+        priorityScore: boostDef.priorityBonus,
+        startsAt: now,
+        endsAt,
+      },
+    })
+
+    // Marca el impulso para que el ranking lo priorice; el cron lo apaga al vencer.
+    if (opts.listingId) {
+      await tx.listing.update({ where: { id: opts.listingId }, data: { isBoosted: true, boostedUntil: endsAt } })
+    } else {
+      await tx.profile.update({ where: { id: opts.businessId }, data: { isBoosted: true, boostedUntil: endsAt } })
+    }
+    return true
+  })
+
+  return { ok: true, alreadyProcessed: !applied, boostName: boostDef.name, durationDays: boostDef.durationDays }
+}
+
+// ¿El negocio ya tiene un boost VIGENTE? Regla: solo 1 boost activo a la vez; hay
+// que esperar a que termine para comprar otro.
+export async function hasActiveBusinessBoost(businessId: string): Promise<boolean> {
+  const active = await prisma.boost.findFirst({
+    where: { businessId, status: "ACTIVE", endsAt: { gt: new Date() } },
+    select: { id: true },
+  })
+  return !!active
+}

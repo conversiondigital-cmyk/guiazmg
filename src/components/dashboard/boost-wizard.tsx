@@ -78,12 +78,13 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
       }
 
       const data = await res.json()
-      if (!data.initPoint) {
+      const redirectUrl = data.url || data.initPoint
+      if (!redirectUrl) {
         toast.error("No se pudo iniciar el pago del boost")
         return
       }
 
-      window.location.href = data.initPoint
+      window.location.href = redirectUrl
     } catch {
       toast.error("Error al activar el boost")
     } finally {
