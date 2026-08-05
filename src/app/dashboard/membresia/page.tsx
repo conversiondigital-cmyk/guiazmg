@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Crown, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Link as LinkIcon, Globe, Store } from "@/lib/icons"
+import { Crown, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Store } from "@/lib/icons"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { CouponRedeemForm } from "@/components/dashboard/coupon-redeem-form"
@@ -168,24 +168,27 @@ export default async function MembresiaPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-5 text-center">
-                <div className="flex justify-center gap-1">
-                  {activeMembership.plan.hasFeaturedBadge && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
-                  {activeMembership.plan.hasSocialLinks && (
-                    <LinkIcon className="h-5 w-5 text-green-600" />
-                  )}
-                  {activeMembership.plan.hasWebsiteLink && (
-                    <Globe className="h-5 w-5 text-purple-500" />
-                  )}
-                  {!activeMembership.plan.hasFeaturedBadge &&
-                    !activeMembership.plan.hasSocialLinks &&
-                    !activeMembership.plan.hasWebsiteLink && (
-                      <span className="text-xs text-gray-400">—</span>
-                    )}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Beneficios adicionales</p>
+              <CardContent className="p-5">
+                <p className="mb-2.5 text-center text-xs text-gray-500">Beneficios adicionales</p>
+                <ul className="space-y-1.5 text-xs">
+                  {[
+                    { on: activeMembership.plan.hasFeaturedBadge, label: "Badge destacado" },
+                    { on: activeMembership.plan.hasSocialLinks, label: "Redes sociales" },
+                    { on: activeMembership.plan.hasWebsiteLink, label: "Sitio web propio" },
+                  ].map((b) => (
+                    <li
+                      key={b.label}
+                      className={`flex items-center gap-1.5 ${b.on ? "text-gray-700" : "text-gray-300"}`}
+                    >
+                      {b.on ? (
+                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                      ) : (
+                        <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-gray-200" />
+                      )}
+                      {b.label}
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>

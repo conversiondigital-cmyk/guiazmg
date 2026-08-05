@@ -1,209 +1,190 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Metadata } from "next"
+import Link from "next/link"
+import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock } from "lucide-react"
+import { Tag, Clock } from "@/lib/icons"
 
 export const metadata: Metadata = {
   title: "Promociones | Guía ZMG",
   description: "Descubre las promociones y ofertas especiales de negocios registrados en Guía ZMG.",
 }
 
-export default function PromocionesPage() {
-  const promotions = [
-    {
-      id: 1,
-      profile: "Restaurante El Paraíso",
-      title: "20% de descuento en cenas",
-      description: "Aprovecha 20% de descuento en todas las cenas de lunes a jueves.",
-      discount: "20%",
-      validUntil: "2026-06-30",
-      category: "Restaurantes",
-      featured: true,
-    },
-    {
-      id: 2,
-      profile: "Salón de Belleza Prestige",
-      title: "Paquete facial + masaje",
-      description: "Paquete completo de tratamiento facial con masaje relajante por solo $499.",
-      discount: "35%",
-      validUntil: "2026-07-15",
-      category: "Belleza",
-      featured: true,
-    },
-    {
-      id: 3,
-      profile: "Clínica Dental Sonrisa",
-      title: "Limpieza dental preventiva",
-      description: "Sesión de limpieza con revisión completa. Primera sesión con 40% de descuento.",
-      discount: "40%",
-      validUntil: "2026-07-31",
-      category: "Salud",
-      featured: true,
-    },
-    {
-      id: 4,
-      profile: "Gimnasio FitZone",
-      title: "Membresía anual con 2 meses gratis",
-      description: "Inscríbete ahora y obtén 2 meses adicionales gratuitos en tu membresía anual.",
-      discount: "Gratis",
-      validUntil: "2026-06-20",
-      category: "Deportes",
-      featured: false,
-    },
-    {
-      id: 5,
-      profile: "Tienda de Electrónica TechHub",
-      title: "Oferta especial en accesorios",
-      description: "Compra 2 accesorios y obtén el tercero con 50% de descuento.",
-      discount: "50%",
-      validUntil: "2026-07-10",
-      category: "Electrónica",
-      featured: false,
-    },
-    {
-      id: 6,
-      profile: "Academia de Inglés Smart English",
-      title: "Clase de prueba gratuita",
-      description: "Toma una clase de prueba sin costo y obtén 15% en tu inscripción si te registras esta semana.",
-      discount: "15%",
-      validUntil: "2026-06-15",
-      category: "Educación",
-      featured: false,
-    },
-  ]
+// Se revalida cada 5 min: las promociones cambian, pero la página es pública.
+export const revalidate = 300
 
-  const featuredPromotions = promotions.filter((p) => p.featured)
-  const regularPromotions = promotions.filter((p) => !p.featured)
+const fmt = (d: Date) => new Date(d).toLocaleDateString("es-MX", { day: "numeric", month: "long" })
 
-  const isExpired = (date: string) => new Date(date) < new Date()
+type PromoCard = {
+  id: string
+  title: string
+  description: string | null
+  code: string | null
+  endDate: Date | null
+  profile: { name: string; slug: string; isBoosted: boolean; category: { name: string } | null }
+}
+
+function PromoCard({ promo, compact = false }: { promo: PromoCard; compact?: boolean }) {
+  return (
+    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            {promo.profile.category?.name && (
+              <Badge className="mb-2 bg-green-700 text-white">{promo.profile.category.name}</Badge>
+            )}
+            <CardTitle className={compact ? "text-base" : "text-lg"}>{promo.title}</CardTitle>
+            <CardDescription className="mt-1 text-sm font-semibold text-gray-700">
+              {promo.profile.name}
+            </CardDescription>
+          </div>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+            <Tag className="h-5 w-5 text-amber-600" />
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col pt-4">
+        {promo.description && <p className="text-sm text-gray-600">{promo.description}</p>}
+        {promo.code && (
+          <div className="mt-3">
+            <span className="text-xs text-gray-500">Código: </span>
+            <code className="rounded bg-amber-100 px-2 py-0.5 font-mono text-sm text-amber-800">{promo.code}</code>
+          </div>
+        )}
+        <div className="mt-3 flex items-center gap-1 text-xs text-gray-500">
+          {promo.endDate ? (
+            <>
+              <Clock className="h-4 w-4" /> Válido hasta {fmt(promo.endDate)}
+            </>
+          ) : (
+            <>
+              <Clock className="h-4 w-4" /> Sin fecha límite
+            </>
+          )}
+        </div>
+        <Link href={`/perfil/${promo.profile.slug}`} className="mt-4 block">
+          <Button className="w-full">Ver negocio</Button>
+        </Link>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default async function PromocionesPage() {
+  const now = new Date()
+  // Promociones REALES: cupones activos, no vencidos, de negocios visibles.
+  const promotions = (await prisma.coupon
+    .findMany({
+      where: {
+        isActive: true,
+        OR: [{ endDate: null }, { endDate: { gte: now } }],
+        profile: { status: "ACTIVE", deletedAt: null },
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        code: true,
+        endDate: true,
+        profile: {
+          select: {
+            name: true,
+            slug: true,
+            isBoosted: true,
+            category: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: [{ createdAt: "desc" }],
+      take: 60,
+    })
+    .catch(() => [])) as PromoCard[]
+
+  // Destacadas = promociones de negocios con boost vigente.
+  const featured = promotions.filter((p) => p.profile.isBoosted)
+  const regular = promotions.filter((p) => !p.profile.isBoosted)
 
   return (
     <>
       <Header />
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="bg-green-900 py-16 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
+        <section className="relative overflow-hidden bg-green-900 py-16">
+          <div
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",
+              backgroundSize: "60px 60px",
+            }}
+          />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Exclusivo para ti</p>
-              <h1 className="text-4xl font-black text-white sm:text-5xl">
-                Promociones y Ofertas
-              </h1>
+              <h1 className="text-4xl font-black text-white sm:text-5xl">Promociones y Ofertas</h1>
               <p className="mt-4 text-xl text-green-200">
-                Descubre las mejores promociones de negocios registrados en Guía ZMG
+                Las promociones reales de los negocios registrados en Guía ZMG
               </p>
             </div>
           </div>
         </section>
 
-        {/* Featured Promotions */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">Ofertas Destacadas</h2>
-            <p className="mt-2 text-gray-600">Las promociones más atractivas del momento</p>
-          </div>
+        {promotions.length === 0 ? (
+          <section className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
+            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+              <Tag className="h-6 w-6 text-amber-500" />
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900">Aún no hay promociones activas</h2>
+            <p className="mx-auto mt-3 max-w-md text-gray-600">
+              Cuando los negocios publiquen sus ofertas, aparecerán aquí. Vuelve pronto.
+            </p>
+          </section>
+        ) : (
+          <>
+            {featured.length > 0 && (
+              <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold tracking-tight">Ofertas Destacadas</h2>
+                  <p className="mt-2 text-gray-600">Las promociones más visibles del momento</p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {featured.map((promo) => (
+                    <PromoCard key={promo.id} promo={promo} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredPromotions.map((promo) => (
-              <Card
-                key={promo.id}
-                className={`overflow-hidden transition-all hover:shadow-lg ${
-                  isExpired(promo.validUntil) ? "opacity-60" : ""
-                }`}
-              >
-                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <Badge className="mb-2 bg-blue-600">{promo.category}</Badge>
-                      <CardTitle className="text-lg">{promo.title}</CardTitle>
-                      <CardDescription className="mt-1 text-sm font-semibold text-gray-700">
-                        {promo.profile}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-600">{promo.discount}</div>
-                      <div className="text-xs text-gray-600">descuento</div>
-                    </div>
+            {regular.length > 0 && (
+              <section className="bg-gray-50 py-16">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                  <div className="mb-8">
+                    <h2 className="text-3xl font-bold tracking-tight">
+                      {featured.length > 0 ? "Todas las Promociones" : "Promociones activas"}
+                    </h2>
+                    <p className="mt-2 text-gray-600">Explora todas las ofertas disponibles</p>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <p className="text-sm text-gray-600">{promo.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Clock className="h-4 w-4" />
-                      Válido hasta {new Date(promo.validUntil).toLocaleDateString("es-MX")}
-                    </div>
-                    {isExpired(promo.validUntil) && (
-                      <Badge variant="destructive" className="text-xs">
-                        Expirada
-                      </Badge>
-                    )}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {regular.map((promo) => (
+                      <PromoCard key={promo.id} promo={promo} compact />
+                    ))}
                   </div>
-                  <Button className="mt-4 w-full" variant={isExpired(promo.validUntil) ? "outline" : "default"}>
-                    {isExpired(promo.validUntil) ? "Expirada" : "Ver detalle"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+                </div>
+              </section>
+            )}
+          </>
+        )}
 
-        {/* Regular Promotions */}
-        <section className="bg-gray-50 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold tracking-tight">Todas las Promociones</h2>
-              <p className="mt-2 text-gray-600">Explora todas las ofertas disponibles</p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {regularPromotions.map((promo) => (
-                <Card key={promo.id} className={isExpired(promo.validUntil) ? "opacity-50" : ""}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <Badge variant="outline" className="mb-2">
-                          {promo.category}
-                        </Badge>
-                        <CardTitle className="text-base">{promo.title}</CardTitle>
-                        <CardDescription className="text-xs">{promo.profile}</CardDescription>
-                      </div>
-                      <div className="text-2xl font-bold text-blue-600">{promo.discount}</div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-gray-600">{promo.description}</p>
-                    <div className="mt-3 flex items-center justify-between text-xs">
-                      <span className="text-gray-500">
-                        {new Date(promo.validUntil).toLocaleDateString("es-MX")}
-                      </span>
-                      {isExpired(promo.validUntil) && (
-                        <Badge variant="destructive" className="text-xs">
-                          Expirada
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
         <section className="bg-white py-16">
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold">¿Eres dueño de un negocio?</h2>
             <p className="mt-4 text-lg text-gray-600">
-              Promociona tus ofertas y atrae más clientes con Guía ZMG
+              Publica tus promociones desde tu panel y atrae más clientes con Guía ZMG.
             </p>
-            <Button size="lg" className="mt-6">
-              Registra tu negocio
-            </Button>
+            <Link href="/dashboard/promociones" className="mt-6 inline-block">
+              <Button size="lg">Publicar una promoción</Button>
+            </Link>
           </div>
         </section>
       </main>
