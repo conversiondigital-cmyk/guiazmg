@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 
 // Umbral de indexación: una landing con menos de estos perfiles activos se sirve
@@ -41,7 +42,14 @@ export type NeighborhoodRecord = {
 // La categoría tiene prioridad (slug global único) para no romper las landings
 // municipio+categoría que ya existían. Tolerante a que la tabla `zones` aún no
 // exista en la BD (pre-migración): en ese caso cae a "none" sin romper.
-export async function resolveLocal(munSlug: string, seg: string): Promise<LocalResolution> {
+//
+// Envuelto en React cache(): generateMetadata y el componente de página se
+// ejecutan en la MISMA petición y ambos llaman resolveLocal; sin esto las 2-3
+// consultas de resolución corren DOS veces por request (duplicando Active CPU).
+export const resolveLocal = cache(async function resolveLocal(
+  munSlug: string,
+  seg: string,
+): Promise<LocalResolution> {
   const municipality = await prisma.municipality.findUnique({
     where: { slug: munSlug },
     select: { id: true, name: true, slug: true },
@@ -86,7 +94,7 @@ export async function resolveLocal(munSlug: string, seg: string): Promise<LocalR
   }
 
   return { kind: "none", municipality }
-}
+})
 
 // Conteo ligero de perfiles activos para decidir indexable/noindex.
 export async function countLocalProfiles(opts: {
