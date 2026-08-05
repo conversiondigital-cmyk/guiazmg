@@ -1,7 +1,7 @@
 // Landing hiperlocal de 2º nivel: /{municipio}/{seg}
 // `seg` se resuelve como CATEGORÍA (municipio+categoría, comportamiento previo) |
 // ZONA (nuevo) | COLONIA (nuevo). ISR 5 min.
-export const revalidate = 300
+export const revalidate = 3600
 
 import { notFound } from "next/navigation"
 import Link from "next/link"

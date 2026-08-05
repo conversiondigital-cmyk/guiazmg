@@ -55,6 +55,12 @@ async function main() {
   )
   console.log("tabla giro_suggestions OK")
 
+  // 4c) Recordatorio de vencimiento de membresía (evita reenvíos diarios).
+  await db.$executeRawUnsafe(
+    `ALTER TABLE "business_memberships" ADD COLUMN IF NOT EXISTS "renewalNotifiedAt" TIMESTAMP(3);`,
+  )
+  console.log("business_memberships.renewalNotifiedAt OK")
+
   // 5) Backfill de valores de plan.
   const empren = await prisma.membershipPlan.updateMany({
     where: { slug: "emprendedor" },

@@ -1,6 +1,6 @@
 // Landing hiperlocal de 3º nivel: /{municipio}/{seg}/{categoria}
 // `seg` = ZONA o COLONIA; `categoria` = categoría. ISR 5 min.
-export const revalidate = 300
+export const revalidate = 3600
 
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"

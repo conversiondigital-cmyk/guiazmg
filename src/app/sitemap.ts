@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// El sitemap cambia lento; se cachea 1 día en vez de regenerarse en cada request
+// (era force-dynamic y consumía CPU por cada hit de bots).
+export const revalidate = 86400
 
 import { getPublicAppUrl } from "@/lib/env"
 import { getSeoSettings } from "@/lib/seo/settings"

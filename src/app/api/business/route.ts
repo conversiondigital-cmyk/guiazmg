@@ -6,6 +6,7 @@ import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
 import { sendEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
+import { redeemMembershipCoupon } from "@/lib/coupons/redeem-membership"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -89,9 +90,29 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validation.data
-    // Slug único legible (nombre, nombre-2, nombre-3…). Distintos dueños SÍ
-    // pueden tener negocios con el mismo nombre; el slug los desambigua.
-    const slug = await generateUniqueSlug(slugify(data.name), async (s) =>
+
+    // Regla: NO se permiten dos negocios con el mismo nombre (comparación sin
+    // distinguir mayúsculas/acentos vía slug del nombre). Las sucursales se
+    // gestionan por separado: se pide contactar al equipo.
+    const nameSlug = slugify(data.name)
+    const dupName = await prisma.profile.findFirst({
+      where: { slug: { equals: nameSlug }, deletedAt: null },
+      select: { id: true },
+    })
+    if (dupName) {
+      return NextResponse.json(
+        {
+          error:
+            "Ya existe un negocio con ese nombre. Si es una sucursal, contáctanos para agregarla.",
+          code: "DUPLICATE_NAME",
+        },
+        { status: 409 }
+      )
+    }
+
+    // Slug único legible (nombre, nombre-2, nombre-3…). Con la regla de nombre
+    // único, el sufijo casi no se usa, pero se mantiene como salvaguarda de carreras.
+    const slug = await generateUniqueSlug(nameSlug, async (s) =>
       Boolean(await prisma.profile.findUnique({ where: { slug: s }, select: { id: true } }))
     )
 
@@ -188,7 +209,30 @@ export async function POST(request: NextRequest) {
       console.error("[BUSINESS_REGISTER_NOTIFY]", e instanceof Error ? e.message : e)
     }
 
-    return NextResponse.json({ slug: business.slug }, { status: 201 })
+    // Código de invitación (cupón de días gratis): si vino uno, se canjea aquí
+    // para activar la membresía de prueba SIN pago. Si el código es inválido no se
+    // rompe el registro; se informa para que lo canjee después en el panel.
+    let coupon: { applied: boolean; days?: number; planName?: string; error?: string } = { applied: false }
+    if (data.invitationCode && data.invitationCode.trim()) {
+      const res = await redeemMembershipCoupon({
+        code: data.invitationCode,
+        businessId: business.id,
+        userId: session.user.id,
+      })
+      if (res.ok) {
+        coupon = { applied: true, days: res.days, planName: res.planName }
+        await createNotification({
+          userId: session.user.id,
+          type: "PAYMENT",
+          title: "Prueba activada",
+          message: `Activaste ${res.planName} gratis por ${res.days} días en "${data.name}".`,
+        }).catch(() => {})
+      } else {
+        coupon = { applied: false, error: res.error }
+      }
+    }
+
+    return NextResponse.json({ slug: business.slug, coupon }, { status: 201 })
   } catch (error) {
     console.error("[BUSINESS_CREATE]", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al crear el negocio" }, { status: 500 })

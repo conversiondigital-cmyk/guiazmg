@@ -665,6 +665,7 @@ model ProfileMembership {
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime
   cancelAtPeriodEnd     Boolean  @default(false)
+  renewalNotifiedAt     DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

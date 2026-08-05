@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { touchRedis } from "@/lib/redis-keepalive"
+import { createNotification } from "@/lib/notifications/create"
+import { sendEmail } from "@/lib/email"
+import { getPublicAppUrl } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
 const DAY = 24 * 60 * 60 * 1000
-const GRACE_DAYS = 3
+const GRACE_DAYS = 2 // gracia tras vencer, antes de ocultar el negocio
+const REMIND_DAYS = 3 // avisar cuando falten <= 3 días para vencer
 
 // Ciclo de vida de membresías. Diario:
 //  1) Marca EXPIRED las membresías (de pago o cupón) cuyo periodo ya venció.
@@ -32,6 +36,56 @@ export async function GET(req: NextRequest) {
 
   const now = new Date()
   const graceCutoff = new Date(now.getTime() - GRACE_DAYS * DAY)
+  const remindCutoff = new Date(now.getTime() + REMIND_DAYS * DAY)
+
+  // 0) Aviso PREVIO al vencimiento: membresías vigentes que vencen en <= REMIND_DAYS
+  //    y aún no se les avisó (renewalNotifiedAt null). Correo + notificación in-app.
+  //    renewalNotifiedAt evita reenviar el mismo aviso cada día.
+  let reminded = 0
+  const soonToExpire = await prisma.profileMembership.findMany({
+    where: {
+      status: { in: ["ACTIVE", "TRIAL"] },
+      currentPeriodEnd: { gt: now, lte: remindCutoff },
+      renewalNotifiedAt: null,
+    },
+    select: {
+      id: true,
+      currentPeriodEnd: true,
+      plan: { select: { name: true } },
+      profile: { select: { name: true, owner: { select: { id: true, email: true } } } },
+    },
+  })
+  for (const m of soonToExpire) {
+    const ownerId = m.profile?.owner?.id
+    const ownerEmail = m.profile?.owner?.email
+    const businessName = m.profile?.name ?? "tu negocio"
+    const expiry = m.currentPeriodEnd.toLocaleDateString("es-MX")
+    if (ownerId) {
+      await createNotification({
+        userId: ownerId,
+        type: "EXPIRATION",
+        title: "Tu membresía está por vencer",
+        message: `La membresía de "${businessName}" vence el ${expiry}. Renueva para no salir del directorio.`,
+      }).catch(() => {})
+    }
+    if (ownerEmail) {
+      await sendEmail(
+        ownerEmail,
+        "renewal_reminder",
+        {
+          businessName,
+          planName: m.plan?.name ?? "Guía ZMG",
+          expiryDate: expiry,
+          renewalUrl: `${getPublicAppUrl()}/dashboard/membresia`,
+        },
+        ownerId,
+      ).catch(() => {})
+    }
+    await prisma.profileMembership
+      .update({ where: { id: m.id }, data: { renewalNotifiedAt: now } })
+      .catch(() => {})
+    reminded++
+  }
 
   // 1) Membresías vencidas → EXPIRED.
   const expired = await prisma.profileMembership.updateMany({
@@ -56,5 +110,9 @@ export async function GET(req: NextRequest) {
     hidden = res.count
   }
 
-  return NextResponse.json({ expiredMemberships: expired.count, hiddenBusinesses: hidden })
+  return NextResponse.json({
+    reminded,
+    expiredMemberships: expired.count,
+    hiddenBusinesses: hidden,
+  })
 }

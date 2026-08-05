@@ -70,6 +70,7 @@ export function BusinessRegistrationWizard({
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
   const [serviceModes, setServiceModes] = useState<string[]>([])
   const [coverageArea, setCoverageArea] = useState("")
+  const [invitationCode, setInvitationCode] = useState("")
   const [hours, setHours] = useState<Record<number, DayHour>>(
     Object.fromEntries(DAYS.map((d) => [d.key, { isClosed: false, openTime: "09:00", closeTime: "18:00" }]))
   )
@@ -152,6 +153,7 @@ export function BusinessRegistrationWizard({
         categoryId: selectedCategory || undefined,
         subcategoryId: selectedSubcategory || undefined,
         postalCode: form.postalCode || undefined,
+        invitationCode: invitationCode.trim() || undefined,
         hours: hoursArray,
       }
 
@@ -161,13 +163,20 @@ export function BusinessRegistrationWizard({
         body: JSON.stringify(body),
       })
 
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json()
         toast.error(data.error || "Error al crear negocio")
         return
       }
 
-      toast.success("¡Negocio registrado! Está en revisión; aparecerá en el directorio cuando un administrador lo apruebe.")
+      if (data.coupon?.applied) {
+        toast.success(`¡Listo! Activaste ${data.coupon.planName} gratis por ${data.coupon.days} días.`)
+      } else {
+        if (invitationCode.trim() && data.coupon?.error) {
+          toast.error(`Negocio registrado, pero el código no se aplicó: ${data.coupon.error}. Puedes canjearlo en Panel → Membresía.`)
+        }
+        toast.success("¡Negocio registrado! Está en revisión; aparecerá en el directorio cuando un administrador lo apruebe.")
+      }
       router.push("/dashboard/negocio")
       router.refresh()
     } catch {
@@ -514,6 +523,27 @@ export function BusinessRegistrationWizard({
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Código de invitación (promo 60 días) — último paso */}
+      {step === 4 && (
+        <div className="mt-6 rounded-xl border border-[#006c49]/20 bg-[#f5faf8] p-4">
+          <Label htmlFor="invitationCode" className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+            ¿Tienes un código de invitación?
+          </Label>
+          <p className="mt-0.5 mb-2 text-xs text-gray-500">
+            Actívalo aquí y prueba tu plan Emprendedor o Negocio <strong>60 días gratis</strong>, sin
+            pagar. Es opcional; si no tienes, puedes canjearlo después en tu panel.
+          </p>
+          <Input
+            id="invitationCode"
+            value={invitationCode}
+            onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
+            placeholder="CÓDIGO (opcional)"
+            autoCapitalize="characters"
+            className="max-w-xs uppercase"
+          />
         </div>
       )}
 

@@ -40,6 +40,9 @@ export const businessSchema = z.object({
   subcategoryId: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  // Código de invitación (cupón de días gratis) opcional: si es válido, activa la
+  // membresía de prueba al registrar el negocio, sin pasar por pago.
+  invitationCode: z.string().trim().max(40).optional(),
   hours: z
     .array(
       z.object({

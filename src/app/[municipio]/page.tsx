@@ -1,5 +1,5 @@
 // ISR: landing por municipio cacheada, regenerada cada 5 min.
-export const revalidate = 300
+export const revalidate = 3600
 
 import { notFound } from "next/navigation"
 import Link from "next/link"
