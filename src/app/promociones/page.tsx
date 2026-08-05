@@ -131,23 +131,25 @@ export default async function PromocionesPage() {
         </section>
 
         {/* Banner de la promo de registro (60 días gratis) */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <Link
             href="/promociones/registro"
-            className="-mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#006c49]/20 bg-white p-5 shadow-lg transition-shadow hover:shadow-xl"
+            className="group flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-[#006c49] to-[#00583b] p-6 shadow-lg transition-shadow hover:shadow-xl"
           >
             <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#006c49] text-white">
-                <Gift className="h-6 w-6" />
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white">
+                <Gift className="h-7 w-7" />
               </span>
               <div>
-                <p className="font-bold text-gray-900">¿Tienes un negocio? 60 días gratis</p>
-                <p className="text-sm text-gray-500">
-                  Registra tu negocio y activa tu plan Emprendedor o Negocio sin pagar 60 días con tu código.
+                <p className="text-lg font-bold text-white sm:text-xl">
+                  ¿Tienes un negocio? Pruébalo 60 días gratis
+                </p>
+                <p className="mt-0.5 text-sm text-white/80">
+                  Registra tu negocio y activa tu plan Emprendedor o Negocio con tu código de invitación.
                 </p>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#006c49] px-4 py-2 text-sm font-semibold text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-[#006c49] transition-transform group-hover:translate-x-0.5">
               Ver promoción <ArrowRight className="h-4 w-4" />
             </span>
           </Link>
