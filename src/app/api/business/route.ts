@@ -125,6 +125,7 @@ export async function POST(request: NextRequest) {
         hasPhysicalLocation: data.hasPhysicalLocation ?? data.profileType !== "EMPRENDEDOR",
         serviceModes: data.serviceModes ?? [],
         coverageArea: data.coverageArea || null,
+        operationModel: data.operationModel || null,
         name: data.name,
         shortDescription: data.shortDescription,
         description: data.description,

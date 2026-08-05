@@ -24,7 +24,13 @@ interface Category {
   id: string
   name: string
   icon?: string
-  subcategories: { id: string; name: string }[]
+  subcategories: { id: string; name: string; meta?: GiroMeta | null }[]
+}
+
+// Metadata del giro (del catálogo) que llega en cada subcategoría vía /api/categories.
+type GiroMeta = {
+  perfil?: string // "EMPRENDEDOR" | "NEGOCIO"
+  modelo?: string // modelo de operación sugerido
 }
 
 interface DayHour {
@@ -68,6 +74,7 @@ export function BusinessRegistrationWizard({
   const [selectedMunicipio, setSelectedMunicipio] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
+  const [operationModel, setOperationModel] = useState("")
   const [serviceModes, setServiceModes] = useState<string[]>([])
   const [coverageArea, setCoverageArea] = useState("")
   const [invitationCode, setInvitationCode] = useState("")
@@ -154,6 +161,7 @@ export function BusinessRegistrationWizard({
         subcategoryId: selectedSubcategory || undefined,
         postalCode: form.postalCode || undefined,
         invitationCode: invitationCode.trim() || undefined,
+        operationModel: operationModel.trim() || undefined,
         hours: hoursArray,
       }
 
@@ -268,10 +276,20 @@ export function BusinessRegistrationWizard({
           </div>
           {currentCategory && currentCategory.subcategories.length > 0 && (
             <div>
-              <Label htmlFor="subcategory">Subcategoría</Label>
-              <Select value={selectedSubcategory} onValueChange={(v) => v && setSelectedSubcategory(v)} items={Object.fromEntries((currentCategory?.subcategories ?? []).map((s) => [s.id, s.name]))}>
+              <Label htmlFor="subcategory">Giro (¿a qué te dedicas?)</Label>
+              <Select
+                value={selectedSubcategory}
+                onValueChange={(v) => {
+                  if (!v) return
+                  setSelectedSubcategory(v)
+                  // Al elegir el giro, pre-llena el modelo de operación sugerido del catálogo.
+                  const sub = currentCategory?.subcategories.find((s) => s.id === v)
+                  if (sub?.meta?.modelo) setOperationModel(sub.meta.modelo)
+                }}
+                items={Object.fromEntries((currentCategory?.subcategories ?? []).map((s) => [s.id, s.name]))}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar subcategoría" />
+                  <SelectValue placeholder="Selecciona tu giro" />
                 </SelectTrigger>
                 <SelectContent>
                   {currentCategory.subcategories.map((sub) => (
@@ -279,6 +297,36 @@ export function BusinessRegistrationWizard({
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Sugerencia por modelo de operación (del catálogo) */}
+              {(() => {
+                const sub = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory)
+                const suggested = sub?.meta?.perfil // "EMPRENDEDOR" | "NEGOCIO"
+                if (!suggested) return null
+                const label = suggested === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"
+                const mismatch = suggested !== profileType
+                return (
+                  <div className="mt-2 space-y-2">
+                    {mismatch && (
+                      <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        Este giro suele registrarse como <strong>{label}</strong>. Elegiste{" "}
+                        {isEmprendedor ? "Emprendedor" : "Negocio"}; puedes continuar así o cambiarlo al inicio.
+                      </p>
+                    )}
+                    <div>
+                      <Label htmlFor="operationModel" className="text-xs text-gray-600">
+                        Modelo de operación
+                      </Label>
+                      <Input
+                        id="operationModel"
+                        value={operationModel}
+                        onChange={(e) => setOperationModel(e.target.value)}
+                        placeholder="Ej: Local comercial, A domicilio, Sobre pedido…"
+                      />
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
           <div>

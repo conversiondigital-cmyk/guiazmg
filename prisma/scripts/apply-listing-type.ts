@@ -61,6 +61,15 @@ async function main() {
   )
   console.log("business_memberships.renewalNotifiedAt OK")
 
+  // 4d) Modelo de operación y metadata de giro (catálogo maestro).
+  await db.$executeRawUnsafe(
+    `ALTER TABLE "businesses" ADD COLUMN IF NOT EXISTS "operationModel" TEXT;`,
+  )
+  await db.$executeRawUnsafe(
+    `ALTER TABLE "subcategories" ADD COLUMN IF NOT EXISTS "meta" JSONB;`,
+  )
+  console.log("businesses.operationModel + subcategories.meta OK")
+
   // 5) Backfill de valores de plan.
   const empren = await prisma.membershipPlan.updateMany({
     where: { slug: "emprendedor" },

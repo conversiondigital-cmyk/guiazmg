@@ -450,6 +450,11 @@ model Subcategory {
   name        String
   slug        String
   description String?
+  // Metadata del giro (del catálogo maestro): perfil sugerido (EMPRENDEDOR/NEGOCIO),
+  // modelo de operación, y flags (productos, servicios, marketplace, ubicación,
+  // domicilio, horario, keywords, sinónimos, icono). Alimenta la auto-sugerencia
+  // del tipo de perfil en el registro. JSON para no crear 10+ columnas.
+  meta        Json?
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -515,6 +520,10 @@ model Profile {
   hasPhysicalLocation Boolean?
   serviceModes       String[]           @default([])
   coverageArea       String?
+  // Modelo de operación (catálogo/registro): local comercial, puesto fijo/semifijo,
+  // a domicilio, desde casa, en línea, por cita, sobre pedido… Se auto-sugiere por
+  // el giro y las respuestas del alta; editable por el dueño.
+  operationModel    String?
   status            ProfileStatus      @default(PENDING_REVIEW)
   verificationStatus VerificationStatus @default(UNVERIFIED)
   visibilityScore   Int                 @default(0)

@@ -43,6 +43,8 @@ export const businessSchema = z.object({
   // Código de invitación (cupón de días gratis) opcional: si es válido, activa la
   // membresía de prueba al registrar el negocio, sin pasar por pago.
   invitationCode: z.string().trim().max(40).optional(),
+  // Modelo de operación (del catálogo/giro): local, a domicilio, sobre pedido, etc.
+  operationModel: z.string().trim().max(60).optional(),
   hours: z
     .array(
       z.object({
