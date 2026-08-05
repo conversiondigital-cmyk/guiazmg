@@ -12,8 +12,8 @@ import { MEMBERSHIP_PLANS, BOOSTS } from "@/lib/constants"
 type CellVal = boolean | string
 const comparisonRows: { label: string; emprendimiento: CellVal; negocio: CellVal }[] = [
   { label: "Perfiles comerciales", emprendimiento: "1", negocio: "1" },
-  { label: "Productos en catálogo", emprendimiento: "100", negocio: "100" },
-  { label: "Servicios en catálogo", emprendimiento: "20", negocio: "100" },
+  { label: "Productos en catálogo", emprendimiento: "50", negocio: "100" },
+  { label: "Servicios en catálogo", emprendimiento: "50", negocio: "100" },
   { label: "Promociones activas", emprendimiento: "3", negocio: "10" },
   { label: "WhatsApp y teléfono", emprendimiento: true, negocio: true },
   { label: "Ubicación", emprendimiento: "Colonia/municipio", negocio: "Dirección exacta" },
