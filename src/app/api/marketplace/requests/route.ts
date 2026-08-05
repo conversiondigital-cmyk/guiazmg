@@ -4,8 +4,9 @@ import { auth } from "@/lib/auth"
 import { z } from "zod"
 
 const querySchema = z.object({
-  categoryId: z.string().cuid().optional(),
-  municipalityId: z.string().cuid().optional(),
+  // categoría/municipio son tablas de referencia con IDs UUID (no cuid).
+  categoryId: z.string().min(1).optional(),
+  municipalityId: z.string().min(1).optional(),
   userId: z.string().cuid().optional(),
   status: z.literal("ACTIVE").optional(),
   page: z.preprocess((v) => (v === "" || v === undefined ? 1 : Number(v)), z.number().int().min(1).max(100).default(1)),

@@ -13,8 +13,10 @@ const updateSchema = z.object({
   description: z.preprocess(blankToNull, z.string().trim().max(5000).nullable().optional()),
   price: z.coerce.number().min(20, "El precio mínimo es $20").max(9999999).optional(),
   type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]).optional(),
-  categoryId: z.string().cuid().optional(),
-  municipalityId: z.preprocess(blankToNull, z.string().cuid().nullable().optional()),
+  // Categoría/municipio: tablas de referencia con IDs UUID (no cuid). Se valida
+  // "no vacío" y la existencia se resuelve con Prisma más abajo.
+  categoryId: z.string().min(1).optional(),
+  municipalityId: z.preprocess(blankToNull, z.string().min(1).nullable().optional()),
   neighborhood: z.preprocess(blankToNull, z.string().trim().max(120).nullable().optional()),
   phone: z.preprocess(blankToNull, z.string().trim().max(30).nullable().optional()),
   whatsapp: z.preprocess(blankToNull, z.string().trim().max(30).nullable().optional()),

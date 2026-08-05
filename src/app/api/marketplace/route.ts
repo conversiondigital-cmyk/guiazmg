@@ -16,8 +16,11 @@ const listingSchema = z.object({
   // Obligatorio y mínimo $20: bloquea "Gratis" (0) y montos de gancho como 1 peso.
   price: z.coerce.number().min(20, "El precio mínimo es $20").max(9999999),
   type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]),
-  categoryId: z.string().cuid(),
-  municipalityId: z.string().cuid().optional().nullable(),
+  // Las tablas de referencia (categorías, municipios) se sembraron con UUID, no
+  // cuid. Se valida solo "no vacío": la existencia real se comprueba abajo con
+  // Prisma (where parametrizado), así que aceptar UUID o cuid no baja seguridad.
+  categoryId: z.string().min(1),
+  municipalityId: z.string().min(1).optional().nullable(),
   neighborhood: z.preprocess(blankToNull, z.string().trim().max(120).optional().nullable()),
   phone: z.preprocess(blankToNull, z.string().trim().max(30).optional().nullable()),
   whatsapp: z.preprocess(blankToNull, z.string().trim().max(30).optional().nullable()),
