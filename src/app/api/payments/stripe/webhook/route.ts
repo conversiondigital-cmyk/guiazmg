@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe"
 import { fulfillMembership, fulfillMarketplaceBoost } from "@/lib/payments/fulfill"
 import { createNotification } from "@/lib/notifications/create"
+import { incrementCouponUsage } from "@/lib/coupons"
 
 export const dynamic = "force-dynamic"
 
@@ -94,6 +95,9 @@ export async function POST(request: Request) {
         // Solo notifica en la PRIMERA activación (evita re-notificar en webhooks
         // duplicados que Stripe entrega "al menos una vez").
         if (result.ok && !result.alreadyProcessed) {
+          // Registra el uso del cupón solo aquí (primera activación) para que el
+          // conteo no se infle con reintentos del webhook.
+          await incrementCouponUsage(s.metadata?.couponCode)
           await createNotification({
             userId,
             type: "PAYMENT",
