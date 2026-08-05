@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Check, ArrowRight } from "@/lib/icons"
+import { Loader2, Check, ArrowRight, CreditCard } from "@/lib/icons"
 import { getPlanBySlug } from "@/lib/constants"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
@@ -17,7 +17,7 @@ function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { status } = useSession()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<"STRIPE" | "MERCADO_PAGO" | null>(null)
 
   const plan = searchParams.get("plan")
   const businessId = searchParams.get("businessId")
@@ -30,31 +30,39 @@ function CheckoutContent() {
     }
   }, [status, router, plan, businessId])
 
-  const handlePayment = async () => {
-    setLoading(true)
+  // Un solo handler para ambos proveedores. Stripe y Mercado Pago comparten el
+  // mismo externalReference (membership:plan:userId:businessId) y el mismo
+  // fulfillment vía webhook; solo cambia a qué endpoint se pide la sesión y qué
+  // campo trae la URL de redirección (Stripe: `url`; MP: `initPoint`).
+  const pay = async (provider: "STRIPE" | "MERCADO_PAGO") => {
+    if (!membershipPlan) return
+    setLoading(provider)
     try {
-      const body: Record<string, unknown> = {}
-
-      if (membershipPlan) {
-        body.type = "membership"
-        body.plan = plan
-        if (businessId) body.businessId = businessId
-      } else {
+      if (provider === "STRIPE") {
+        const res = await fetch("/api/payments/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan, businessId }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data.url) {
+          toast.error(data.error || "Error al procesar el pago")
+          return
+        }
+        window.location.href = data.url
         return
       }
 
       const res = await fetch("/api/payments/create-preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ type: "membership", plan, ...(businessId ? { businessId } : {}) }),
       })
-
       if (!res.ok) {
-        const err = await res.json()
+        const err = await res.json().catch(() => ({}))
         toast.error(err.error || "Error al procesar el pago")
         return
       }
-
       const data = await res.json()
       if (data.initPoint) {
         window.location.href = data.initPoint
@@ -62,7 +70,7 @@ function CheckoutContent() {
     } catch {
       toast.error("Error al procesar el pago")
     } finally {
-      setLoading(false)
+      setLoading(null)
     }
   }
 
@@ -138,25 +146,42 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                <Button
-                  className="w-full bg-green-700 hover:bg-green-800"
-                  size="lg"
-                  onClick={handlePayment}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      Pagar con Mercado Pago
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button
+                    className="w-full bg-slate-900 hover:bg-slate-800"
+                    size="lg"
+                    onClick={() => pay("STRIPE")}
+                    disabled={loading !== null}
+                  >
+                    {loading === "STRIPE" ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Pagar con tarjeta
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    className="w-full bg-sky-600 hover:bg-sky-700"
+                    size="lg"
+                    onClick={() => pay("MERCADO_PAGO")}
+                    disabled={loading !== null}
+                  >
+                    {loading === "MERCADO_PAGO" ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        Mercado Pago
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 <p className="text-xs text-center text-gray-400">
-                  Al hacer clic en &quot;Pagar&quot; serás redirigido a Mercado Pago para completar
-                  el pago de forma segura.
+                  Serás redirigido a la pasarela segura del método que elijas
+                  (tarjeta con Stripe, o Mercado Pago) para completar el pago.
                 </p>
               </CardContent>
             </Card>
