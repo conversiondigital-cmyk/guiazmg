@@ -7,7 +7,7 @@ import { MEMBERSHIP_PLANS } from "@/lib/constants"
 import { Gift, Check, ArrowRight, MapPin, Star, ShoppingBag, Zap, Crown } from "@/lib/icons"
 
 export const metadata: Metadata = {
-  title: "60 días gratis al registrar tu negocio | Guía ZMG",
+  title: "60 días gratis al registrar tu negocio",
   description:
     "Registra tu negocio en Guía ZMG y activa tu plan Emprendedor o Negocio gratis por 60 días con tu código de invitación. Aparece donde la gente de tu zona busca.",
 }
