@@ -58,12 +58,17 @@ const steps = [
 
 export function BusinessRegistrationWizard({
   mapsApiKey = "",
-  profileType = "NEGOCIO",
+  profileType: initialProfileType = "NEGOCIO",
 }: {
   mapsApiKey?: string
   profileType?: "EMPRENDEDOR" | "NEGOCIO"
 }) {
   const router = useRouter()
+  // El tipo de perfil ahora es ESTADO: lo auto-clasifica la pantalla de 3 preguntas
+  // (modelo de operación) antes del wizard; el prop solo es el valor inicial.
+  const [profileType, setProfileType] = useState<"EMPRENDEDOR" | "NEGOCIO">(initialProfileType)
+  const [classified, setClassified] = useState(false)
+  const [hasLocation, setHasLocation] = useState<boolean | null>(null)
   // El Emprendedor puede no tener local físico: la dirección exacta y el mapa
   // son opcionales; basta el municipio/zona base.
   const isEmprendedor = profileType === "EMPRENDEDOR"
@@ -78,6 +83,10 @@ export function BusinessRegistrationWizard({
   const [serviceModes, setServiceModes] = useState<string[]>([])
   const [coverageArea, setCoverageArea] = useState("")
   const [invitationCode, setInvitationCode] = useState("")
+  // Respuestas de la pantalla de clasificación (modelo de operación).
+  const [q1, setQ1] = useState<string>("") // cómo ofrece: local|puesto|casa|domicilio|online
+  const [q2, setQ2] = useState<boolean | null>(null) // ¿atiende en un lugar fijo?
+  const [q3, setQ3] = useState<boolean | null>(null) // ¿tiene horarios?
   const [hours, setHours] = useState<Record<number, DayHour>>(
     Object.fromEntries(DAYS.map((d) => [d.key, { isClosed: false, openTime: "09:00", closeTime: "18:00" }]))
   )
@@ -137,7 +146,7 @@ export function BusinessRegistrationWizard({
 
       const body = {
         profileType,
-        hasPhysicalLocation: !isEmprendedor,
+        hasPhysicalLocation: hasLocation ?? !isEmprendedor,
         serviceModes,
         coverageArea: coverageArea || undefined,
         name: form.name,
@@ -196,6 +205,124 @@ export function BusinessRegistrationWizard({
 
   const currentCategory = categories.find((c) => c.id === selectedCategory)
   const municipio = municipalities.find((m) => m.id === selectedMunicipio)
+
+  // ── Clasificación por modelo de operación (Persona/Empresa) ──────────────────
+  const Q1_OPTIONS = [
+    { value: "local", label: "Tengo un establecimiento fijo", model: "Local comercial", loc: true },
+    { value: "puesto", label: "Tengo un puesto fijo o semifijo", model: "Puesto fijo / semifijo", loc: true },
+    { value: "casa", label: "Trabajo desde casa / por pedido", model: "Desde casa / sobre pedido", loc: false },
+    { value: "domicilio", label: "Trabajo a domicilio", model: "A domicilio", loc: false },
+    { value: "online", label: "Solo vendo por internet o redes", model: "En línea / redes", loc: false },
+  ] as const
+
+  const q1def = Q1_OPTIONS.find((o) => o.value === q1)
+  const answered = q1 !== "" && q2 !== null && q3 !== null
+  const suggestedType: "EMPRENDEDOR" | "NEGOCIO" =
+    q1 === "local" || q1 === "puesto" || (q2 === true && q3 === true) ? "NEGOCIO" : "EMPRENDEDOR"
+  const suggestedLocation = !!q1def?.loc || q2 === true
+  const suggestedModel = q1def?.model ?? ""
+
+  const confirmClassification = (type: "EMPRENDEDOR" | "NEGOCIO") => {
+    setProfileType(type)
+    setHasLocation(suggestedLocation)
+    if (suggestedModel) setOperationModel(suggestedModel)
+    setClassified(true)
+  }
+
+  if (!classified) {
+    const OptBtn = ({
+      active, onClick, children,
+    }: { active: boolean; onClick: () => void; children: string }) => (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+          active ? "border-[#006c49] bg-[#f0faf6] font-medium text-gray-900" : "border-gray-200 hover:border-[#006c49]/40"
+        }`}
+      >
+        {children}
+      </button>
+    )
+    return (
+      <div className="rounded-xl border bg-white p-6 sm:p-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Cuéntanos cómo operas</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Con esto te registramos como <strong>Emprendedor</strong> o <strong>Negocio</strong>, lo que mejor te queda. Podrás cambiarlo.
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <Label className="mb-2 block text-sm font-semibold text-gray-800">
+              1. ¿Cómo ofreces tus productos o servicios?
+            </Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {Q1_OPTIONS.map((o) => (
+                <OptBtn key={o.value} active={q1 === o.value} onClick={() => setQ1(o.value)}>
+                  {o.label}
+                </OptBtn>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 block text-sm font-semibold text-gray-800">
+              2. ¿Atiendes al público en un lugar específico?
+            </Label>
+            <div className="flex gap-2">
+              <OptBtn active={q2 === true} onClick={() => setQ2(true)}>Sí</OptBtn>
+              <OptBtn active={q2 === false} onClick={() => setQ2(false)}>No</OptBtn>
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 block text-sm font-semibold text-gray-800">
+              3. ¿Tienes horarios de atención?
+            </Label>
+            <div className="flex gap-2">
+              <OptBtn active={q3 === true} onClick={() => setQ3(true)}>Sí</OptBtn>
+              <OptBtn active={q3 === false} onClick={() => setQ3(false)}>No</OptBtn>
+            </div>
+          </div>
+
+          {answered && (
+            <div className="rounded-xl border border-[#006c49]/20 bg-[#f5faf8] p-4">
+              <p className="text-sm text-gray-700">
+                Te sugerimos registrarte como{" "}
+                <strong>{suggestedType === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"}</strong>
+                {suggestedModel ? (
+                  <>
+                    {" "}· modelo <strong>{suggestedModel}</strong>
+                  </>
+                ) : null}
+                .
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => confirmClassification(suggestedType)}
+                  className="bg-[#006c49] text-white hover:bg-[#00583b]"
+                >
+                  Continuar como {suggestedType === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"}
+                  <ChevronRightIcon className="ml-1.5 h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    confirmClassification(suggestedType === "EMPRENDEDOR" ? "NEGOCIO" : "EMPRENDEDOR")
+                  }
+                >
+                  Prefiero {suggestedType === "EMPRENDEDOR" ? "Negocio" : "Emprendedor"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl border bg-white p-6 sm:p-8">

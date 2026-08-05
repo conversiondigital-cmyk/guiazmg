@@ -12,8 +12,9 @@ export default async function RegistrarNegocioPage({
 }) {
   const mapsApiKey = await getGoogleMapsApiKey()
   const { tipo } = await searchParams
-  const isEmprendedor = tipo === "emprendedor"
-  const profileType = isEmprendedor ? "EMPRENDEDOR" : "NEGOCIO"
+  // El tipo real lo decide la pantalla de 3 preguntas dentro del wizard; el ?tipo
+  // solo sesga el valor inicial (compatibilidad con enlaces existentes).
+  const profileType = tipo === "emprendedor" ? "EMPRENDEDOR" : "NEGOCIO"
 
   return (
     <>
@@ -22,12 +23,11 @@ export default async function RegistrarNegocioPage({
         <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900">
-              {isEmprendedor ? "Crea tu perfil de Emprendedor" : "Registra tu negocio"}
+              Registra tu negocio o emprendimiento
             </h1>
             <p className="mt-2 text-gray-600">
-              {isEmprendedor
-                ? "Vende tus productos o servicios en tu zona: por pedido, catálogo o WhatsApp. No necesitas local."
-                : "Aparece en las búsquedas de Guía ZMG y haz crecer tu negocio."}
+              Responde unas preguntas rápidas y te registramos en el perfil que mejor te queda para
+              aparecer en las búsquedas de Guía ZMG.
             </p>
           </div>
           <BusinessRegistrationWizard mapsApiKey={mapsApiKey} profileType={profileType} />
