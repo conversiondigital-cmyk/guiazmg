@@ -1,6 +1,7 @@
 import Link from "next/link"
 
-export const dynamic = "force-dynamic"
+// Contenido estático (FAQ). ISR 10 min: sin costo de función por visita.
+export const revalidate = 600
 
 export default function PreguntasPage() {
   return (

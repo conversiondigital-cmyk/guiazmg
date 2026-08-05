@@ -11,6 +11,7 @@ import { ZonesSection } from "@/components/home/zones-section"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 import { CTASection } from "@/components/home/cta-section"
 import { TestimonialsCarousel } from "@/components/home/testimonials-carousel"
+import { PromoPopup } from "@/components/home/promo-popup"
 import { getCategories, getFeaturedBusinesses } from "@/lib/queries"
 import { getHeroImages } from "@/lib/hero-images"
 import { getHeroConfig, DEFAULT_HERO_CONFIG, type HeroConfig } from "@/lib/hero-config"
@@ -57,6 +58,7 @@ export default async function HomePage() {
         <CTASection />
       </main>
       <Footer />
+      <PromoPopup />
     </>
   )
 }

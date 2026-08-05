@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// Contenido estático (planes/boosts desde constantes). ISR 10 min: sin costo de
+// función por visita.
+export const revalidate = 600
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Tag, Clock } from "@/lib/icons"
+import { Tag, Clock, Gift, ArrowRight } from "@/lib/icons"
 
 export const metadata: Metadata = {
   title: "Promociones | Guía ZMG",
@@ -128,6 +128,29 @@ export default async function PromocionesPage() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Banner de la promo de registro (60 días gratis) */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/promociones/registro"
+            className="-mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#006c49]/20 bg-white p-5 shadow-lg transition-shadow hover:shadow-xl"
+          >
+            <div className="flex items-center gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#006c49] text-white">
+                <Gift className="h-6 w-6" />
+              </span>
+              <div>
+                <p className="font-bold text-gray-900">¿Tienes un negocio? 60 días gratis</p>
+                <p className="text-sm text-gray-500">
+                  Registra tu negocio y activa tu plan Emprendedor o Negocio sin pagar 60 días con tu código.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#006c49] px-4 py-2 text-sm font-semibold text-white">
+              Ver promoción <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
         </section>
 
         {promotions.length === 0 ? (

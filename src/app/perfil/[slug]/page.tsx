@@ -57,11 +57,16 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
   // El dueño puede PREVISUALIZAR su negocio aunque aún no esté aprobado (en
   // revisión/borrador). Para el público, un negocio no ACTIVE sigue dando 404.
-  const session = await auth()
-  const isOwner = !!session?.user?.id && business.ownerId === session.user.id
+  // IMPORTANTE (costo/CPU): auth() fuerza render dinámico, así que SOLO se consulta
+  // la sesión para negocios NO publicados (caso raro, vista previa del dueño). Los
+  // ACTIVE —el grueso del tráfico— se renderizan cacheados vía ISR (revalidate).
   const isPublished = business.status === "ACTIVE"
-  if (!isPublished && !isOwner) {
-    notFound()
+  if (!isPublished) {
+    const session = await auth()
+    const isOwner = !!session?.user?.id && business.ownerId === session.user.id
+    if (!isOwner) {
+      notFound()
+    }
   }
 
   // Promedio y conteo reales sobre TODAS las reseñas visibles (no solo las 10
