@@ -96,8 +96,13 @@ export function getTrustedClientIp(request: Request): string {
   return `unknown:${Math.abs(hash).toString(36).substring(0, 8)}`
 }
 
+// Limpieza periódica del store en memoria. `unref()` es CLAVE en serverless/Fluid:
+// sin él, el timer mantiene vivo el event loop e impide que la instancia baje a
+// cero, facturándose como "Active CPU" aunque no haya tráfico. Con unref, el timer
+// no sostiene la instancia por sí solo (corre solo mientras ya está activa).
 if (typeof setInterval !== "undefined") {
-  setInterval(() => store.cleanup(), 60_000)
+  const t = setInterval(() => store.cleanup(), 60_000)
+  ;(t as { unref?: () => void })?.unref?.()
 }
 
 export async function rateLimit(
