@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
 import { BusinessActions } from "@/components/business/business-actions"
+import { BusinessMap } from "@/components/business/business-map"
 import { TrackBusinessView } from "@/components/business/track-business-view"
 import { ClaimButton } from "@/components/business/claim-button"
 import { BusinessPromotions } from "@/components/business/business-promotions"
@@ -192,6 +193,14 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <BusinessDetail business={business} avgRating={avgRating} reviewCount={reviewCount} />
+              {business.latitude != null && business.longitude != null && (
+                <BusinessMap
+                  lat={business.latitude}
+                  lng={business.longitude}
+                  name={business.name}
+                  businessId={business.id}
+                />
+              )}
               <BusinessModality
                 profileType={business.profileType}
                 serviceModes={business.serviceModes}
