@@ -150,7 +150,7 @@ export default async function MembresiaPage() {
                 <p className="text-3xl font-bold text-green-700">
                   {activeMembership.plan.maxListings}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Anuncios máximos</p>
+                <p className="text-xs text-gray-500 mt-1">Productos y servicios</p>
               </CardContent>
             </Card>
             <Card>
@@ -265,7 +265,7 @@ export default async function MembresiaPage() {
                     <ul className="space-y-2 flex-1">
                       <li className="flex items-start gap-2 text-xs text-gray-600">
                         <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxListings} anuncio{plan.maxListings !== 1 ? "s" : ""}
+                        {plan.maxListings} productos y servicios
                       </li>
                       <li className="flex items-start gap-2 text-xs text-gray-600">
                         <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
