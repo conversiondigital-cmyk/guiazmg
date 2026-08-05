@@ -163,8 +163,8 @@ export default async function MembresiaPage() {
             </Card>
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-green-700">Incluido</p>
-                <p className="text-xs text-gray-500 mt-1">Boosts y visibilidad</p>
+                <p className="text-3xl font-bold text-green-700">Incluida</p>
+                <p className="text-xs text-gray-500 mt-1">Visibilidad prioritaria</p>
               </CardContent>
             </Card>
             <Card>
@@ -229,7 +229,7 @@ export default async function MembresiaPage() {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative flex flex-col ${
+                  className={`relative flex flex-col overflow-visible ${
                     isActive
                       ? "border-blue-500 ring-2 ring-blue-200"
                       : plan.slug === "negocio" && !activeMembership

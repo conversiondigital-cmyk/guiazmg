@@ -72,7 +72,7 @@ export default function PlansPage() {
                 return (
                   <Card
                     key={key}
-                    className={`relative flex flex-col ${
+                    className={`relative flex flex-col overflow-visible ${
                       isRecommended ? "border-[#006c49] shadow-xl ring-2 ring-[#006c49]" : ""
                     }`}
                   >
