@@ -204,6 +204,12 @@ export function BusinessRegistrationWizard({
   }
 
   const currentCategory = categories.find((c) => c.id === selectedCategory)
+  // Fase C — restricción por plan/perfil: solo se muestran los giros cuyo `perfil`
+  // (del catálogo) coincide con el tipo elegido (Emprendedor/Negocio). Los giros sin
+  // perfil definido se muestran siempre (salvaguarda).
+  const girosForProfile = (currentCategory?.subcategories ?? []).filter(
+    (s) => !s.meta?.perfil || s.meta.perfil === profileType,
+  )
   const municipio = municipalities.find((m) => m.id === selectedMunicipio)
 
   // ── Clasificación por modelo de operación (Persona/Empresa) ──────────────────
@@ -401,7 +407,7 @@ export function BusinessRegistrationWizard({
             </Select>
             <SuggestGiro />
           </div>
-          {currentCategory && currentCategory.subcategories.length > 0 && (
+          {currentCategory && girosForProfile.length > 0 && (
             <div>
               <Label htmlFor="subcategory">Giro (¿a qué te dedicas?)</Label>
               <Select
@@ -410,16 +416,16 @@ export function BusinessRegistrationWizard({
                   if (!v) return
                   setSelectedSubcategory(v)
                   // Al elegir el giro, pre-llena el modelo de operación sugerido del catálogo.
-                  const sub = currentCategory?.subcategories.find((s) => s.id === v)
+                  const sub = girosForProfile.find((s) => s.id === v)
                   if (sub?.meta?.modelo) setOperationModel(sub.meta.modelo)
                 }}
-                items={Object.fromEntries((currentCategory?.subcategories ?? []).map((s) => [s.id, s.name]))}
+                items={Object.fromEntries(girosForProfile.map((s) => [s.id, s.name]))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu giro" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currentCategory.subcategories.map((sub) => (
+                  {girosForProfile.map((sub) => (
                     <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -455,6 +461,12 @@ export function BusinessRegistrationWizard({
                 )
               })()}
             </div>
+          )}
+          {currentCategory && girosForProfile.length === 0 && (
+            <p className="text-xs text-gray-500">
+              Esta categoría no tiene giros para {isEmprendedor ? "Emprendedor" : "Negocio"}. Elige
+              otra categoría, cambia tu tipo al inicio, o usa &ldquo;¿No encuentras tu giro?&rdquo;.
+            </p>
           )}
           <div>
             <Label htmlFor="description">Descripción completa</Label>
