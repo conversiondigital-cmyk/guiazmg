@@ -16,7 +16,8 @@ export async function getCatalogUsage(ownerId: string, type: CatalogType) {
     select: {
       id: true,
       memberships: {
-        where: { status: "ACTIVE" },
+        // TRIAL (cupón) cuenta como activa, igual que en el endpoint de creación.
+        where: { status: { in: ["ACTIVE", "TRIAL"] } },
         select: { plan: { select: { maxListings: true, maxServices: true } } },
         take: 1,
       },

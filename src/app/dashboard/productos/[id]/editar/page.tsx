@@ -13,7 +13,7 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
   const { id } = await params
 
   const listing = await prisma.listing.findFirst({
-    where: { id, deletedAt: null },
+    where: { id, deletedAt: null, type: "PRODUCT" },
     select: {
       id: true,
       title: true,

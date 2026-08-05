@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
       where: { businessId: business.id },
       select: { status: true, plan: { select: { maxListings: true, maxServices: true } } },
     })
-    const active = membership?.status === "ACTIVE"
+    // TRIAL (membresía por cupón) cuenta como activa: si no, caería al tope default
+    // de 100 y se saltaría el límite real del plan.
+    const active = membership?.status === "ACTIVE" || membership?.status === "TRIAL"
     const maxForType = active
       ? (isService ? membership!.plan.maxServices : membership!.plan.maxListings) ?? 100
       : 100

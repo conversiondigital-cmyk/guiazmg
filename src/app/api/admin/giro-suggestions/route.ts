@@ -22,10 +22,19 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 })
   }
 
-  await prisma.giroSuggestion.update({
-    where: { id: parsed.data.id },
-    data: { status: parsed.data.status },
-  })
+  try {
+    await prisma.giroSuggestion.update({
+      where: { id: parsed.data.id },
+      data: { status: parsed.data.status },
+    })
+  } catch (e) {
+    // Registro inexistente (P2025): página del admin desactualizada → 404 limpio.
+    if (typeof e === "object" && e !== null && "code" in e && (e as { code?: unknown }).code === "P2025") {
+      return NextResponse.json({ error: "La solicitud ya no existe" }, { status: 404 })
+    }
+    console.error("[GIRO_SUGGESTION_PATCH]", e instanceof Error ? e.message : e)
+    return NextResponse.json({ error: "No se pudo actualizar" }, { status: 500 })
+  }
 
   await prisma.auditLog
     .create({
