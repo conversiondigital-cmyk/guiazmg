@@ -137,9 +137,11 @@ export default function LoginPage() {
       {/* Formulario */}
       <main className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-10 sm:px-6 lg:w-1/2">
         <div className="w-full max-w-md">
-          {/* Marca en móvil (el panel de la izquierda se oculta) */}
-          <Link href="/" className="mb-8 flex items-center justify-center gap-1 text-2xl font-bold lg:hidden">
-            <span className="text-green-700">Guía</span> ZMG
+          {/* Logotipo real de Guía ZMG (fondo claro: se ve bien; visible también en
+              móvil, donde el panel de marca de la izquierda se oculta). */}
+          <Link href="/" className="mb-8 flex items-center justify-center lg:justify-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Guía ZMG" className="h-10 w-auto" />
           </Link>
 
           <div className="mb-6 text-center lg:text-left">
