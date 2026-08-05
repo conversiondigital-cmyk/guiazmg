@@ -18,6 +18,10 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
     subject: `Nuevo negocio por aprobar: ${v.businessName || ""}`,
     html: `<h1>Nuevo negocio registrado</h1><p><strong>${v.businessName || ""}</strong> se registró en Guía ZMG y está pendiente de aprobación${v.ownerName ? ` (dueño: ${v.ownerName})` : ""}.</p><p><a href="${v.reviewUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Revisar y aprobar</a></p>`,
   }),
+  giro_suggested: (v) => ({
+    subject: `Nuevo giro solicitado: ${v.giro || ""}`,
+    html: `<h1>Solicitud de giro nuevo</h1><p>Un usuario no encontró su giro en el catálogo y solicitó agregarlo:</p><ul><li><strong>Giro:</strong> ${v.giro || ""}</li>${v.categoryHint ? `<li><strong>Categoría sugerida:</strong> ${v.categoryHint}</li>` : ""}${v.businessName ? `<li><strong>Negocio:</strong> ${v.businessName}</li>` : ""}${v.note ? `<li><strong>Detalle:</strong> ${v.note}</li>` : ""}${v.contactEmail ? `<li><strong>Contacto:</strong> ${v.contactEmail}</li>` : ""}</ul><p><a href="${v.reviewUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Revisar solicitudes de giro</a></p>`,
+  }),
   renewal_reminder: (v) => ({
     subject: `Tu membresía está por vencer${v.businessName ? ` - ${v.businessName}` : ""}`,
     html: `<h1>Tu membresía vence pronto</h1><p>Tu membresía de <strong>${v.planName || "Guía ZMG"}</strong> vence el <strong>${v.expiryDate || "pronto"}</strong>.</p><p><a href="${v.renewalUrl || "#"}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Renovar ahora</a></p>`,

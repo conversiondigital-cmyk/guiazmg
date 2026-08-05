@@ -19,9 +19,27 @@ export interface EditProduct {
   images: string[]
 }
 
-export function ProductForm({ product }: { product?: EditProduct }) {
+type Kind = "PRODUCT" | "SERVICE"
+
+const COPY = {
+  PRODUCT: {
+    noun: "producto",
+    listPath: "/dashboard/productos",
+    titleLabel: "Nombre del producto *",
+    titlePlaceholder: "Ej: Manzana roja (kg)",
+  },
+  SERVICE: {
+    noun: "servicio",
+    listPath: "/dashboard/servicios",
+    titleLabel: "Nombre del servicio *",
+    titlePlaceholder: "Ej: Instalación eléctrica a domicilio",
+  },
+} as const
+
+export function ProductForm({ product, kind = "PRODUCT" }: { product?: EditProduct; kind?: Kind }) {
   const router = useRouter()
   const isEdit = !!product
+  const t = COPY[kind]
 
   const [loading, setLoading] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
@@ -83,7 +101,7 @@ export function ProductForm({ product }: { product?: EditProduct }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title.trim()) {
-      toast.error("El nombre del producto es requerido")
+      toast.error(`El nombre del ${t.noun} es requerido`)
       return
     }
     if (uploadingImages) {
@@ -108,6 +126,8 @@ export function ProductForm({ product }: { product?: EditProduct }) {
         description: form.description.trim() || null,
         price,
         images,
+        // El tipo solo importa al crear; en edición el backend no lo cambia.
+        ...(isEdit ? {} : { type: kind }),
       }
       const res = await fetch(isEdit ? `/api/listings/${product!.id}` : "/api/listings", {
         method: isEdit ? "PATCH" : "POST",
@@ -116,14 +136,16 @@ export function ProductForm({ product }: { product?: EditProduct }) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        toast.error(data.error || "Error al guardar el producto")
+        toast.error(data.error || `Error al guardar el ${t.noun}`)
         return
       }
-      toast.success(isEdit ? "Producto actualizado" : "Producto agregado")
-      router.push("/dashboard/productos")
+      toast.success(
+        isEdit ? `${t.noun[0].toUpperCase()}${t.noun.slice(1)} actualizado` : `${t.noun[0].toUpperCase()}${t.noun.slice(1)} agregado`,
+      )
+      router.push(t.listPath)
       router.refresh()
     } catch {
-      toast.error("Error al guardar el producto")
+      toast.error(`Error al guardar el ${t.noun}`)
     } finally {
       setLoading(false)
     }
@@ -134,12 +156,12 @@ export function ProductForm({ product }: { product?: EditProduct }) {
       <Card>
         <CardContent className="space-y-4 pt-6">
           <div>
-            <Label htmlFor="title">Nombre del producto *</Label>
+            <Label htmlFor="title">{t.titleLabel}</Label>
             <Input
               id="title"
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
-              placeholder="Ej: Manzana roja (kg)"
+              placeholder={t.titlePlaceholder}
               required
             />
           </div>
@@ -214,7 +236,7 @@ export function ProductForm({ product }: { product?: EditProduct }) {
         </Button>
         <Button type="submit" disabled={loading || uploadingImages}>
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isEdit ? "Guardar cambios" : "Agregar producto"}
+          {isEdit ? "Guardar cambios" : `Agregar ${t.noun}`}
         </Button>
       </div>
     </form>

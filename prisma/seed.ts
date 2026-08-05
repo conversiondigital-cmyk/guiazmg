@@ -152,7 +152,8 @@ async function main() {
       description: "Para quien vende por su cuenta: catálogo y perfil para que te encuentren en tu zona.",
       monthlyPrice: 49,
       priorityLevel: 1,
-      maxListings: 100,     // hasta 100 productos / 20 servicios
+      maxListings: 50,      // 50 productos
+      maxServices: 50,      // 50 servicios
       maxGalleryImages: 15,
       hasFeaturedBadge: false,
       hasSocialLinks: false,
@@ -164,7 +165,8 @@ async function main() {
       description: "Para negocios y servicios establecidos: ficha completa, reseñas, estadísticas y mejor visibilidad.",
       monthlyPrice: 149,
       priorityLevel: 2,
-      maxListings: 100,     // hasta 100 productos y 100 servicios
+      maxListings: 100,     // 100 productos
+      maxServices: 100,     // 100 servicios
       maxGalleryImages: 30,
       hasFeaturedBadge: true,
       hasSocialLinks: true,

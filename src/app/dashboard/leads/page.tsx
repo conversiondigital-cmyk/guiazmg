@@ -117,7 +117,7 @@ export default async function LeadsPage() {
                     <th className="pb-3 pr-4 font-medium">Tipo</th>
                     <th className="pb-3 pr-4 font-medium">Origen</th>
                     <th className="pb-3 pr-4 font-medium">Negocio</th>
-                    <th className="pb-3 font-medium">Anuncio</th>
+                    <th className="pb-3 font-medium">Publicación</th>
                   </tr>
                 </thead>
                 <tbody>

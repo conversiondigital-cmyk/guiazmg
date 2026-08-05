@@ -51,6 +51,7 @@ type MembershipPlan = {
   monthlyPrice: number
   priorityLevel: number
   maxListings: number
+  maxServices: number
   maxGalleryImages: number
   hasFeaturedBadge: boolean
   hasSocialLinks: boolean
@@ -66,6 +67,7 @@ const defaultForm = {
   monthlyPrice: 0,
   priorityLevel: 0,
   maxListings: 1,
+  maxServices: 0,
   maxGalleryImages: 5,
   hasFeaturedBadge: false,
   hasSocialLinks: false,
@@ -91,6 +93,7 @@ export function PlanesClient({ plans }: { plans: MembershipPlan[] }) {
       monthlyPrice: Number(plan.monthlyPrice),
       priorityLevel: plan.priorityLevel,
       maxListings: plan.maxListings,
+      maxServices: plan.maxServices,
       maxGalleryImages: plan.maxGalleryImages,
       hasFeaturedBadge: plan.hasFeaturedBadge,
       hasSocialLinks: plan.hasSocialLinks,
@@ -154,6 +157,7 @@ export function PlanesClient({ plans }: { plans: MembershipPlan[] }) {
           monthlyPrice: Number(plan.monthlyPrice),
           priorityLevel: plan.priorityLevel + 1,
           maxListings: plan.maxListings,
+          maxServices: plan.maxServices,
           maxGalleryImages: plan.maxGalleryImages,
           hasFeaturedBadge: plan.hasFeaturedBadge,
           hasSocialLinks: plan.hasSocialLinks,
@@ -294,7 +298,8 @@ export function PlanesClient({ plans }: { plans: MembershipPlan[] }) {
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="space-y-2">
-                    <FeatureRow icon={Gem} label={`${plan.maxListings} listing${plan.maxListings !== 1 ? "s" : ""}`} />
+                    <FeatureRow icon={Gem} label={`${plan.maxListings} productos`} />
+                    <FeatureRow icon={Gem} label={`${plan.maxServices} servicios`} />
                     <FeatureRow icon={CheckCircle} label={`${plan.maxGalleryImages} imágenes`} />
                     <FeatureRow icon={Star} label="Badge destacado" active={plan.hasFeaturedBadge} />
                     <FeatureRow icon={Globe} label="Redes sociales" active={plan.hasSocialLinks} />
@@ -368,14 +373,23 @@ export function PlanesClient({ plans }: { plans: MembershipPlan[] }) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Max listings</Label>
+                <Label>Max productos</Label>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
                   value={form.maxListings}
-                  onChange={(e) => setForm({ ...form, maxListings: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => setForm({ ...form, maxListings: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Max servicios</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.maxServices}
+                  onChange={(e) => setForm({ ...form, maxServices: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div className="space-y-1.5">

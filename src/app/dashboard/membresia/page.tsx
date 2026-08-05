@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
 import { Crown, Zap, Check, ArrowRight, Calendar, Gem, CheckCircle, Store } from "@/lib/icons"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { CouponRedeemForm } from "@/components/dashboard/coupon-redeem-form"
+import { CancelMembershipToggle } from "@/components/dashboard/cancel-membership-toggle"
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   ACTIVE: { label: "ACTIVA", color: "bg-green-100 text-green-700 border-green-300" },
@@ -78,7 +78,7 @@ export default async function MembresiaPage() {
 
       {activeMembership ? (
         <>
-          <Card className="border-green-200 bg-gradient-to-br from-blue-50 to-white overflow-hidden">
+          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div className="flex-1 min-w-[240px]">
@@ -124,14 +124,12 @@ export default async function MembresiaPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center gap-4">
-                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                      <Switch
-                        defaultChecked={activeMembership.cancelAtPeriodEnd}
-                        disabled
-                      />
-                      Cancelar al final del período
-                    </label>
+                  <div className="mt-4">
+                    <CancelMembershipToggle
+                      businessId={activeMembership.businessId}
+                      initialCancelAtPeriodEnd={activeMembership.cancelAtPeriodEnd}
+                      periodEnd={activeMembership.currentPeriodEnd.toLocaleDateString("es-MX")}
+                    />
                   </div>
                 </div>
 
@@ -150,7 +148,15 @@ export default async function MembresiaPage() {
                 <p className="text-3xl font-bold text-green-700">
                   {activeMembership.plan.maxListings}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Productos y servicios</p>
+                <p className="text-xs text-gray-500 mt-1">Productos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5 text-center">
+                <p className="text-3xl font-bold text-green-700">
+                  {activeMembership.plan.maxServices}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Servicios</p>
               </CardContent>
             </Card>
             <Card>
@@ -158,13 +164,7 @@ export default async function MembresiaPage() {
                 <p className="text-3xl font-bold text-green-700">
                   {activeMembership.plan.maxGalleryImages}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Imágenes por anuncio</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-green-700">Incluida</p>
-                <p className="text-xs text-gray-500 mt-1">Visibilidad prioritaria</p>
+                <p className="text-xs text-gray-500 mt-1">Imágenes por publicación</p>
               </CardContent>
             </Card>
             <Card>
@@ -172,6 +172,7 @@ export default async function MembresiaPage() {
                 <p className="mb-2.5 text-center text-xs text-gray-500">Beneficios adicionales</p>
                 <ul className="space-y-1.5 text-xs">
                   {[
+                    { on: true, label: "Visibilidad prioritaria" },
                     { on: activeMembership.plan.hasFeaturedBadge, label: "Badge destacado" },
                     { on: activeMembership.plan.hasSocialLinks, label: "Redes sociales" },
                     { on: activeMembership.plan.hasWebsiteLink, label: "Sitio web propio" },
@@ -234,24 +235,24 @@ export default async function MembresiaPage() {
                   key={plan.id}
                   className={`relative flex flex-col overflow-visible ${
                     isActive
-                      ? "border-blue-500 ring-2 ring-blue-200"
+                      ? "border-green-600 ring-2 ring-green-200"
                       : plan.slug === "negocio" && !activeMembership
                         ? "border-amber-300"
                         : ""
                   }`}
                 >
                   {isActive && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-green-700 text-white">Actual</Badge>
+                    <div className="absolute right-3 top-3 z-10">
+                      <Badge className="bg-green-700 text-white shadow-sm">Actual</Badge>
                     </div>
                   )}
                   {plan.slug === "negocio" && !activeMembership && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-amber-500 text-white">Recomendado</Badge>
+                    <div className="absolute right-3 top-3 z-10">
+                      <Badge className="bg-amber-500 text-white shadow-sm">Recomendado</Badge>
                     </div>
                   )}
                   <CardContent className="p-5 flex flex-col h-full">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="mb-3 flex items-center gap-2 pr-20">
                       {planIcon[plan.slug] || <Store className="h-5 w-5 text-gray-400" />}
                       <h3 className="font-semibold">{plan.name}</h3>
                     </div>
@@ -265,15 +266,15 @@ export default async function MembresiaPage() {
                     <ul className="space-y-2 flex-1">
                       <li className="flex items-start gap-2 text-xs text-gray-600">
                         <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxListings} productos y servicios
+                        {plan.maxListings} productos
                       </li>
                       <li className="flex items-start gap-2 text-xs text-gray-600">
                         <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxGalleryImages} imágenes por anuncio
+                        {plan.maxServices} servicios
                       </li>
                       <li className="flex items-start gap-2 text-xs text-gray-600">
                         <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        —
+                        {plan.maxGalleryImages} imágenes por publicación
                       </li>
                       {plan.hasFeaturedBadge && (
                         <li className="flex items-start gap-2 text-xs text-gray-600">

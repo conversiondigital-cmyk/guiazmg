@@ -48,6 +48,13 @@ enum ListingStatus {
   ARCHIVED
 }
 
+// Distingue una publicación del catálogo entre PRODUCTO y SERVICIO. Los planes
+// tienen topes separados para cada tipo (maxListings = productos, maxServices).
+enum ListingType {
+  PRODUCT
+  SERVICE
+}
+
 enum ReviewStatus {
   PENDING
   APPROVED
@@ -632,7 +639,8 @@ model MembershipPlan {
   description      String?
   monthlyPrice     Decimal  @db.Decimal(10, 2)
   priorityLevel    Int      @default(0)
-  maxListings      Int      @default(1)
+  maxListings      Int      @default(1) // tope de PRODUCTOS
+  maxServices      Int      @default(0) // tope de SERVICIOS (separado de productos)
   maxGalleryImages Int      @default(5)
   hasFeaturedBadge Boolean  @default(false)
   hasSocialLinks   Boolean  @default(false)
@@ -717,6 +725,7 @@ model Listing {
   slug            String
   description     String?
   price           Decimal?      @db.Decimal(10, 2)
+  type            ListingType   @default(PRODUCT)
   status          ListingStatus @default(DRAFT)
   startsAt        DateTime?
   endsAt          DateTime?
@@ -740,6 +749,7 @@ model Listing {
   @@unique([businessId, slug])
   @@index([slug])
   @@index([businessId])
+  @@index([businessId, type])
   @@index([status])
   @@index([deletedAt])
   @@index([createdAt])
@@ -963,6 +973,31 @@ model Report {
   @@index([listingId])
   @@index([reporterUserId])
   @@map("reports")
+}
+
+enum GiroSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Solicitud de un giro que no está en el catálogo. La envía el usuario al no
+// encontrar su actividad; llega por correo + notificación al admin para revisarla
+// y, si procede, agregarla al catálogo. userId sin FK (solo traza de quién pidió).
+model GiroSuggestion {
+  id           String               @id @default(cuid())
+  name         String
+  note         String?
+  categoryHint String?
+  businessName String?
+  contactEmail String?
+  userId       String?
+  status       GiroSuggestionStatus @default(PENDING)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@map("giro_suggestions")
 }
 
 /// ── Claims ─────────────────────────────────────────────

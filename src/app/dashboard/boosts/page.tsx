@@ -58,7 +58,7 @@ export default async function BoostsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Boosts</h1>
-          <p className="text-gray-500">Impulsa tus anuncios para llegar a más clientes</p>
+          <p className="text-gray-500">Impulsa tus publicaciones para llegar a más clientes</p>
         </div>
         <Button render={<Link href="/dashboard/boosts/nuevo" />}>
           <Plus className="mr-2 h-4 w-4" />
@@ -108,7 +108,7 @@ export default async function BoostsPage() {
             <Zap className="mx-auto h-12 w-12 text-gray-300" />
             <h3 className="mt-4 text-lg font-semibold text-gray-900">No tienes boosts</h3>
             <p className="mt-2 text-sm text-gray-500">
-              Impulsa tus anuncios para llegar a más clientes.
+              Impulsa tus publicaciones para llegar a más clientes.
             </p>
             <Button className="mt-4" render={<Link href="/dashboard/boosts/nuevo" />}>
               <Plus className="mr-2 h-4 w-4" />
@@ -133,7 +133,7 @@ export default async function BoostsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Negocio</TableHead>
-                  <TableHead>Anuncio</TableHead>
+                  <TableHead>Publicación</TableHead>
                   <TableHead>Precio</TableHead>
                   <TableHead>Duración</TableHead>
                   <TableHead>Estado</TableHead>

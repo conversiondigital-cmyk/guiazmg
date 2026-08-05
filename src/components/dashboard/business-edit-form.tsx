@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
+import { SuggestGiro } from "@/components/business/suggest-giro"
 
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
@@ -393,7 +394,7 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="w-full justify-start mb-6 overflow-x-auto">
+        <TabsList className="mb-6 w-full justify-start overflow-x-auto overflow-y-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="general">
             <Store className="size-4" />
             Información General
@@ -444,6 +445,7 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                     ))}
                   </SelectContent>
                 </Select>
+                <SuggestGiro defaultBusinessName={business.name} />
               </Field>
               <Field label="Subcategoría">
                 <Select

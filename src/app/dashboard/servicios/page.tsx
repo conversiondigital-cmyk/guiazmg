@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Table,
   TableHeader,
@@ -19,8 +19,11 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
-import { Wrench, Plus, Eye, Edit3, Trash2, Play, Pause } from "@/lib/icons"
-import { cn } from "@/lib/utils"
+import { Wrench, Plus } from "@/lib/icons"
+import { cn, formatCurrency } from "@/lib/utils"
+import { ProductActions } from "@/components/dashboard/product-actions"
+import { CatalogCounter } from "@/components/dashboard/catalog-counter"
+import { getCatalogUsage } from "@/lib/catalog-limits"
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador",
@@ -42,41 +45,45 @@ export default async function ServiciosPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.profile.findMany({
-    where: { ownerId: session.user.id },
-    select: { id: true },
-  })
+  const { used, limit, businessIds } = await getCatalogUsage(session.user.id, "SERVICE")
 
-  const businessIds = businesses.map((b) => b.id)
-
-  // Services use the Listing model with a service-type category
   const listings =
     businessIds.length > 0
       ? await prisma.listing.findMany({
-          where: {
-            businessId: { in: businessIds },
-            deletedAt: null,
-            category: { slug: { contains: "servicio" } },
-          },
+          where: { businessId: { in: businessIds }, deletedAt: null, type: "SERVICE" },
           include: {
-            category: { select: { name: true } },
             _count: { select: { leads: true, leadEvents: true } },
           },
           orderBy: { createdAt: "desc" },
         })
       : []
+  const atLimit = limit > 0 && used >= limit
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Servicios</h1>
           <p className="text-gray-500">Gestiona los servicios que ofrece tu perfil</p>
         </div>
-        <Link href="/dashboard/servicios/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
-          <Plus className="h-4 w-4" />
-          Agregar servicio
-        </Link>
+        <div className="flex items-center gap-5">
+          <CatalogCounter used={used} limit={limit} noun="servicios" />
+          {atLimit ? (
+            <span
+              className={cn(buttonVariants({ variant: "outline" }), "gap-1.5 cursor-not-allowed opacity-60")}
+              aria-disabled
+              title="Alcanzaste el límite de tu plan"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar servicio
+            </span>
+          ) : (
+            <Link href="/dashboard/servicios/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
+              <Plus className="h-4 w-4" />
+              Agregar servicio
+            </Link>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -91,20 +98,22 @@ export default async function ServiciosPage() {
               <p className="mt-2 text-sm text-gray-500">
                 Agrega los servicios que ofreces para que los clientes te encuentren.
               </p>
-              <Link
-                href="/dashboard/servicios/nuevo"
-                className={cn(buttonVariants(), "mt-4 gap-1.5")}
-              >
-                <Plus className="h-4 w-4" />
-                Agregar servicio
-              </Link>
+              {!atLimit && (
+                <Link
+                  href="/dashboard/servicios/nuevo"
+                  className={cn(buttonVariants(), "mt-4 gap-1.5")}
+                >
+                  <Plus className="h-4 w-4" />
+                  Agregar servicio
+                </Link>
+              )}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Categoría</TableHead>
+                  <TableHead>Precio</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Vistas</TableHead>
                   <TableHead>Leads</TableHead>
@@ -117,7 +126,7 @@ export default async function ServiciosPage() {
                   <TableRow key={listing.id}>
                     <TableCell className="font-medium">{listing.title}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {listing.category.name}
+                      {listing.price != null ? formatCurrency(Number(listing.price)) : "A preguntar"}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -133,23 +142,7 @@ export default async function ServiciosPage() {
                       {listing.createdAt.toLocaleDateString("es-MX")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Play className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Pause className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon-xs" disabled>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      <ProductActions id={listing.id} status={listing.status} kind="SERVICE" />
                     </TableCell>
                   </TableRow>
                 ))}

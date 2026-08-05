@@ -29,7 +29,7 @@ interface Props {
 
 const targetTypes = [
   { value: "business", label: "Perfil general", icon: Store, desc: "Impulsa todo tu perfil" },
-  { value: "listing", label: "Anuncio específico", icon: MapPin, desc: "Selecciona un anuncio para potenciar" },
+  { value: "listing", label: "Producto o servicio", icon: MapPin, desc: "Selecciona una publicación para potenciar" },
   { value: "marketplace", label: "Marketplace", icon: ShoppingBag, desc: "Destaca en el marketplace" },
 ] as const
 
@@ -137,7 +137,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                     onClick={() => setTargetType(t.value)}
                     className={`text-left p-5 rounded-xl border-2 transition-all ${
                       targetType === t.value
-                        ? "border-blue-500 bg-green-50"
+                        ? "border-green-600 bg-green-50"
                         : "border-gray-200 hover:border-green-300"
                     }`}
                   >
@@ -158,12 +158,12 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
           <CardHeader>
             <CardTitle>
               {targetType === "listing"
-                ? "Selecciona negocio y anuncio"
+                ? "Selecciona negocio y publicación"
                 : "Selecciona el negocio"}
             </CardTitle>
             <CardDescription>
               {targetType === "listing"
-                ? "Elige el negocio y el anuncio que deseas impulsar"
+                ? "Elige el negocio y la publicación que deseas impulsar"
                 : "Elige el negocio que deseas impulsar"}
             </CardDescription>
           </CardHeader>
@@ -182,7 +182,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                     }}
                     className={`text-left p-4 rounded-lg border-2 transition-all ${
                       selectedBusinessId === b.id
-                        ? "border-blue-500 bg-green-50"
+                        ? "border-green-600 bg-green-50"
                         : "border-gray-200 hover:border-green-300"
                     }`}
                   >
@@ -196,11 +196,11 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
             {targetType === "listing" && selectedBusinessId && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Anuncio específico
+                  Producto o servicio
                 </label>
                 {activeListings.length === 0 ? (
                   <p className="text-sm text-gray-400 py-4 text-center">
-                    No tienes anuncios activos en este negocio.
+                    No tienes publicaciones activas en este negocio.
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -210,7 +210,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                         onClick={() => setSelectedListingId(l.id)}
                         className={`text-left p-4 rounded-lg border-2 transition-all ${
                           selectedListingId === l.id
-                            ? "border-blue-500 bg-green-50"
+                            ? "border-green-600 bg-green-50"
                             : "border-gray-200 hover:border-green-300"
                         }`}
                       >
@@ -243,7 +243,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                   onClick={() => setSelectedDefId(d.id)}
                   className={`text-left p-5 rounded-xl border-2 transition-all ${
                     selectedDefId === d.id
-                      ? "border-blue-500 bg-green-50 ring-2 ring-blue-200"
+                      ? "border-green-600 bg-green-50 ring-2 ring-green-200"
                       : "border-gray-200 hover:border-green-300"
                   }`}
                 >
@@ -294,7 +294,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
               )}
               {targetType === "listing" && selectedListingId && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Anuncio</span>
+                  <span className="text-gray-500">Publicación</span>
                   <span className="font-medium text-gray-900">
                     {activeListings.find((l) => l.id === selectedListingId)?.title}
                   </span>

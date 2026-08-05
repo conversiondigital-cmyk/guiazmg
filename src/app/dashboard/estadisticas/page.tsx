@@ -293,19 +293,19 @@ export default async function EstadisticasPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Eye className="h-5 w-5 text-green-600" />
-              Anuncios más vistos
+              Publicaciones más vistas
             </CardTitle>
             <CardDescription>Top 5 por visualizaciones</CardDescription>
           </CardHeader>
           <CardContent>
             {topByViews.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Sin anuncios</p>
+              <p className="text-sm text-gray-400 text-center py-8">Sin publicaciones</p>
             ) : (
               <div className="space-y-3">
                 {topByViews.map((listing, i) => (
                   <Link
                     key={listing.id}
-                    href="/dashboard/anuncios"
+                    href="/dashboard/productos"
                     className="flex items-center justify-between rounded-lg -mx-2 px-2 py-1 transition-colors hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-3">
@@ -326,13 +326,13 @@ export default async function EstadisticasPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Users className="h-5 w-5 text-indigo-500" />
-              Anuncios con más leads
+              Publicaciones con más leads
             </CardTitle>
             <CardDescription>Top 5 por generación de leads</CardDescription>
           </CardHeader>
           <CardContent>
             {topByLeads.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Sin anuncios</p>
+              <p className="text-sm text-gray-400 text-center py-8">Sin publicaciones</p>
             ) : (
               <div className="space-y-3">
                 {topByLeads.map((listing, i) => (

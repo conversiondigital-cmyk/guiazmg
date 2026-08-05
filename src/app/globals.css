@@ -95,6 +95,24 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Neutraliza el estilo de autocompletado del navegador (Chrome pinta el texto
+   y el fondo en ámbar), para que los campos precargados se vean con el color
+   normal del sistema en lugar de un naranja "raro". */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0 1000px var(--background) inset;
+  box-shadow: 0 0 0 1000px var(--background) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Reserva SIEMPRE el ancho de la barra de scroll. Sin esto, al pasar de una
    página sin scroll a una con scroll, el contenido centrado se recorre unos
    px hacia un lado (el "descuadre" al hacer scroll). */

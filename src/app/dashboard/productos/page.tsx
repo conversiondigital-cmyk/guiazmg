@@ -22,6 +22,8 @@ import {
 import { ShoppingBag, Plus } from "@/lib/icons"
 import { cn, formatCurrency } from "@/lib/utils"
 import { ProductActions } from "@/components/dashboard/product-actions"
+import { CatalogCounter } from "@/components/dashboard/catalog-counter"
+import { getCatalogUsage } from "@/lib/catalog-limits"
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador",
@@ -43,17 +45,12 @@ export default async function ProductosPage() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const businesses = await prisma.profile.findMany({
-    where: { ownerId: session.user.id },
-    select: { id: true },
-  })
-
-  const businessIds = businesses.map((b) => b.id)
+  const { used, limit, businessIds } = await getCatalogUsage(session.user.id, "PRODUCT")
 
   const listings =
     businessIds.length > 0
       ? await prisma.listing.findMany({
-          where: { businessId: { in: businessIds }, deletedAt: null },
+          where: { businessId: { in: businessIds }, deletedAt: null, type: "PRODUCT" },
           include: {
             category: { select: { name: true } },
             _count: { select: { leads: true, leadEvents: true } },
@@ -61,18 +58,33 @@ export default async function ProductosPage() {
           orderBy: { createdAt: "desc" },
         })
       : []
+  const atLimit = limit > 0 && used >= limit
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
           <p className="text-gray-500">Gestiona el catálogo de productos de tu perfil</p>
         </div>
-        <Link href="/dashboard/productos/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
-          <Plus className="h-4 w-4" />
-          Agregar producto
-        </Link>
+        <div className="flex items-center gap-5">
+          <CatalogCounter used={used} limit={limit} noun="productos" />
+          {atLimit ? (
+            <span
+              className={cn(buttonVariants({ variant: "outline" }), "gap-1.5 cursor-not-allowed opacity-60")}
+              aria-disabled
+              title="Alcanzaste el límite de tu plan"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar producto
+            </span>
+          ) : (
+            <Link href="/dashboard/productos/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
+              <Plus className="h-4 w-4" />
+              Agregar producto
+            </Link>
+          )}
+        </div>
       </div>
 
       <Card>

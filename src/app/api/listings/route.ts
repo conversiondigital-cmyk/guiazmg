@@ -25,6 +25,8 @@ const productSchema = z.object({
   ),
   subcategoryId: z.preprocess(blankToNull, z.string().nullable().optional()),
   images: z.array(imageUrl).max(10).optional(),
+  // PRODUCT (default) o SERVICE. Cada tipo tiene su propio tope de plan.
+  type: z.enum(["PRODUCT", "SERVICE"]).default("PRODUCT"),
 })
 
 export async function POST(request: NextRequest) {
@@ -52,7 +54,9 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
     }
-    const { title, description, price, subcategoryId, images } = parsed.data
+    const { title, description, price, subcategoryId, images, type } = parsed.data
+    const isService = type === "SERVICE"
+    const noun = isService ? "servicios" : "productos"
 
     // La subcategoría (si viene) debe pertenecer a la categoría del negocio.
     if (subcategoryId) {
@@ -63,13 +67,17 @@ export async function POST(request: NextRequest) {
       if (!sub) return NextResponse.json({ error: "Subcategoría inválida" }, { status: 400 })
     }
 
-    // Límite de productos según el plan (maxListings). Sin membresía activa se usa
-    // un tope generoso por defecto para no bloquear durante el lanzamiento.
+    // Límite SEPARADO por tipo: productos → maxListings, servicios → maxServices.
+    // Sin membresía activa se usa un tope generoso por defecto para no bloquear
+    // durante el lanzamiento.
     const membership = await prisma.profileMembership.findUnique({
       where: { businessId: business.id },
-      select: { status: true, plan: { select: { maxListings: true } } },
+      select: { status: true, plan: { select: { maxListings: true, maxServices: true } } },
     })
-    const maxListings = membership?.status === "ACTIVE" ? membership.plan.maxListings ?? 100 : 100
+    const active = membership?.status === "ACTIVE"
+    const maxForType = active
+      ? (isService ? membership!.plan.maxServices : membership!.plan.maxListings) ?? 100
+      : 100
     // El conteo definitivo va dentro de la transacción con lock por negocio (abajo).
 
     // Slug único DENTRO del negocio (el modelo tiene @@unique([businessId, slug])).
@@ -88,8 +96,11 @@ export async function POST(request: NextRequest) {
         // Lock por negocio: serializa creaciones concurrentes del mismo negocio
         // para que el límite del plan no se evada por carrera.
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`cat:${business.id}`}))`
-        const listingCount = await tx.listing.count({ where: { businessId: business.id, deletedAt: null } })
-        if (listingCount >= maxListings) throw new Error("MAX_LISTINGS")
+        // Cuenta solo las publicaciones DEL MISMO TIPO para respetar el tope separado.
+        const listingCount = await tx.listing.count({
+          where: { businessId: business.id, deletedAt: null, type },
+        })
+        if (listingCount >= maxForType) throw new Error("MAX_LISTINGS")
 
         return tx.listing.create({
           data: {
@@ -100,7 +111,8 @@ export async function POST(request: NextRequest) {
             slug,
             description: description ?? null,
             price: price ?? null,
-            // El negocio ya pasó moderación; sus productos entran visibles de una vez.
+            type,
+            // El negocio ya pasó moderación; sus publicaciones entran visibles de una vez.
             status: "ACTIVE",
             images: images?.length
               ? { createMany: { data: images.map((url, i) => ({ imageUrl: url, sortOrder: i })) } }
@@ -112,7 +124,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       if (e instanceof Error && e.message === "MAX_LISTINGS") {
         return NextResponse.json(
-          { error: `Alcanzaste el límite de ${maxListings} productos de tu plan. Mejora tu plan para agregar más.`, code: "MAX_LISTINGS" },
+          { error: `Alcanzaste el límite de ${maxForType} ${noun} de tu plan. Mejora tu plan para agregar más.`, code: "MAX_LISTINGS" },
           { status: 409 }
         )
       }
@@ -123,6 +135,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id: listing.id }, { status: 201 })
   } catch (error) {
     console.error("[LISTING_CREATE]", error instanceof Error ? error.message : error)
-    return NextResponse.json({ error: "Error al crear el producto" }, { status: 500 })
+    return NextResponse.json({ error: "Error al crear la publicación" }, { status: 500 })
   }
 }

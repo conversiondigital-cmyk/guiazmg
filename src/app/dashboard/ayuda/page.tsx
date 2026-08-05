@@ -6,7 +6,7 @@ import Link from "next/link"
 
 const faqs = [
   { q: "¿Cómo registro mi negocio?", a: "Ve a 'Mi Negocio' en el menú lateral y completa el formulario de registro. Una vez enviado, nuestro equipo revisará la información." },
-  { q: "¿Cómo puedo promocionar mi negocio?", a: "Puedes activar Boosts para destacar tu negocio en búsquedas y anuncios. El cobro es directo por cada activación." },
+  { q: "¿Cómo puedo promocionar mi negocio?", a: "Puedes activar Boosts para destacar tu negocio en las búsquedas y el directorio. El cobro es directo por cada activación." },
   { q: "¿Qué es un Boost?", a: "Un Boost impulsa tu negocio para que aparezca en los primeros resultados de búsqueda por un tiempo determinado." },
   { q: "¿Cómo veo mis estadísticas?", a: "En la sección de Estadísticas encontrarás gráficas detalladas de vistas, contactos y leads generados por tus negocios." },
   { q: "¿Puedo cancelar mi membresía?", a: "Sí, puedes cancelar la renovación desde la sección de Membresía. Tu membresía seguirá activa hasta el final del período pagado." },

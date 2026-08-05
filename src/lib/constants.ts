@@ -21,8 +21,7 @@ export const MEMBERSHIP_PLANS = {
     tagline: "Para quien vende por su cuenta",
     features: [
       "1 perfil comercial",
-      "Catálogo de hasta 100 productos",
-      "Hasta 20 servicios",
+      "Hasta 50 productos y 50 servicios",
       "Hasta 3 promociones activas",
       "WhatsApp, teléfono y ubicación",
       "Galería básica",

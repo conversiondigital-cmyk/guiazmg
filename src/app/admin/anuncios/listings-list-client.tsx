@@ -313,7 +313,7 @@ export function ListingsListClient({
                               Ver
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/anuncios`)}>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/productos`)}>
                             <Eye className="h-4 w-4" />
                             Editar
                           </DropdownMenuItem>

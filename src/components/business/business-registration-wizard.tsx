@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon } from "@/lib/icons"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
+import { SuggestGiro } from "@/components/business/suggest-giro"
 import { SERVICE_MODES } from "@/lib/profile-modality"
 
 interface Municipality {
@@ -254,6 +255,7 @@ export function BusinessRegistrationWizard({
                 ))}
               </SelectContent>
             </Select>
+            <SuggestGiro />
           </div>
           {currentCategory && currentCategory.subcategories.length > 0 && (
             <div>

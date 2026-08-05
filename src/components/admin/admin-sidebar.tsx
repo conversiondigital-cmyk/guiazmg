@@ -72,6 +72,7 @@ const sections: SidebarSection[] = [
     items: [
       { label: "Categorías", href: "/admin/categorias", icon: Tags },
       { label: "Subcategorías", href: "/admin/subcategorias", icon: Layers3 },
+      { label: "Solicitudes de giro", href: "/admin/giros-solicitudes", icon: Tag },
       { label: "Etiquetas / tags", href: "/admin/etiquetas", icon: Tags },
       { label: "Municipios", href: "/admin/municipios", icon: MapPinned },
       { label: "Colonias", href: "/admin/colonias", icon: Globe },
