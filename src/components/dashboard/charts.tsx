@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, MessageCircle, Globe, MapPin } from "@/lib/icons"
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   BarChart,
   Bar,
   XAxis,
@@ -12,7 +12,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts"
 
 interface ChartDataPoint {
@@ -39,9 +38,8 @@ const EMPTY: Omit<ChartDataPoint, "date"> = {
 }
 
 // La serie que llega solo trae los días CON registro (escasa), así que el eje X
-// saltaba fechas (11/7, 21/7, 27/7…) y la barra se veía como un bloque suelto.
-// Aquí se normaliza a los últimos 30 días CONTINUOS (rellenando ceros) para que
-// el eje sea parejo y la gráfica lea como una línea de tiempo real.
+// saltaba fechas y la barra se veía como un bloque suelto. Aquí se normaliza a los
+// últimos 30 días CONTINUOS (rellenando ceros) para que el eje sea parejo.
 function toContinuous(data: ChartDataPoint[]): ChartDataPoint[] {
   const byDate = new Map(data.map((d) => [d.date, d]))
   const today = new Date()
@@ -61,13 +59,41 @@ const dayLabel = (v: string) => {
   return `${d.getDate()}/${d.getMonth() + 1}`
 }
 
-// Totales por canal en el periodo — la lectura "de un vistazo" que faltaba.
+// Totales por canal en el periodo — la lectura "de un vistazo".
 const CONTACT_TOTALS = [
   { key: "phoneClicks", label: "Llamadas", color: "#f97316", icon: Phone },
-  { key: "whatsappClicks", label: "WhatsApp", color: "#22c55e", icon: MessageCircle },
+  { key: "whatsappClicks", label: "WhatsApp", color: "#16a34a", icon: MessageCircle },
   { key: "websiteClicks", label: "Sitio web", color: "#8b5cf6", icon: Globe },
   { key: "mapClicks", label: "Ruta / Mapa", color: "#3b82f6", icon: MapPin },
 ] as const
+
+// Tooltip con tarjeta blanca, punto de color por serie y ocultando los ceros.
+function ChartTooltip({ active, payload, label }: {
+  active?: boolean
+  label?: string | number
+  payload?: Array<{ name?: string; value?: number; color?: string; fill?: string; dataKey?: string }>
+}) {
+  if (!active || !payload?.length) return null
+  const rows = payload.filter((p) => (p.value ?? 0) > 0)
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white/95 px-3 py-2 shadow-lg backdrop-blur">
+      <p className="mb-1 text-xs font-semibold text-gray-700">{dayLabel(String(label))}</p>
+      {rows.length ? (
+        rows.map((p) => (
+          <div key={p.dataKey} className="flex items-center gap-2 text-xs">
+            <span className="h-2 w-2 rounded-full" style={{ background: p.color || p.fill }} />
+            <span className="text-gray-500">{p.name}</span>
+            <span className="ml-auto font-semibold text-gray-900">{p.value}</span>
+          </div>
+        ))
+      ) : (
+        <p className="text-xs text-gray-400">Sin actividad</p>
+      )}
+    </div>
+  )
+}
+
+const AXIS_TICK = { fontSize: 11, fill: "#9aa5b1" }
 
 export function DashboardCharts({ data }: DashboardChartsProps) {
   if (!data.length) {
@@ -98,13 +124,19 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={series}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} interval={tickInterval} tickFormatter={dayLabel} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={28} />
-              <Tooltip labelFormatter={(v) => dayLabel(String(v))} />
-              <Line type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={2} dot={false} name="Visitas" />
-            </LineChart>
+            <AreaChart data={series} margin={{ top: 6, right: 10, left: -14, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gViews" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#006c49" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#006c49" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="#eef1f4" />
+              <XAxis dataKey="date" tick={AXIS_TICK} tickLine={false} axisLine={false} interval={tickInterval} tickFormatter={dayLabel} tickMargin={8} />
+              <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} width={30} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="monotone" dataKey="views" stroke="#006c49" strokeWidth={2.5} fill="url(#gViews)" name="Visitas" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+            </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
@@ -137,19 +169,37 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
               visite tu sitio o pida la ruta, aparecerá aquí.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={230}>
-              <BarChart data={series} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} interval={tickInterval} tickFormatter={dayLabel} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={28} />
-                <Tooltip labelFormatter={(v) => dayLabel(String(v))} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
-                <Legend />
-                <Bar dataKey="phoneClicks" fill="#f97316" name="Llamadas" stackId="a" />
-                <Bar dataKey="whatsappClicks" fill="#22c55e" name="WhatsApp" stackId="a" />
-                <Bar dataKey="websiteClicks" fill="#8b5cf6" name="Sitio web" stackId="a" />
-                <Bar dataKey="mapClicks" fill="#3b82f6" name="Ruta" stackId="a" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={series} barCategoryGap="30%" maxBarSize={26} margin={{ top: 6, right: 10, left: -14, bottom: 0 }}>
+                  <defs>
+                    {CONTACT_TOTALS.map((c) => (
+                      <linearGradient key={c.key} id={`g-${c.key}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={c.color} stopOpacity={0.95} />
+                        <stop offset="100%" stopColor={c.color} stopOpacity={0.65} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="#eef1f4" />
+                  <XAxis dataKey="date" tick={AXIS_TICK} tickLine={false} axisLine={false} interval={tickInterval} tickFormatter={dayLabel} tickMargin={8} />
+                  <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} allowDecimals={false} width={30} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(0,0,0,0.035)" }} />
+                  <Bar dataKey="phoneClicks" stackId="a" fill="url(#g-phoneClicks)" name="Llamadas" />
+                  <Bar dataKey="whatsappClicks" stackId="a" fill="url(#g-whatsappClicks)" name="WhatsApp" />
+                  <Bar dataKey="websiteClicks" stackId="a" fill="url(#g-websiteClicks)" name="Sitio web" />
+                  <Bar dataKey="mapClicks" stackId="a" fill="url(#g-mapClicks)" name="Ruta / Mapa" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              {/* Leyenda propia (colores consistentes con los totales de arriba) */}
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+                {CONTACT_TOTALS.map((c) => (
+                  <div key={c.key} className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <span className="h-2.5 w-2.5 rounded-sm" style={{ background: c.color }} />
+                    {c.label}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

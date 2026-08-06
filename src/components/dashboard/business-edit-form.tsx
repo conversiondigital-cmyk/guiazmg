@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import NextImage from "next/image"
 import { toast } from "sonner"
@@ -16,7 +16,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
+import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
+import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-address"
+
+// Look tenue de los campos del formulario (fondo suave, blanco al enfocar).
+const INPUT_TENUE =
+  "h-9 w-full min-w-0 rounded-md border border-input bg-slate-50/70 px-3 py-1 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus:bg-white focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
 
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
@@ -184,8 +190,10 @@ function SectionCard({ title, icon: Icon, children }: { title: string; icon: Rea
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  // El fondo tenue se aplica a los inputs/textarea descendientes (sin tocar el
+  // componente Input global) para dar el look suave sin verde.
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 [&_input]:bg-slate-50/70 [&_input:focus]:bg-white [&_textarea]:bg-slate-50/70 [&_textarea:focus]:bg-white">
       <Label>{label}</Label>
       {children}
     </div>
@@ -215,7 +223,20 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   // Categoría / subcategoría editables.
   const [categoryId, setCategoryId] = useState(business.category?.id ?? "")
   const [subcategoryId, setSubcategoryId] = useState(business.subcategory?.id ?? "")
-  const subOptions = categories.find((c) => c.id === categoryId)?.subcategories ?? []
+  // Opciones de subcategoría de la categoría elegida. Si la subcategoría YA guardada
+  // no está en esa lista (giro inactivo o de otra categoría), se inyecta con su
+  // nombre real para que el select muestre el nombre y NO el ID crudo.
+  const subOptions = useMemo(() => {
+    const base = categories.find((c) => c.id === categoryId)?.subcategories ?? []
+    if (
+      business.subcategory &&
+      subcategoryId === business.subcategory.id &&
+      !base.some((s) => s.id === business.subcategory!.id)
+    ) {
+      return [{ id: business.subcategory.id, name: business.subcategory.name }, ...base]
+    }
+    return base
+  }, [categories, categoryId, subcategoryId, business.subcategory])
 
   const handleCategoryChange = (value: string | null) => {
     setCategoryId(value ?? "")
@@ -253,6 +274,41 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
     lat: business.latitude,
     lng: business.longitude,
   })
+
+  // Sincronía mapa ↔ dirección/CP (igual que en el registro). Un lugar resuelto (de
+  // la dirección tecleada, del pin o del CP) rellena dirección, CP y mueve el pin.
+  // Municipio/Colonia aquí son de solo lectura, así que no se tocan.
+  const applyResolvedPlace = (p: ResolvedPlace) => {
+    setForm((f) => ({
+      ...f,
+      addressText: p.address || f.addressText,
+      postalCode: p.postalCode || f.postalCode,
+    }))
+    setCoords({ lat: p.lat, lng: p.lng })
+  }
+
+  // Geocodifica el código postal → mueve el pin y sincroniza.
+  const geocodePostal = () => {
+    const cp = form.postalCode.trim()
+    if (!/^\d{5}$/.test(cp)) return
+    const g = (window as unknown as { google?: any }).google
+    if (!g?.maps?.Geocoder) return
+    new g.maps.Geocoder().geocode(
+      { address: cp, componentRestrictions: { country: "MX" } },
+      (res: any, status: string) => {
+        if (status === "OK" && res?.[0]?.geometry?.location) {
+          const loc = res[0].geometry.location
+          applyResolvedPlace({
+            address: form.addressText || res[0].formatted_address || "",
+            lat: loc.lat(),
+            lng: loc.lng(),
+            ...parseAddressComponents(res[0].address_components),
+            postalCode: cp,
+          })
+        }
+      },
+    )
+  }
 
   const uploadOne = async (file: File): Promise<string | null> => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
@@ -561,10 +617,17 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                 <ReadOnlyInput value={business.neighborhood?.name} />
               </Field>
               <Field label="Dirección">
-                <Input value={form.addressText} onChange={(e) => set("addressText", e.target.value)} />
+                <AddressAutocomplete
+                  apiKey={mapsApiKey}
+                  value={form.addressText}
+                  onChange={(v) => set("addressText", v)}
+                  onPlace={applyResolvedPlace}
+                  placeholder="Empieza a escribir tu dirección…"
+                  className={INPUT_TENUE}
+                />
               </Field>
               <Field label="Código Postal">
-                <Input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} inputMode="numeric" />
+                <Input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} onBlur={geocodePostal} inputMode="numeric" maxLength={5} />
               </Field>
             </div>
             <div className="mt-4 space-y-2">
@@ -574,11 +637,11 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                 lat={coords.lat}
                 lng={coords.lng}
                 onChange={(lat, lng) => setCoords({ lat, lng })}
+                onResolved={applyResolvedPlace}
               />
               <p className="text-xs text-muted-foreground">
-                {coords.lat != null && coords.lng != null
-                  ? `Coordenadas: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`
-                  : "Aún sin ubicación. Haz clic en el mapa o arrastra el pin."}
+                Arrastra el pin o haz clic en el mapa y la dirección y el código postal se
+                actualizan solos; también puedes escribir la dirección o el CP para mover el pin.
               </p>
             </div>
           </SectionCard>
@@ -672,9 +735,9 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
               Imagen ancha que encabeza tu perfil (recomendado 1200×400).
             </p>
             <div className="space-y-3">
-              <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg border bg-muted">
+              <div className="relative aspect-[3/1] w-full max-w-md overflow-hidden rounded-lg border bg-muted">
                 {coverImageUrl ? (
-                  <NextImage src={coverImageUrl} alt="Portada" fill className="object-cover" sizes="(max-width: 768px) 100vw, 640px" unoptimized />
+                  <NextImage src={coverImageUrl} alt="Portada" fill className="object-cover" sizes="(max-width: 768px) 100vw, 448px" unoptimized />
                 ) : (
                   <div className="flex size-full items-center justify-center text-muted-foreground">
                     <Camera className="size-6" />

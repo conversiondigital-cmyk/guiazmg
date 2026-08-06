@@ -59,6 +59,38 @@ export function FeaturedBusinesses({ businesses, bare = false }: FeaturedBusines
           </div>
         )}
 
+        {bare ? (
+          /* Variante compacta (/cuenta): cuadrícula uniforme de tarjetas chicas. */
+          <>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+              {businesses.slice(0, 6).map((biz) => (
+                <Link key={biz.id} href={`/perfil/${biz.slug}`} className={CARD}>
+                  <Cover biz={biz} className="aspect-[16/10]" />
+                  <div className="p-3.5">
+                    {biz.category && (
+                      <span className="text-[11px] font-bold uppercase text-[#006c49]">{biz.category.name}</span>
+                    )}
+                    <h3 className="truncate text-sm font-semibold text-[#003527]">{biz.name}</h3>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-[#404944]">
+                      {biz.isVerified && <VerifiedPill />}
+                      {biz.municipality && (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {biz.municipality.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-5">
+              <Link href="/search" className="text-sm font-semibold text-[#006c49] hover:underline">
+                Ver todos los negocios →
+              </Link>
+            </div>
+          </>
+        ) : (
+        <>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
           {/* Hero card */}
           <Link href={`/perfil/${hero.slug}`} className={`${CARD} md:col-span-7`}>
@@ -138,6 +170,8 @@ export function FeaturedBusinesses({ businesses, bare = false }: FeaturedBusines
             Ver todos los negocios →
           </Link>
         </div>
+        </>
+        )}
       </div>
     </section>
   )
