@@ -102,7 +102,7 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Panel de Control</h1>
         <p className="text-gray-500">Resumen de tu negocio en Guía ZMG</p>
@@ -145,7 +145,7 @@ export default async function DashboardPage() {
           const Icon = k.icon
           return (
             <Link key={k.label} href={k.href} className="block">
-              <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+              <Card size="sm" className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-gray-500">{k.label}</CardTitle>
                   <Icon className={`h-4 w-4 ${k.color}`} />
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((m) => (
           <Link key={m.label} href="/dashboard/estadisticas" className="block">
-            <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
+            <Card size="sm" className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
               <CardContent className="p-5">
                 <p className="text-sm text-gray-500">{m.label}</p>
                 <p className={`text-2xl font-bold ${m.color}`}>{m.value}</p>

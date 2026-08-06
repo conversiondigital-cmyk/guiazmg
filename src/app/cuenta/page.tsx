@@ -46,10 +46,10 @@ export default async function CuentaPage() {
   return (
     <div className="space-y-12" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
       {/* Hero de bienvenida */}
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] p-8 text-white shadow-[0_10px_40px_-10px_rgba(0,53,39,0.5)] md:p-12">
+      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] p-6 text-white shadow-[0_10px_40px_-10px_rgba(0,53,39,0.5)] md:p-8">
         <div className="relative z-10 max-w-2xl">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#4edea3]">Bienvenido de vuelta</p>
-          <h1 className="mb-3 text-3xl font-extrabold leading-tight md:text-5xl">Hola, {firstName}</h1>
+          <h1 className="mb-3 text-2xl font-extrabold leading-tight md:text-4xl">Hola, {firstName}</h1>
           <p className="mb-7 max-w-xl text-white/85">
             Descubre los mejores negocios locales, guarda tus favoritos y apoya el crecimiento de tu comunidad en Guadalajara.
           </p>
@@ -77,7 +77,7 @@ export default async function CuentaPage() {
           <Link
             key={href}
             href={href}
-            className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_6px_24px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)]"
+            className="rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_6px_24px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)]"
           >
             <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tint}`}>
               <Icon className="h-5 w-5" />
@@ -95,12 +95,12 @@ export default async function CuentaPage() {
       {featured.length > 0 && <FeaturedBusinesses businesses={featured} />}
 
       {/* CTA — registrar negocio */}
-      <section className="relative overflow-hidden rounded-[32px] bg-[#064e3b] p-8 text-white md:p-12">
+      <section className="relative overflow-hidden rounded-[32px] bg-[#064e3b] p-6 text-white md:p-8">
         <div className="relative z-10 max-w-2xl">
           <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#4edea3] text-[#003527]">
             <Store className="h-7 w-7" />
           </div>
-          <h2 className="mb-3 text-2xl font-extrabold md:text-3xl">¿Tienes un negocio o emprendimiento?</h2>
+          <h2 className="mb-2 text-xl font-extrabold md:text-2xl">¿Tienes un negocio o emprendimiento?</h2>
           <p className="mb-8 max-w-xl text-white/80">
             Únete a la red de negocios más grande de la Zona Metropolitana de Guadalajara y conecta con miles de clientes potenciales cada día.
           </p>
