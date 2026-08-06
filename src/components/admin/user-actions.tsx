@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MoreHorizontal, Eye, Edit3, Shield, UserCheck, UserX } from "@/lib/icons"
+import { MoreHorizontal, Eye, Edit3, Shield, UserCheck, UserX, Mail, RotateCcw } from "@/lib/icons"
 
 type UserRow = {
   id: string
@@ -54,6 +54,9 @@ export function UserActions({ user }: { user: UserRow }) {
   const [name, setName] = useState(user.name ?? "")
   const [role, setRole] = useState(user.role)
   const [saving, setSaving] = useState(false)
+  // Enlace generado por una acción de acceso (reset / activación) para copiar y
+  // entregárselo al usuario, por si su buzón no recibe el correo.
+  const [linkInfo, setLinkInfo] = useState<{ title: string; hint: string; url: string; emailed: boolean } | null>(null)
 
   async function patch(data: Record<string, unknown>, successMsg: string) {
     setSaving(true)
@@ -70,6 +73,32 @@ export function UserActions({ user }: { user: UserRow }) {
       toast.success(successMsg)
       setEditOpen(false)
       setRoleOpen(false)
+      router.refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error inesperado")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Acciones de acceso: llaman al endpoint y muestran el enlace resultante para
+  // copiarlo (además de enviarlo por correo desde el servidor).
+  async function accessAction(
+    action: "RESET_ACCESS" | "RESEND_ACTIVATION",
+    meta: { title: string; hint: string },
+  ) {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error ?? "No se pudo completar la acción")
+      const url: string = data.resetUrl ?? data.verifyUrl ?? ""
+      setLinkInfo({ title: meta.title, hint: meta.hint, url, emailed: !!data.emailed })
+      toast.success(data.emailed ? "Correo enviado" : "Enlace generado (el correo no se pudo enviar)")
       router.refresh()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error inesperado")
@@ -121,6 +150,28 @@ export function UserActions({ user }: { user: UserRow }) {
             <Shield className="mr-2 h-4 w-4" />
             Cambiar Rol
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              accessAction("RESET_ACCESS", {
+                title: "Restablecer contraseña",
+                hint: "Activa y verifica la cuenta. Comparte este enlace (vence en 24 h) para que el usuario ponga su contraseña y entre.",
+              })
+            }
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Restablecer contraseña
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              accessAction("RESEND_ACTIVATION", {
+                title: "Reenviar activación",
+                hint: "Enlace para que el usuario active (verifique) su correo. Vence en 24 h.",
+              })
+            }
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Reenviar activación
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -149,6 +200,43 @@ export function UserActions({ user }: { user: UserRow }) {
             >
               {saving ? "Guardando..." : "Guardar"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!linkInfo} onOpenChange={(o) => !o && setLinkInfo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{linkInfo?.title}</DialogTitle>
+            <DialogDescription>{user.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">{linkInfo?.hint}</p>
+            <p className="text-xs text-gray-500">
+              {linkInfo?.emailed
+                ? "Ya se envió por correo. Si no llega, copia y compártele este enlace directamente:"
+                : "El correo no se pudo enviar. Copia y compártele este enlace directamente:"}
+            </p>
+            <div className="flex gap-2">
+              <Input readOnly value={linkInfo?.url ?? ""} onFocus={(e) => e.currentTarget.select()} />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (linkInfo?.url) {
+                    navigator.clipboard.writeText(linkInfo.url).then(
+                      () => toast.success("Enlace copiado"),
+                      () => toast.error("No se pudo copiar"),
+                    )
+                  }
+                }}
+              >
+                Copiar
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setLinkInfo(null)}>Listo</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
