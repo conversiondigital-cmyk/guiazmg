@@ -8,6 +8,13 @@ export async function DELETE() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
+  // Corta los vínculos de acceso ANTES de anonimizar: si no, el Account de OAuth
+  // (Google) sigue apuntando a este usuario ya inactivo y bloquea volver a entrar
+  // o registrarse con el mismo Google. Al borrarlos, un futuro login con Google se
+  // trata como cuenta NUEVA. También se borran las sesiones abiertas.
+  await prisma.account.deleteMany({ where: { userId: session.user.id } })
+  await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {})
+
   await prisma.user.update({
     where: { id: session.user.id },
     data: {
