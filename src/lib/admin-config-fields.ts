@@ -124,7 +124,7 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       { key: "stripe_public_key", label: "Stripe · Publishable Key", type: "text", description: "pk_live_… (opcional, para el checkout en el navegador)." },
       { key: "stripe_webhook_secret", label: "Stripe · Webhook Secret", type: "password", description: "whsec_… del endpoint de webhook en Stripe. Verifica la firma." },
       { key: "stripe_sandbox", label: "Stripe · Modo test", type: "toggle", description: "Actívalo mientras pruebas con claves sk_test/pk_test." },
-      { key: "webhook_url", label: "Webhook URL (referencia)", type: "url", placeholder: "https://guiazmg.vercel.app/api/payments/webhook", description: "Informativo: la URL que debes registrar en el panel del proveedor." },
+      { key: "webhook_url", label: "Webhook URL (referencia)", type: "url", placeholder: "https://guiazmg.com/api/payments/stripe/webhook", description: "Informativo (no se usa en el código). URLs a registrar en cada proveedor — Stripe: https://guiazmg.com/api/payments/stripe/webhook · Mercado Pago: https://guiazmg.com/api/payments/webhook" },
     ],
   },
   membresias: {
