@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
-import { sendEmail } from "@/lib/email"
+import { sendEmail, getAdminNotifyEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
 import { redeemMembershipCoupon } from "@/lib/coupons/redeem-membership"
 import { z } from "zod"
@@ -195,17 +195,13 @@ export async function POST(request: NextRequest) {
           })
         )
       )
-      await Promise.allSettled(
-        admins
-          .filter((a) => a.email)
-          .map((a) =>
-            sendEmail(a.email, "business_registered", {
-              businessName: data.name,
-              ownerName: session.user?.name || "",
-              reviewUrl,
-            }, a.id)
-          )
-      )
+      // Correo: UNA sola vez al buzón de contacto (contacto@), no al login de cada admin.
+      const notifyEmail = await getAdminNotifyEmail()
+      await sendEmail(notifyEmail, "business_registered", {
+        businessName: data.name,
+        ownerName: session.user?.name || "",
+        reviewUrl,
+      })
     } catch (e) {
       console.error("[BUSINESS_REGISTER_NOTIFY]", e instanceof Error ? e.message : e)
     }

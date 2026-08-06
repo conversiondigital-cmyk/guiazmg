@@ -51,15 +51,16 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
 // Construye el transporte SMTP leyendo la config del admin (Admin → Configuración
 // → Correo SMTP) con respaldo a variables de entorno. Devuelve null si no hay host
 // configurado, en cuyo caso el envío se omite sin romper la petición.
-async function getMailer(): Promise<{ transporter: nodemailer.Transporter; from: string } | null> {
+async function getMailer(): Promise<{ transporter: nodemailer.Transporter; from: string; replyTo: string } | null> {
   const host = await getSetting("smtp_host", "SMTP_HOST")
   if (!host) return null
-  const [port, user, pass, from, secure] = await Promise.all([
+  const [port, user, pass, from, secure, contactEmail] = await Promise.all([
     getSetting("smtp_port", "SMTP_PORT"),
     getSetting("smtp_username", "SMTP_USER"),
     getSetting("smtp_password", "SMTP_PASS"),
     getSetting("smtp_from_email", "SMTP_FROM"),
     getSettingBool("smtp_tls_enabled", "SMTP_SECURE"),
+    getSetting("contact_email"),
   ])
   const transporter = nodemailer.createTransport({
     host,
@@ -67,7 +68,16 @@ async function getMailer(): Promise<{ transporter: nodemailer.Transporter; from:
     secure,
     auth: { user, pass },
   })
-  return { transporter, from: from || DEFAULT_FROM }
+  // Reply-To = buzón de contacto: los correos salen "de" noreply/SMTP_FROM pero las
+  // respuestas llegan a contacto@ (buzón humano monitoreado), no a un buzón muerto.
+  return { transporter, from: from || DEFAULT_FROM, replyTo: contactEmail || CONTACT_EMAIL }
+}
+
+// Correo del buzón de contacto: destino de los avisos de admin y Reply-To de todos
+// los correos. Configurable en Admin → Config → Contacto (contact_email).
+const CONTACT_EMAIL = "contacto@guiazmg.com"
+export async function getAdminNotifyEmail(): Promise<string> {
+  return (await getSetting("contact_email")) || CONTACT_EMAIL
 }
 
 export async function sendEmail(
@@ -85,7 +95,7 @@ export async function sendEmail(
   try {
     const mailer = await getMailer()
     if (mailer) {
-      await mailer.transporter.sendMail({ from: mailer.from, to, subject, html })
+      await mailer.transporter.sendMail({ from: mailer.from, replyTo: mailer.replyTo, to, subject, html })
     } else {
       // SMTP no configurado: se omite el envío sin romper la petición.
       console.log(`[EMAIL OMITIDO] [${template}] Para: ${to} | Asunto: ${subject}`)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { sendEmail } from "@/lib/email"
+import { sendEmail, getAdminNotifyEmail } from "@/lib/email"
 import { createNotification } from "@/lib/notifications/create"
 import { getPublicAppUrl } from "@/lib/env"
 import { enforceRateLimits } from "@/lib/security/request-rate-limit"
@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
       select: { id: true, email: true },
     })
     const reviewUrl = `${getPublicAppUrl()}/admin/giros-solicitudes`
+    // Notificación in-app: a cada admin (la ven al entrar al panel).
+    // Correo: UNA sola vez al buzón de contacto (contacto@), no al correo de login
+    // de cada admin. admin@ es solo para el panel; contacto@ recibe el correo.
+    const notifyEmail = await getAdminNotifyEmail()
     await Promise.allSettled([
       ...admins.map((a) =>
         createNotification({
@@ -69,23 +73,18 @@ export async function POST(req: NextRequest) {
           message: `"${name}" — un usuario no encontró su giro en el catálogo.`,
         }),
       ),
-      ...admins
-        .filter((a) => a.email)
-        .map((a) =>
-          sendEmail(
-            a.email!,
-            "giro_suggested",
-            {
-              giro: name,
-              categoryHint: categoryHint ?? "",
-              businessName: businessName ?? "",
-              note: note ?? "",
-              contactEmail: contactEmail ?? "",
-              reviewUrl,
-            },
-            a.id,
-          ),
-        ),
+      sendEmail(
+        notifyEmail,
+        "giro_suggested",
+        {
+          giro: name,
+          categoryHint: categoryHint ?? "",
+          businessName: businessName ?? "",
+          note: note ?? "",
+          contactEmail: contactEmail ?? "",
+          reviewUrl,
+        },
+      ),
     ])
 
     return NextResponse.json({ success: true })
