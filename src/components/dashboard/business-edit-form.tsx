@@ -24,6 +24,9 @@ import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-addr
 const INPUT_TENUE =
   "h-9 w-full min-w-0 rounded-md border border-input bg-slate-50/70 px-3 py-1 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus:bg-white focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
 
+// Pestaña activa en verde de marca (como la referencia del usuario).
+const TAB_ACTIVE = "data-active:!bg-[#006c49] data-active:!text-white"
+
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
   1: "Lunes",
@@ -450,28 +453,28 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="mb-6 w-full justify-start overflow-x-auto overflow-y-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsTrigger value="general">
+        <TabsList className="mb-6 max-w-full overflow-x-auto overflow-y-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="general" className={TAB_ACTIVE}>
             <Store className="size-4" />
             Información General
           </TabsTrigger>
-          <TabsTrigger value="contact">
+          <TabsTrigger value="contact" className={TAB_ACTIVE}>
             <Phone className="size-4" />
             Contacto
           </TabsTrigger>
-          <TabsTrigger value="location">
+          <TabsTrigger value="location" className={TAB_ACTIVE}>
             <MapPin className="size-4" />
             Ubicación
           </TabsTrigger>
-          <TabsTrigger value="hours">
+          <TabsTrigger value="hours" className={TAB_ACTIVE}>
             <Clock className="size-4" />
             Horarios
           </TabsTrigger>
-          <TabsTrigger value="fotos">
+          <TabsTrigger value="fotos" className={TAB_ACTIVE}>
             <Camera className="size-4" />
-            Fotos
+            Galería de Fotos
           </TabsTrigger>
-          <TabsTrigger value="status">
+          <TabsTrigger value="status" className={TAB_ACTIVE}>
             <Shield className="size-4" />
             Estado
           </TabsTrigger>

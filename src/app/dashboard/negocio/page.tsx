@@ -59,8 +59,8 @@ export default async function MiNegocioPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mi Negocio</h1>
-          <p className="text-gray-500">Administra la información de tu negocio</p>
+          <h1 className="text-2xl font-bold text-gray-900">Información del Negocio</h1>
+          <p className="text-gray-500">Administra la presencia de tu marca en el directorio</p>
         </div>
         <Link
           href={`/perfil/${business.slug}`}

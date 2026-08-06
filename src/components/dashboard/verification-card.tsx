@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BadgeCheck, Clock, ShieldX, ShieldQuestion, Loader2 } from "lucide-react"
 import type { VerificationMode } from "@/lib/verification-config"
@@ -62,43 +62,37 @@ export function VerificationCard({ businessId, status, isVerified, mode }: Verif
 
   const canRequest = mode === "manual" && !verified && !pending
 
+  // Contenido compacto según el estado (icono + título + subtítulo en una fila).
+  const view = verified
+    ? { Icon: BadgeCheck, iconCls: "bg-green-100 text-green-700", title: "Negocio verificado", text: "Tu insignia de Verificado aparece en tu perfil público y genera más confianza." }
+    : pending
+      ? { Icon: Clock, iconCls: "bg-amber-100 text-amber-700", title: "Verificación en revisión", text: "Te avisaremos en cuanto el equipo la apruebe o rechace." }
+      : rejected
+        ? { Icon: ShieldX, iconCls: "bg-red-100 text-red-700", title: "Verificación rechazada", text: "Revisa que tus datos (nombre, dirección, teléfono) sean correctos y vuelve a solicitarla." }
+        : { Icon: ShieldQuestion, iconCls: "bg-gray-100 text-gray-600", title: "Negocio sin verificar", text: mode === "manual" ? "Solicita la verificación para mostrar la insignia de Verificado y generar más confianza." : "El equipo de Guía ZMG verifica los negocios. Mantén tu información completa para agilizar el proceso." }
+  const { Icon } = view
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-lg">Verificación del negocio</CardTitle>
-        {badge}
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {verified && (
-          <p className="text-sm text-muted-foreground">
-            Tu negocio muestra la insignia de Verificado en su perfil público. Genera más confianza en
-            los clientes.
-          </p>
-        )}
-        {pending && (
-          <p className="text-sm text-muted-foreground">
-            Tu solicitud está en revisión. Te notificaremos en cuanto el equipo la apruebe o rechace.
-          </p>
-        )}
-        {!verified && !pending && mode === "manual" && (
-          <p className="text-sm text-muted-foreground">
-            {rejected
-              ? "Tu solicitud anterior fue rechazada. Revisa que tus datos (nombre, dirección, teléfono) sean correctos y vuelve a solicitarla."
-              : "Solicita la verificación para mostrar la insignia de Verificado y generar más confianza."}
-          </p>
-        )}
-        {!verified && mode === "quick" && (
-          <p className="text-sm text-muted-foreground">
-            El equipo de Guía ZMG verifica los negocios. Mantén tu información completa y actualizada
-            para agilizar el proceso.
-          </p>
-        )}
-        {canRequest && (
-          <Button onClick={request} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
-            {rejected ? "Volver a solicitar" : "Solicitar verificación"}
-          </Button>
-        )}
+    <Card size="sm">
+      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${view.iconCls}`}>
+            <Icon className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">{view.title}</p>
+            <p className="text-xs text-muted-foreground">{view.text}</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
+          {badge}
+          {canRequest && (
+            <Button size="sm" onClick={request} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+              {rejected ? "Volver a solicitar" : "Solicitar verificación"}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
