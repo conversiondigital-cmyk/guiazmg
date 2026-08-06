@@ -48,6 +48,24 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Verde UNIFORME del sitio: se redefine la escala `green-*` de Tailwind con el
+   matiz de marca (emerald/teal), anclada en los verdes oficiales al extremo
+   oscuro. Así todo `green-*` del sitio (cientos de usos) queda del mismo tono y
+   deja de "chocar" con los hex #006c49 / #003527. emerald-* ya coincide. */
+@theme {
+  --color-green-50: #ecfdf5;
+  --color-green-100: #d1fae5;
+  --color-green-200: #a7f3d0;
+  --color-green-300: #6ee7b7;
+  --color-green-400: #34d399;
+  --color-green-500: #10b981;
+  --color-green-600: #059669;
+  --color-green-700: #006c49; /* verde de marca (primario) */
+  --color-green-800: #00583b; /* hover / oscuro */
+  --color-green-900: #003527; /* fondos más oscuros */
+  --color-green-950: #01231a;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -55,7 +73,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #166534;
+  --primary: #006c49; /* verde de marca uniforme (antes #166534, verdoso-amarillo) */
   --primary-foreground: #ffffff;
   --secondary: #D97706;
   --secondary-foreground: #ffffff;
