@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon, Gift } from "@/lib/icons"
+import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon, ChevronDown, Gift } from "@/lib/icons"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
@@ -87,6 +87,7 @@ export function BusinessRegistrationWizard({
   const [selectedMunicipio, setSelectedMunicipio] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
+  const [openCat, setOpenCat] = useState("") // categoría expandida en el acordeón
   const [operationModel, setOperationModel] = useState("")
   const [serviceModes, setServiceModes] = useState<string[]>([])
   const [coverageArea, setCoverageArea] = useState("")
@@ -200,10 +201,6 @@ export function BusinessRegistrationWizard({
     )
   }
 
-  const handleCategoryChange = (v: string | null) => {
-    if (v) { setSelectedCategory(v); setSelectedSubcategory("") }
-  }
-
   const canProceed = () => {
     if (step === 1) return form.name.trim().length > 0
     if (step === 2) return form.phone.trim().length >= 10 && form.whatsapp.trim().length >= 10
@@ -301,12 +298,6 @@ export function BusinessRegistrationWizard({
   }
 
   const currentCategory = categories.find((c) => c.id === selectedCategory)
-  // Fase C — restricción por plan/perfil: solo se muestran los giros cuyo `perfil`
-  // (del catálogo) coincide con el tipo elegido (Emprendedor/Negocio). Los giros sin
-  // perfil definido se muestran siempre (salvaguarda).
-  const girosForProfile = (currentCategory?.subcategories ?? []).filter(
-    (s) => !s.meta?.perfil || s.meta.perfil === profileType,
-  )
   const municipio = municipalities.find((m) => m.id === selectedMunicipio)
 
   // ── Clasificación por modelo de operación (Persona/Empresa) ──────────────────
@@ -496,82 +487,94 @@ export function BusinessRegistrationWizard({
             />
           </div>
           <div>
-            <Label htmlFor="category">Categoría</Label>
-            <Select value={selectedCategory} onValueChange={handleCategoryChange} items={Object.fromEntries(categories.map((c) => [c.id, c.name]))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.icon || ""} {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <SuggestGiro />
-          </div>
-          {currentCategory && girosForProfile.length > 0 && (
-            <div>
-              <Label htmlFor="subcategory">Giro (¿a qué te dedicas?)</Label>
-              <Select
-                value={selectedSubcategory}
-                onValueChange={(v) => {
-                  if (!v) return
-                  setSelectedSubcategory(v)
-                  // Al elegir el giro, pre-llena el modelo de operación sugerido del catálogo.
-                  const sub = girosForProfile.find((s) => s.id === v)
-                  if (sub?.meta?.modelo) setOperationModel(sub.meta.modelo)
-                }}
-                items={Object.fromEntries(girosForProfile.map((s) => [s.id, s.name]))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona tu giro" />
-                </SelectTrigger>
-                <SelectContent>
-                  {girosForProfile.map((sub) => (
-                    <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Sugerencia por modelo de operación (del catálogo) */}
-              {(() => {
-                const sub = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory)
-                const suggested = sub?.meta?.perfil // "EMPRENDEDOR" | "NEGOCIO"
-                if (!suggested) return null
-                const label = suggested === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"
-                const mismatch = suggested !== profileType
+            <Label>Categoría y giro (¿a qué te dedicas?)</Label>
+            {selectedSubcategory && (() => {
+              const sel = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory)
+              return sel ? (
+                <p className="mb-2 mt-1 text-sm text-[#006c49]">
+                  Elegido: <strong>{currentCategory?.name}</strong> · {sel.name}
+                </p>
+              ) : null
+            })()}
+            {/* Acordeón: categorías colapsadas; se expanden para ver y elegir el giro. */}
+            <div className="mt-1 max-h-80 divide-y overflow-y-auto rounded-lg border">
+              {categories.map((cat) => {
+                // Solo los giros del perfil elegido (Emprendedor/Negocio).
+                const giros = (cat.subcategories ?? []).filter(
+                  (s) => !s.meta?.perfil || s.meta.perfil === profileType,
+                )
+                if (giros.length === 0) return null
+                const open = openCat === cat.id
                 return (
-                  <div className="mt-2 space-y-2">
-                    {mismatch && (
-                      <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        Este giro suele registrarse como <strong>{label}</strong>. Elegiste{" "}
-                        {isEmprendedor ? "Emprendedor" : "Negocio"}; puedes continuar así o cambiarlo al inicio.
-                      </p>
+                  <div key={cat.id}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenCat(open ? "" : cat.id)}
+                      className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
+                        selectedCategory === cat.id ? "font-semibold text-[#006c49]" : "text-gray-700"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        {cat.icon && <span>{cat.icon}</span>}
+                        {cat.name}
+                        <span className="text-xs font-normal text-gray-400">({giros.length})</span>
+                      </span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+                    </button>
+                    {open && (
+                      <div className="grid gap-1 bg-gray-50/50 p-2 sm:grid-cols-2">
+                        {giros.map((sub) => (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCategory(cat.id)
+                              setSelectedSubcategory(sub.id)
+                              if (sub.meta?.modelo) setOperationModel(sub.meta.modelo)
+                            }}
+                            className={`rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
+                              selectedSubcategory === sub.id ? "bg-[#006c49] text-white" : "text-gray-700 hover:bg-white"
+                            }`}
+                          >
+                            {sub.name}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                    <div>
-                      <Label htmlFor="operationModel" className="text-xs text-gray-600">
-                        Modelo de operación
-                      </Label>
-                      <Input
-                        id="operationModel"
-                        value={operationModel}
-                        onChange={(e) => setOperationModel(e.target.value)}
-                        placeholder="Ej: Local comercial, A domicilio, Sobre pedido…"
-                      />
-                    </div>
                   </div>
                 )
-              })()}
+              })}
             </div>
-          )}
-          {currentCategory && girosForProfile.length === 0 && (
-            <p className="text-xs text-gray-500">
-              Esta categoría no tiene giros para {isEmprendedor ? "Emprendedor" : "Negocio"}. Elige
-              otra categoría, cambia tu tipo al inicio, o usa &ldquo;¿No encuentras tu giro?&rdquo;.
-            </p>
-          )}
+            <SuggestGiro />
+
+            {/* Modelo de operación + aviso de perfil sugerido (del catálogo). */}
+            {selectedSubcategory && (() => {
+              const sub = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory)
+              const suggested = sub?.meta?.perfil // "EMPRENDEDOR" | "NEGOCIO"
+              const label = suggested === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"
+              return (
+                <div className="mt-3 space-y-2">
+                  {suggested && suggested !== profileType && (
+                    <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Este giro suele registrarse como <strong>{label}</strong>. Elegiste{" "}
+                      {isEmprendedor ? "Emprendedor" : "Negocio"}; puedes continuar así o cambiarlo al inicio.
+                    </p>
+                  )}
+                  <div>
+                    <Label htmlFor="operationModel" className="text-xs text-gray-600">
+                      Modelo de operación
+                    </Label>
+                    <Input
+                      id="operationModel"
+                      value={operationModel}
+                      onChange={(e) => setOperationModel(e.target.value)}
+                      placeholder="Ej: Local comercial, A domicilio, Sobre pedido…"
+                    />
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
           <div>
             <Label htmlFor="description">Descripción completa</Label>
             <Textarea
