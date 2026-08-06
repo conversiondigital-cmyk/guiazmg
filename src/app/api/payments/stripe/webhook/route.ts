@@ -44,11 +44,28 @@ export async function POST(request: Request) {
       .catch(() => null)
     webhookEventId = logged?.id ?? null
 
-    if (event.type === "checkout.session.completed") {
+    // Se cumple en `completed` (tarjeta) y en `async_payment_succeeded` (métodos
+    // diferidos como OXXO/SPEI que confirman después). En ambos exigimos que el
+    // pago esté CONFIRMADO (`payment_status === "paid"`): nunca se activa sin cobro.
+    if (
+      event.type === "checkout.session.completed" ||
+      event.type === "checkout.session.async_payment_succeeded"
+    ) {
       const s = event.data.object as {
         id: string
         amount_total?: number | null
+        payment_status?: string | null
         metadata?: Record<string, string> | null
+      }
+      if (s.payment_status !== "paid") {
+        // Pago aún no confirmado (p. ej. voucher OXXO generado pero no pagado):
+        // NO se activa nada; se marca procesado y se espera async_payment_succeeded.
+        if (webhookEventId) {
+          await prisma.webhookEvent
+            .update({ where: { id: webhookEventId }, data: { status: "PROCESSED" } })
+            .catch(() => {})
+        }
+        return NextResponse.json({ received: true })
       }
       const externalRef = s.metadata?.externalReference || ""
       const parts = externalRef.split(":")
@@ -149,6 +166,9 @@ export async function POST(request: Request) {
         })
         .catch(() => {})
     }
-    return NextResponse.json({ received: true })
+    // 500 (no 200): la firma ya se validó arriba, así que un error aquí es interno
+    // (p. ej. BD transitoria). Devolver 5xx hace que Stripe REINTENTE la entrega,
+    // evitando el caso "cobró pero no activó" por un fallo momentáneo.
+    return NextResponse.json({ error: "fulfillment failed" }, { status: 500 })
   }
 }
