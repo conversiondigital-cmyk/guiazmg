@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
 })
 
 // Los metadatos base leen la configuración SEO editable en /admin/configuracion/seo

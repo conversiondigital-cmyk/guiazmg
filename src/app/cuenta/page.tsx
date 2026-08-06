@@ -44,45 +44,45 @@ export default async function CuentaPage() {
   ]
 
   return (
-    <div className="space-y-12" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
+    <div className="space-y-6" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
       {/* Hero de bienvenida */}
-      <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] p-6 text-white shadow-[0_10px_40px_-10px_rgba(0,53,39,0.5)] md:p-8">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] p-5 text-white shadow-[0_8px_30px_-12px_rgba(0,53,39,0.5)]">
         <div className="relative z-10 max-w-2xl">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#4edea3]">Bienvenido de vuelta</p>
-          <h1 className="mb-3 text-2xl font-extrabold leading-tight md:text-4xl">Hola, {firstName}</h1>
-          <p className="mb-7 max-w-xl text-white/85">
-            Descubre los mejores negocios locales, guarda tus favoritos y apoya el crecimiento de tu comunidad en Guadalajara.
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#4edea3]">Bienvenido de vuelta</p>
+          <h1 className="mb-1.5 text-xl font-extrabold leading-tight md:text-2xl">Hola, {firstName}</h1>
+          <p className="mb-4 max-w-xl text-sm text-white/85">
+            Descubre los mejores negocios locales, guarda tus favoritos y apoya a tu comunidad en Guadalajara.
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 rounded-full bg-[#4edea3] px-7 py-3.5 font-semibold text-[#003527] transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-[#4edea3] px-5 py-2.5 text-sm font-semibold text-[#003527] transition-all hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <Search className="h-5 w-5" /> Explorar negocios
+              <Search className="h-4 w-4" /> Explorar negocios
             </Link>
             <Link
               href="/feed"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3.5 font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
             >
-              <TrendingUp className="h-5 w-5" /> Ver tendencias
+              <TrendingUp className="h-4 w-4" /> Ver tendencias
             </Link>
           </div>
         </div>
-        <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#4edea3]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#4edea3]/10 blur-3xl" />
       </section>
 
       {/* Resumen rápido */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ label, value, href, icon: Icon, tint }) => (
           <Link
             key={href}
             href={href}
-            className="rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_6px_24px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)]"
+            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_4px_16px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(11,28,48,0.10)]"
           >
-            <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${tint}`}>
-              <Icon className="h-5 w-5" />
+            <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${tint}`}>
+              <Icon className="h-4 w-4" />
             </div>
-            <p className="text-2xl font-extrabold text-[#0b1c30]">{value}</p>
+            <p className="text-xl font-extrabold text-[#0b1c30]">{value}</p>
             <p className="text-sm text-[#404944]">{label}</p>
           </Link>
         ))}
