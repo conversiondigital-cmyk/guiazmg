@@ -21,7 +21,7 @@ export function BusinessActions({ business }: BusinessActionsProps) {
     <Card>
       <CardContent className="p-5 space-y-3">
         {business.phone && (
-          <a href={`tel:${business.phone}`} onClick={track("PHONE_CLICK")} className={`${greenBtnClass} bg-green-600 hover:bg-green-700`}>
+          <a href={`tel:${business.phone}`} onClick={track("PHONE_CLICK")} className={`${greenBtnClass} bg-[#006c49] hover:bg-[#00583b]`}>
             <Phone className="h-4 w-4" />
             {formatPhone(business.phone)}
           </a>
@@ -33,7 +33,7 @@ export function BusinessActions({ business }: BusinessActionsProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={track("WHATSAPP_CLICK")}
-            className={`${greenBtnClass} bg-green-500 hover:bg-green-600`}
+            className={`${greenBtnClass} bg-[#006c49] hover:bg-[#00583b]`}
           >
             <MessageCircle className="h-4 w-4" />
             WhatsApp

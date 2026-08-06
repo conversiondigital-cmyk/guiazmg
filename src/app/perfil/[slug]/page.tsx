@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
 import { BusinessActions } from "@/components/business/business-actions"
 import { BusinessSaveShare } from "@/components/business/business-save-share"
+import { ReportButton } from "@/components/business/report-button"
 import { BusinessMap } from "@/components/business/business-map"
 import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import { TrackBusinessView } from "@/components/business/track-business-view"
@@ -237,6 +238,11 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                 )}
                 <BusinessActions business={business} />
                 <ClaimButton businessId={business.id} businessName={business.name} />
+                {isPublished && (
+                  <div className="pt-1 text-center">
+                    <ReportButton businessId={business.id} />
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -31,8 +31,9 @@ export function BusinessCatalog({ items }: { items: CatalogItem[] }) {
               {item.image ? (
                 <Image src={item.image} alt={item.title} fill className="object-cover" unoptimized />
               ) : (
-                <div className="flex h-full items-center justify-center text-gray-300">
+                <div className="flex h-full flex-col items-center justify-center gap-1 text-gray-300">
                   <Package className="h-8 w-8" />
+                  <span className="text-[10px] font-medium text-gray-400">Sin imagen</span>
                 </div>
               )}
             </div>

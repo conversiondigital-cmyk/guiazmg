@@ -40,15 +40,24 @@ export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDet
           {business.shortDescription && (
             <p className="mt-2 text-gray-600">{business.shortDescription}</p>
           )}
-          {avgRating > 0 && (
-            <div className="mt-2 flex items-center gap-1 text-sm">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              <span className="font-medium">{avgRating.toFixed(1)}</span>
-              <span className="text-gray-500">
-                ({totalReviews} reseña{totalReviews !== 1 ? "s" : ""})
-              </span>
+          <div className="mt-2 flex items-center gap-1.5 text-sm">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${i <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
+                />
+              ))}
             </div>
-          )}
+            {totalReviews > 0 ? (
+              <span className="text-gray-700">
+                <span className="font-semibold">{avgRating.toFixed(1)}</span> · {totalReviews} reseña
+                {totalReviews !== 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span className="text-gray-400">Sin reseñas aún</span>
+            )}
+          </div>
         </div>
       </div>
 
