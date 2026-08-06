@@ -1,14 +1,14 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lightbulb, Camera, MessageCircle, Zap, Star } from "@/lib/icons"
+import { Lightbulb, Camera, MessageCircle, Zap, Tag } from "@/lib/icons"
 import Link from "next/link"
 
 const tips = [
   { icon: Camera, label: "Completa tu perfil", action: "Agrega más imágenes", href: "/dashboard/negocio" },
   { icon: MessageCircle, label: "Responde reseñas", action: "Mejora tu reputación", href: "/dashboard/resenas" },
   { icon: Zap, label: "Activa un boost", action: "Destaca tu perfil", href: "/dashboard/boosts" },
-  { icon: Star, label: "Actualiza a Premium", action: "Máxima prioridad", href: "/dashboard/membresia" },
+  { icon: Tag, label: "Publica una promoción", action: "Atrae más clientes", href: "/dashboard/promociones" },
 ]
 
 export function GamificationTips() {

@@ -87,7 +87,7 @@ export default function AyudaPage() {
       category: "Registrar un Negocio",
       question: "¿Es gratis registrar mi negocio?",
       answer:
-        "Sí, el registro es completamente gratuito. Puedes crear un perfil básico sin costo. Contamos con planes premium opcionales que ofrecen características adicionales.",
+        "Sí, el registro es completamente gratuito. Puedes crear un perfil básico sin costo. Contamos con planes de pago opcionales que ofrecen características adicionales.",
     },
     {
       id: 3,

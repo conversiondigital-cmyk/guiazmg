@@ -237,7 +237,7 @@ export default function ContactoPage() {
             {[
               {
                 q: "¿Cuánto cuesta registrar un negocio?",
-                a: "El registro es gratuito. Puedes crear un perfil básico sin costo y acceder a planes premium según tus necesidades.",
+                a: "El registro es gratuito. Puedes crear un perfil básico sin costo y acceder a planes de pago según tus necesidades.",
               },
               {
                 q: "¿Cómo puedo editar la información de mi negocio?",
