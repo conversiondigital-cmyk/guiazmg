@@ -66,56 +66,57 @@ export default function PlansPage() {
         {/* Pricing cards */}
         <section className="bg-[#f8f9ff] py-16">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
               {plans.map(([key, plan]) => {
                 const meta = planMeta[key] ?? PLAN_META_FALLBACK
                 const Icon = meta.icon
                 const isRecommended = key === "NEGOCIO"
                 return (
-                  <Card
+                  <div
                     key={key}
-                    className={`relative flex flex-col overflow-visible ${
-                      isRecommended ? "border-[#006c49] shadow-xl ring-2 ring-[#006c49]" : ""
+                    className={`relative flex flex-col rounded-2xl border bg-white p-6 transition-shadow hover:shadow-md ${
+                      isRecommended ? "border-[#006c49] ring-1 ring-[#006c49]/20" : "border-gray-200"
                     }`}
                   >
                     {isRecommended && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-[#006c49] px-4 py-1 text-xs text-white">Más popular</Badge>
-                      </div>
+                      <span className="absolute right-4 top-4 rounded-full bg-[#006c49] px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                        Más popular
+                      </span>
                     )}
-                    <CardHeader className="pb-4">
-                      <div className="mb-1 flex items-center gap-2">
-                        <Icon className={`h-5 w-5 ${meta.color}`} />
-                        <CardTitle className="text-lg">{plan.name}</CardTitle>
-                      </div>
-                      <p className="text-xs text-gray-500">{plan.tagline}</p>
-                      <div className="mt-4">
-                        <span className="text-4xl font-bold text-gray-900">${plan.price}</span>
-                        <span className="ml-1 text-sm text-gray-500">MXN/mes</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex flex-1 flex-col">
-                      <ul className="flex-1 space-y-2.5">
-                        {plan.features.map((f) => (
-                          <li key={f} className="flex items-start gap-2">
-                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
-                            <span className="text-sm text-gray-600">{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Link href={`/checkout?plan=${plan.slug}`} className="mt-6 block">
-                        <Button
-                          className={`w-full text-white ${
-                            isRecommended
-                              ? "bg-[#006c49] hover:bg-[#00583b]"
-                              : "bg-[#003527] hover:bg-[#00281e]"
-                          }`}
-                        >
-                          Empezar por ${plan.price}/mes
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+
+                    <div className="flex items-center gap-2 pr-24">
+                      <Icon className={`h-5 w-5 ${meta.color}`} />
+                      <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">{plan.tagline}</p>
+
+                    <div className="mt-4 flex items-baseline gap-1">
+                      <span className="text-3xl font-extrabold tracking-tight text-gray-900">
+                        ${plan.price}
+                      </span>
+                      <span className="text-sm font-medium text-gray-400">/mes</span>
+                    </div>
+                    <p className="text-xs text-gray-400">MXN · facturación mensual</p>
+
+                    <ul className="mt-5 flex-1 space-y-2.5">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Link href={`/checkout?plan=${plan.slug}`} className="mt-6 block">
+                      <Button
+                        variant={isRecommended ? "default" : "outline"}
+                        size="lg"
+                        className={`w-full rounded-lg ${isRecommended ? "bg-[#006c49] text-white hover:bg-[#00583b]" : ""}`}
+                      >
+                        Elegir {plan.name}
+                      </Button>
+                    </Link>
+                  </div>
                 )
               })}
             </div>

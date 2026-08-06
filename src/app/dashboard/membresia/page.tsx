@@ -226,94 +226,78 @@ export default async function MembresiaPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid max-w-3xl gap-5 sm:grid-cols-2">
             {plans.map((plan) => {
               const isActive = activeMembership?.planId === plan.id
-
+              const recommended = plan.slug === "negocio" && !activeMembership
+              const feats = [
+                `${plan.maxListings} productos y ${plan.maxServices} servicios`,
+                `${plan.maxGalleryImages} imágenes por publicación`,
+                ...(plan.hasFeaturedBadge ? ["Badge destacado"] : []),
+                ...(plan.hasSocialLinks ? ["Redes sociales"] : []),
+                ...(plan.hasWebsiteLink ? ["Sitio web"] : []),
+              ]
               return (
-                <Card
+                <div
                   key={plan.id}
-                  className={`relative flex flex-col overflow-visible ${
+                  className={`relative flex flex-col rounded-2xl border bg-white p-6 transition-shadow hover:shadow-md ${
                     isActive
-                      ? "border-green-600 ring-2 ring-green-200"
-                      : plan.slug === "negocio" && !activeMembership
-                        ? "border-amber-300"
-                        : ""
+                      ? "border-green-600 ring-1 ring-green-200"
+                      : recommended
+                        ? "border-green-500 ring-1 ring-green-100"
+                        : "border-gray-200"
                   }`}
                 >
-                  {isActive && (
-                    <div className="absolute right-3 top-3 z-10">
-                      <Badge className="bg-green-700 text-white shadow-sm">Actual</Badge>
-                    </div>
+                  {(isActive || recommended) && (
+                    <span
+                      className={`absolute right-4 top-4 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                        isActive ? "bg-green-100 text-green-700" : "bg-green-600 text-white"
+                      }`}
+                    >
+                      {isActive ? "Plan actual" : "Recomendado"}
+                    </span>
                   )}
-                  {plan.slug === "negocio" && !activeMembership && (
-                    <div className="absolute right-3 top-3 z-10">
-                      <Badge className="bg-amber-500 text-white shadow-sm">Recomendado</Badge>
-                    </div>
+
+                  <div className="flex items-center gap-2 pr-24">
+                    {planIcon[plan.slug] || <Store className="h-5 w-5 text-green-600" />}
+                    <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+                  </div>
+                  {plan.description && (
+                    <p className="mt-1 text-sm text-gray-500">{plan.description}</p>
                   )}
-                  <CardContent className="p-5 flex flex-col h-full">
-                    <div className="mb-3 flex items-center gap-2 pr-20">
-                      {planIcon[plan.slug] || <Store className="h-5 w-5 text-gray-400" />}
-                      <h3 className="font-semibold">{plan.name}</h3>
-                    </div>
-                    <p className="text-2xl font-bold">
+
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-3xl font-extrabold tracking-tight text-gray-900">
                       {formatCurrency(Number(plan.monthlyPrice))}
-                    </p>
-                    <p className="text-xs text-gray-500 mb-3">MXN/mes</p>
-                    {plan.description && (
-                      <p className="text-xs text-gray-400 mb-4">{plan.description}</p>
-                    )}
-                    <ul className="space-y-2 flex-1">
-                      <li className="flex items-start gap-2 text-xs text-gray-600">
-                        <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxListings} productos
+                    </span>
+                    <span className="text-sm font-medium text-gray-400">/mes</span>
+                  </div>
+                  <p className="text-xs text-gray-400">MXN · facturación mensual</p>
+
+                  <ul className="mt-5 flex-1 space-y-2.5">
+                    {feats.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                        {f}
                       </li>
-                      <li className="flex items-start gap-2 text-xs text-gray-600">
-                        <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxServices} servicios
-                      </li>
-                      <li className="flex items-start gap-2 text-xs text-gray-600">
-                        <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                        {plan.maxGalleryImages} imágenes por publicación
-                      </li>
-                      {plan.hasFeaturedBadge && (
-                        <li className="flex items-start gap-2 text-xs text-gray-600">
-                          <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                          Badge destacado
-                        </li>
-                      )}
-                      {plan.hasSocialLinks && (
-                        <li className="flex items-start gap-2 text-xs text-gray-600">
-                          <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                          Redes sociales
-                        </li>
-                      )}
-                      {plan.hasWebsiteLink && (
-                        <li className="flex items-start gap-2 text-xs text-gray-600">
-                          <Check className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
-                          Sitio web
-                        </li>
-                      )}
-                    </ul>
-                    {!isActive && (
-                      <Link
-                        href={`/checkout?plan=${plan.slug}&businessId=${businesses[0]?.id || ""}`}
-                        className="mt-4"
+                    ))}
+                  </ul>
+
+                  {!isActive && (
+                    <Link
+                      href={`/checkout?plan=${plan.slug}&businessId=${businesses[0]?.id || ""}`}
+                      className="mt-6 block"
+                    >
+                      <Button
+                        variant={recommended ? "default" : "outline"}
+                        size="lg"
+                        className="w-full rounded-lg"
                       >
-                        <Button
-                          variant={
-                            plan.slug === "negocio" && !activeMembership
-                              ? "default"
-                              : "outline"
-                          }
-                          className="w-full"
-                        >
-                          {activeMembership ? "Cambiar a este plan" : "Adquirir"}
-                        </Button>
-                      </Link>
-                    )}
-                  </CardContent>
-                </Card>
+                        {activeMembership ? "Cambiar a este plan" : `Elegir ${plan.name}`}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               )
             })}
           </div>
