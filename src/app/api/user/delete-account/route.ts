@@ -16,6 +16,15 @@ export async function DELETE() {
     await prisma.account.deleteMany({ where: { userId: session.user.id } })
     await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {})
 
+    // Desactiva (oculta) los negocios del usuario: salen del directorio público y
+    // quedan marcados como borrados. No se hard-deletean para conservar registros
+    // de pagos/auditoría asociados.
+    const now = new Date()
+    await prisma.profile.updateMany({
+      where: { ownerId: session.user.id, deletedAt: null },
+      data: { status: "INACTIVE", deletedAt: now },
+    })
+
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
