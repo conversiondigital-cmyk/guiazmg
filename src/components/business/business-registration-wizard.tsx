@@ -13,6 +13,7 @@ import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
 import { SERVICE_MODES } from "@/lib/profile-modality"
+import { normalizeName, parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-address"
 
 interface Municipality {
   id: string
@@ -127,7 +128,31 @@ export function BusinessRegistrationWizard({
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Geocodifica el código postal y mueve el mapa/pin (además de la dirección).
+  // Punto ÚNICO de sincronía: recibe un lugar resuelto (de la dirección, del pin o
+  // del CP) y llena dirección, lat/lng, código postal, y hace coincidir Municipio y
+  // Colonia con las opciones de la BD (por nombre, sin acentos). Así el pin, la
+  // dirección, el CP y la colonia siempre concuerdan.
+  const applyResolvedPlace = (p: ResolvedPlace) => {
+    setForm((f) => ({
+      ...f,
+      addressText: p.address || f.addressText,
+      latitude: p.lat.toFixed(6),
+      longitude: p.lng.toFixed(6),
+      postalCode: p.postalCode || f.postalCode,
+    }))
+    if (p.municipality) {
+      const m = municipalities.find((mm) => normalizeName(mm.name) === normalizeName(p.municipality!))
+      if (m) {
+        setSelectedMunicipio(m.id)
+        if (p.neighborhood) {
+          const n = m.neighborhoods.find((nn) => normalizeName(nn.name) === normalizeName(p.neighborhood!))
+          setForm((f) => ({ ...f, neighborhoodId: n ? n.id : f.neighborhoodId }))
+        }
+      }
+    }
+  }
+
+  // Geocodifica el código postal → mueve el mapa y sincroniza todo.
   const geocodePostal = () => {
     const cp = form.postalCode.trim()
     if (!/^\d{5}$/.test(cp)) return
@@ -138,11 +163,37 @@ export function BusinessRegistrationWizard({
       (res: any, status: string) => {
         if (status === "OK" && res?.[0]?.geometry?.location) {
           const loc = res[0].geometry.location
-          setForm((p) => ({
-            ...p,
+          applyResolvedPlace({
+            address: form.addressText || res[0].formatted_address || "",
+            lat: loc.lat(),
+            lng: loc.lng(),
+            ...parseAddressComponents(res[0].address_components),
+            postalCode: cp,
+          })
+        }
+      },
+    )
+  }
+
+  // Geocodifica una colonia elegida (dentro del municipio) → mueve el pin y CP.
+  const geocodeNeighborhood = (neighborhoodId: string) => {
+    const g = (window as any).google
+    if (!g?.maps?.Geocoder || !neighborhoodId) return
+    const muni = municipalities.find((m) => m.id === selectedMunicipio)
+    const colonia = muni?.neighborhoods.find((n) => n.id === neighborhoodId)?.name
+    if (!colonia) return
+    const query = `${colonia}, ${muni?.name ?? ""}, Jalisco, México`
+    new g.maps.Geocoder().geocode(
+      { address: query, componentRestrictions: { country: "MX" } },
+      (res: any, status: string) => {
+        if (status === "OK" && res?.[0]?.geometry?.location) {
+          const loc = res[0].geometry.location
+          const parsed = parseAddressComponents(res[0].address_components)
+          setForm((f) => ({
+            ...f,
             latitude: loc.lat().toFixed(6),
             longitude: loc.lng().toFixed(6),
-            addressText: p.addressText || res[0].formatted_address || p.addressText,
+            postalCode: parsed.postalCode || f.postalCode,
           }))
         }
       },
@@ -644,7 +695,7 @@ export function BusinessRegistrationWizard({
             {municipio && municipio.neighborhoods.length > 0 && (
               <div>
                 <Label htmlFor="neighborhood">Colonia</Label>
-                <Select value={form.neighborhoodId} onValueChange={(v) => v && updateField("neighborhoodId", v)} items={Object.fromEntries((municipio?.neighborhoods ?? []).map((n) => [n.id, n.name]))}>
+                <Select value={form.neighborhoodId} onValueChange={(v) => { if (v) { updateField("neighborhoodId", v); geocodeNeighborhood(v) } }} items={Object.fromEntries((municipio?.neighborhoods ?? []).map((n) => [n.id, n.name]))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar colonia" />
                   </SelectTrigger>
@@ -664,14 +715,7 @@ export function BusinessRegistrationWizard({
               apiKey={mapsApiKey}
               value={form.addressText}
               onChange={(v) => updateField("addressText", v)}
-              onPlace={(d) =>
-                setForm((p) => ({
-                  ...p,
-                  addressText: d.address,
-                  latitude: d.lat.toFixed(6),
-                  longitude: d.lng.toFixed(6),
-                }))
-              }
+              onPlace={applyResolvedPlace}
               placeholder="Empieza a escribir tu dirección…"
               className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
             />
@@ -685,7 +729,7 @@ export function BusinessRegistrationWizard({
               onChange={(la, lo) =>
                 setForm((p) => ({ ...p, latitude: la.toFixed(6), longitude: lo.toFixed(6) }))
               }
-              onAddress={(a) => setForm((p) => ({ ...p, addressText: a }))}
+              onResolved={applyResolvedPlace}
             />
           </div>
           <div className="grid gap-5 sm:grid-cols-3">

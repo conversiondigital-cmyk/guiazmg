@@ -2,12 +2,13 @@
 
 import { useEffect, useRef } from "react"
 import { loadGoogleMaps } from "@/lib/google-maps-loader"
+import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-address"
 
 interface Props {
   apiKey: string
   value: string
   onChange: (value: string) => void
-  onPlace: (data: { address: string; lat: number; lng: number }) => void
+  onPlace: (data: ResolvedPlace) => void
   placeholder?: string
   className?: string
   id?: string
@@ -37,7 +38,7 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
         if (!g?.maps?.places) return
         autocomplete = new g.maps.places.Autocomplete(inputRef.current, {
           componentRestrictions: { country: "mx" },
-          fields: ["formatted_address", "geometry"],
+          fields: ["formatted_address", "geometry", "address_components"],
           types: ["address"],
         })
         autocomplete.addListener("place_changed", () => {
@@ -49,6 +50,7 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
               address: place.formatted_address || "",
               lat: loc.lat(),
               lng: loc.lng(),
+              ...parseAddressComponents(place.address_components),
             })
           }
         })
@@ -79,6 +81,7 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
             address: results[0].formatted_address || text,
             lat: loc.lat(),
             lng: loc.lng(),
+            ...parseAddressComponents(results[0].address_components),
           })
         }
       },

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { loadGoogleMaps } from "@/lib/google-maps-loader"
+import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-address"
 
 // Centro por defecto: Guadalajara.
 const GDL = { lat: 20.6597, lng: -103.3496 }
@@ -11,20 +12,20 @@ interface Props {
   lat?: number | null
   lng?: number | null
   onChange: (lat: number, lng: number) => void
-  // Al mover el pin, devuelve también la dirección (reverse-geocoding) para
-  // actualizar el campo de dirección de arriba.
-  onAddress?: (address: string) => void
+  // Al mover el pin, devuelve dirección + CP/colonia/municipio (reverse-geocoding)
+  // para autocompletar esos campos de arriba.
+  onResolved?: (place: ResolvedPlace) => void
 }
 
-export function GoogleMapPicker({ apiKey, lat, lng, onChange, onAddress }: Props) {
+export function GoogleMapPicker({ apiKey, lat, lng, onChange, onResolved }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
   const geocoderRef = useRef<any>(null)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
-  const onAddressRef = useRef(onAddress)
-  onAddressRef.current = onAddress
+  const onResolvedRef = useRef(onResolved)
+  onResolvedRef.current = onResolved
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -52,11 +53,16 @@ export function GoogleMapPicker({ apiKey, lat, lng, onChange, onAddress }: Props
           const la = pos.lat()
           const lo = pos.lng()
           onChangeRef.current(la, lo)
-          // Reverse-geocoding: al mover el pin, actualiza la dirección de arriba.
-          if (geocoderRef.current && onAddressRef.current) {
+          // Reverse-geocoding: al mover el pin, actualiza dirección + CP/colonia.
+          if (geocoderRef.current && onResolvedRef.current) {
             geocoderRef.current.geocode({ location: { lat: la, lng: lo } }, (res: any, status: string) => {
-              if (status === "OK" && res?.[0]?.formatted_address) {
-                onAddressRef.current?.(res[0].formatted_address)
+              if (status === "OK" && res?.[0]) {
+                onResolvedRef.current?.({
+                  address: res[0].formatted_address || "",
+                  lat: la,
+                  lng: lo,
+                  ...parseAddressComponents(res[0].address_components),
+                })
               }
             })
           }
