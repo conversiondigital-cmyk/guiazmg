@@ -20,15 +20,24 @@ export default async function AdminConfigSectionPage({ params }: { params: Promi
     where: { key: { in: settingKeys } },
   })
 
+  // Vista enmascarada de un secreto: primeras 4 y últimas 4 (para confirmar que es
+  // el valor correcto SIN exponerlo). El valor completo nunca viaja al navegador.
+  const maskSecret = (v: string): string =>
+    v.length > 8 ? `${v.slice(0, 4)}…${v.slice(-4)}` : "••••"
+
   const initialValues: Record<string, string> = {}
   const savedSecrets: string[] = []
+  const secretHints: Record<string, string> = {}
   config.fields.forEach((field) => {
     const setting = settings.find((s) => s.key === field.key)
     const stored = setting?.value || ""
     if (SECRET_KEYS.has(field.key)) {
-      // El secreto no viaja al navegador; solo se marca que existe uno guardado.
+      // El secreto no viaja al navegador; solo se manda una pista enmascarada 4+4.
       initialValues[field.key] = ""
-      if (stored) savedSecrets.push(field.key)
+      if (stored) {
+        savedSecrets.push(field.key)
+        secretHints[field.key] = maskSecret(stored)
+      }
     } else {
       initialValues[field.key] = stored
     }
@@ -42,7 +51,12 @@ export default async function AdminConfigSectionPage({ params }: { params: Promi
         <p className="text-sm text-slate-500">{config.description}</p>
       </div>
 
-      <ConfigurationSectionClient section={section} initialValues={initialValues} savedSecrets={savedSecrets} />
+      <ConfigurationSectionClient
+        section={section}
+        initialValues={initialValues}
+        savedSecrets={savedSecrets}
+        secretHints={secretHints}
+      />
     </div>
   )
 }

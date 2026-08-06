@@ -15,12 +15,16 @@ export function ConfigurationSectionClient({
   section,
   initialValues,
   savedSecrets = [],
+  secretHints = {},
 }: {
   section: string
   initialValues: ConfigValue
   // Claves de secretos que YA tienen un valor guardado (el valor nunca llega
   // al navegador; esto solo alimenta el placeholder "•••• guardado").
   savedSecrets?: string[]
+  // Pista enmascarada 4+4 por secreto guardado (p. ej. "AIza…4h2k") para confirmar
+  // que es la key correcta sin revelarla.
+  secretHints?: Record<string, string>
 }) {
   const config = ADMIN_CONFIG_SECTIONS[section as keyof typeof ADMIN_CONFIG_SECTIONS]
   const savedSecretSet = new Set(savedSecrets)
@@ -179,6 +183,13 @@ export function ConfigurationSectionClient({
                   autoComplete={SECRET_KEYS.has(field.key) ? "new-password" : undefined}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder-slate-400 focus:border-slate-300 focus:outline-none"
                 />
+              )}
+              {secretHints[field.key] && (
+                <p className="mt-1 text-xs text-slate-500">
+                  Guardado actualmente:{" "}
+                  <span className="font-mono text-slate-700">{secretHints[field.key]}</span>{" "}
+                  <span className="text-slate-400">(primeras y últimas 4 — escribe arriba para reemplazar)</span>
+                </p>
               )}
             </div>
           ))}
