@@ -78,8 +78,8 @@ export async function getProfileBySlug(slug: string) {
 // cuando el admin edita esas entidades (revalidateTag) y, como red de seguridad,
 // por tiempo. Categorías/municipios cambian poco → 1h; destacados → 10min.
 export const getCategories = unstable_cache(
-  async () =>
-    prisma.category.findMany({
+  async () => {
+    const cats = await prisma.category.findMany({
       where: { isActive: true },
       include: {
         // Giros en orden alfabético para que sean fáciles de encontrar.
@@ -87,7 +87,12 @@ export const getCategories = unstable_cache(
       },
       // Categorías en orden alfabético (antes por sortOrder manual).
       orderBy: { name: "asc" },
-    }),
+    })
+    // Oculta categorías activas SIN giros (Restaurantes, Cafeterías, etc. quedaron
+    // vacías y llevaban a un callejón sin salida). Reversible: al agregarles giros
+    // vuelven a aparecer. No toca datos.
+    return cats.filter((c) => c.subcategories.length > 0)
+  },
   ["categories"],
   { revalidate: 600, tags: ["categories"] }
 )
@@ -111,8 +116,11 @@ export const getFeaturedProfiles = unstable_cache(
       where: { status: "ACTIVE" },
       include: {
         municipality: true,
+        neighborhood: true,
         category: true,
         memberships: { include: { plan: true } },
+        hours: true,
+        _count: { select: { reviews: true } },
       },
       orderBy: [{ isBoosted: "desc" }, { isVerified: "desc" }, { isFeatured: "desc" }, { createdAt: "desc" }],
       take: limit,
