@@ -82,9 +82,11 @@ export const getCategories = unstable_cache(
     prisma.category.findMany({
       where: { isActive: true },
       include: {
-        subcategories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+        // Giros en orden alfabético para que sean fáciles de encontrar.
+        subcategories: { where: { isActive: true }, orderBy: { name: "asc" } },
       },
-      orderBy: { sortOrder: "asc" },
+      // Categorías en orden alfabético (antes por sortOrder manual).
+      orderBy: { name: "asc" },
     }),
   ["categories"],
   { revalidate: 600, tags: ["categories"] }
