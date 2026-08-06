@@ -19,7 +19,7 @@ async function main() {
   const p = prisma as any
   const keys = ["stripe_api_key", "stripe_webhook_secret", "stripe_public_key", "stripe_sandbox"]
   const rows = await p.systemSetting.findMany({ where: { key: { in: keys } }, select: { key: true, value: true } })
-  const map = new Map(rows.map((r: any) => [r.key, r.value]))
+  const map = new Map<string, string | null>(rows.map((r: any) => [r.key, r.value]))
   console.log("== Estado de Stripe en PROD ==")
   console.log("Secret Key      :", classify(map.get("stripe_api_key")))
   console.log("Webhook Secret  :", classify(map.get("stripe_webhook_secret")))
