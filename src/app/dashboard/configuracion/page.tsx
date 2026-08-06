@@ -4,11 +4,12 @@ import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Settings, Bell, Shield, Globe } from "@/lib/icons"
+import { Settings, Bell, Shield, Globe, AlertTriangle } from "@/lib/icons"
 import { redirect } from "next/navigation"
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences"
 import { SecuritySection } from "@/components/dashboard/security-section"
 import { PersonalInfoForm } from "@/components/dashboard/personal-info-form"
+import { DeleteAccountSection } from "@/components/dashboard/delete-account-section"
 
 export default async function ConfiguracionPage() {
   const session = await auth()
@@ -103,6 +104,18 @@ export default async function ConfiguracionPage() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-red-100">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            Eliminar cuenta
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DeleteAccountSection />
         </CardContent>
       </Card>
     </div>
