@@ -79,7 +79,6 @@ function BusinessCard({ business }: { business: SearchBusiness }) {
   const img: string | null = business.coverImageUrl || business.logoUrl || null
   const rating: number = Number(business.avgRating) || 0
   const reviews: number = business._count?.reviews ?? 0
-  const activeMembership = business.memberships?.find((m: { status: string }) => m.status === "ACTIVE")
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
@@ -114,11 +113,6 @@ function BusinessCard({ business }: { business: SearchBusiness }) {
           {business.isVerified && (
             <span className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
               Verificado
-            </span>
-          )}
-          {activeMembership && (
-            <span className="rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-              Premium
             </span>
           )}
         </div>

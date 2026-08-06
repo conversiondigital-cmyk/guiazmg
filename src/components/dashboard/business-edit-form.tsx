@@ -759,10 +759,6 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
                 <Star className="size-3" />
                 Destacado
               </Badge>
-              <Badge variant={business.isPremium ? "default" : "outline"} className="gap-1.5">
-                <Star className="size-3" />
-                Premium
-              </Badge>
             </div>
           </SectionCard>
 
