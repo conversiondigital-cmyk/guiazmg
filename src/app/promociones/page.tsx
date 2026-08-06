@@ -111,7 +111,7 @@ export default async function PromocionesPage() {
     <>
       <Header />
       <main className="flex-1">
-        <section className="relative overflow-hidden bg-green-900 py-16">
+        <section className="relative overflow-hidden bg-green-900 py-12">
           <div
             className="absolute inset-0 opacity-5"
             style={{
@@ -122,7 +122,7 @@ export default async function PromocionesPage() {
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Exclusivo para ti</p>
-              <h1 className="text-4xl font-black text-white sm:text-5xl">Promociones y Ofertas</h1>
+              <h1 className="text-3xl font-black text-white sm:text-4xl">Promociones y Ofertas</h1>
               <p className="mt-4 text-xl text-green-200">
                 Las promociones reales de los negocios registrados en Guía ZMG
               </p>

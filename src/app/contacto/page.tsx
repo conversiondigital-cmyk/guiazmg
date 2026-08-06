@@ -62,12 +62,12 @@ export default function ContactoPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-green-900 py-16 relative overflow-hidden">
+        <section className="bg-green-900 py-12 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Soporte</p>
-              <h1 className="text-4xl font-black text-white sm:text-5xl">Contacto</h1>
+              <h1 className="text-3xl font-black text-white sm:text-4xl">Contacto</h1>
               <p className="mt-4 text-xl text-green-200">
                 ¿Preguntas o sugerencias? Nos encantaría escucharte
               </p>

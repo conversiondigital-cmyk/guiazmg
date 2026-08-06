@@ -53,10 +53,10 @@ export default function PlansPage() {
       <Header />
       <main className="flex-1">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-20">
+        <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-14">
           <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-bold text-white sm:text-5xl">Planes para tu negocio</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-xl text-white/85">
+            <h1 className="text-3xl font-bold text-white sm:text-4xl">Planes para tu negocio</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-lg text-white/85">
               Desde quien vende por su cuenta hasta negocios establecidos. Dos planes, sin
               complicaciones.
             </p>

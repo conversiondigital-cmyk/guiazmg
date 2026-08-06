@@ -93,11 +93,11 @@ export default async function BlogPage({ searchParams }: Props) {
       <Header />
       <main className="flex-1">
         {/* Hero */}
-        <section className="bg-green-900 py-16 relative overflow-hidden">
+        <section className="bg-green-900 py-12 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Blog</p>
-            <h1 className="text-4xl font-black text-white sm:text-5xl">
+            <h1 className="text-3xl font-black text-white sm:text-4xl">
               {q ? `Búsqueda: "${q}"` : categoria ? categoria : "Blog de Guía ZMG"}
             </h1>
             <p className="mt-4 text-lg text-green-200 max-w-2xl mx-auto">

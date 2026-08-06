@@ -13,7 +13,7 @@ export default function PoliticaPrivacidadPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-green-900 py-16 relative overflow-hidden">
+        <section className="bg-green-900 py-12 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px)",backgroundSize:"60px 60px"}} />
           <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-amber-400">Legal · LFPDPPP</p>

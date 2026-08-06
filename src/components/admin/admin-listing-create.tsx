@@ -25,14 +25,14 @@ const EMPTY = {
 }
 
 /**
- * Botón + diálogo para que un admin cree un anuncio (producto o servicio)
+ * Botón + diálogo para que un admin cree un producto o servicio
  * en nombre de un negocio. Usado en /admin/anuncios y /admin/servicios.
  */
 export function AdminListingCreate({
   profiles,
   categories,
   buttonLabel = "Nuevo",
-  dialogTitle = "Nuevo anuncio",
+  dialogTitle = "Nuevo producto",
 }: {
   profiles: Opt[]
   categories: Opt[]
@@ -62,12 +62,12 @@ export function AdminListingCreate({
       })
       if (!res.ok) {
         const e = await res.json().catch(() => ({}))
-        throw new Error(e.error ?? "Error al crear el anuncio")
+        throw new Error(e.error ?? "Error al crear el producto")
       }
       setOpen(false)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al crear el anuncio")
+      setError(e instanceof Error ? e.message : "Error al crear el producto")
     } finally {
       setSaving(false)
     }
