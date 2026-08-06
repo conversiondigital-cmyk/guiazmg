@@ -1221,6 +1221,21 @@ model Notification {
   @@map("notifications")
 }
 
+/// Alta de negocio en espera de pago (cliente real sin cupón). NO se crea el
+/// negocio hasta que el pago se concreta: aquí se guardan temporalmente los datos
+/// del formulario. El webhook de Stripe lee esto, crea el negocio ACTIVO y lo borra.
+/// Un cron limpia los abandonados.
+model PendingRegistration {
+  id        String   @id @default(cuid())
+  userId    String
+  planSlug  String
+  data      Json // body validado del formulario del negocio
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("pending_registrations")
+}
+
 /// Visitas de entrada al sitio (1 por sesión) para analítica de fuentes de tráfico.
 model PageVisit {
   id        String   @id @default(cuid())

@@ -15,9 +15,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { plan, businessId, couponCode } = (await request.json().catch(() => ({}))) as {
+  const { plan, businessId, pending, couponCode } = (await request.json().catch(() => ({}))) as {
     plan?: string
     businessId?: string
+    pending?: string
     couponCode?: string
   }
 
@@ -25,20 +26,34 @@ export async function POST(request: Request) {
   if (!planDef) {
     return NextResponse.json({ error: "Plan inválido" }, { status: 400 })
   }
-  if (!businessId) {
+  if (!businessId && !pending) {
     return NextResponse.json({ error: "Falta el negocio" }, { status: 400 })
   }
   if (planDef.price <= 0) {
     return NextResponse.json({ error: "El plan gratuito no requiere pago" }, { status: 400 })
   }
 
-  // El negocio debe ser del usuario.
-  const business = await prisma.profile.findFirst({
-    where: { id: businessId, ownerId: session.user.id },
-    select: { id: true },
-  })
-  if (!business) {
-    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 })
+  // Dos modos: negocio YA creado (businessId) o alta en espera de pago (pending).
+  // En ambos se valida propiedad y se arma el externalReference que leerá el webhook.
+  let externalReference: string
+  if (pending) {
+    const pend = await prisma.pendingRegistration.findUnique({
+      where: { id: pending },
+      select: { userId: true },
+    })
+    if (!pend || pend.userId !== session.user.id) {
+      return NextResponse.json({ error: "Registro no encontrado" }, { status: 404 })
+    }
+    externalReference = `pendingmembership:${plan}:${session.user.id}:${pending}`
+  } else {
+    const business = await prisma.profile.findFirst({
+      where: { id: businessId, ownerId: session.user.id },
+      select: { id: true },
+    })
+    if (!business) {
+      return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 })
+    }
+    externalReference = `membership:${plan}:${session.user.id}:${businessId}`
   }
 
   // Cupón de descuento (opcional). El descuento se calcula aquí; a Stripe solo le
@@ -78,7 +93,7 @@ export async function POST(request: Request) {
       },
     ],
     metadata: {
-      externalReference: `membership:${plan}:${session.user.id}:${businessId}`,
+      externalReference,
       couponCode: resolution.coupon?.code ?? "",
     },
     success_url: `${baseUrl}/dashboard?pago=exitoso`,

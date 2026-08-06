@@ -4,6 +4,8 @@ import { getStripe, getStripeWebhookSecret } from "@/lib/stripe"
 import { fulfillMembership, fulfillMarketplaceBoost, fulfillBusinessBoost } from "@/lib/payments/fulfill"
 import { createNotification } from "@/lib/notifications/create"
 import { incrementCouponUsage } from "@/lib/coupons"
+import { createBusinessForOwner } from "@/lib/business/create"
+import { businessSchema } from "@/lib/validations"
 
 export const dynamic = "force-dynamic"
 
@@ -146,6 +148,51 @@ export async function POST(request: Request) {
             title: "Pago recibido",
             message: "Tu membresía quedó activa.",
           }).catch(() => {})
+        }
+      }
+
+      // Alta en espera de pago (cliente sin cupón): el negocio NO existía; se crea
+      // ahora que el pago se concretó. `businessId` aquí es el id del pending.
+      // Idempotente: si el usuario ya tiene negocio (reintento), no se duplica.
+      if (kind === "pendingmembership" && planSlug && userId && businessId) {
+        const pendingId = businessId
+        const pend = await prisma.pendingRegistration.findUnique({ where: { id: pendingId } })
+        const existing = await prisma.profile.findFirst({
+          where: { ownerId: userId, deletedAt: null },
+          select: { id: true },
+        })
+        let bizId: string | null = existing?.id ?? null
+        if (!bizId && pend) {
+          const parsed = businessSchema.safeParse(pend.data)
+          if (parsed.success) {
+            try {
+              const created = await createBusinessForOwner({ userId, data: parsed.data, status: "ACTIVE" })
+              bizId = created.id
+            } catch (e) {
+              console.error("[stripe-webhook] pending create failed:", e instanceof Error ? e.message : e)
+            }
+          }
+        }
+        if (bizId) {
+          const result = await fulfillMembership({
+            planSlug,
+            userId,
+            businessId: bizId,
+            provider: "STRIPE",
+            providerPaymentId: s.id,
+            amount,
+            metadata: { source: "stripe", sessionId: s.id },
+          })
+          if (result.ok && !result.alreadyProcessed) {
+            await incrementCouponUsage(s.metadata?.couponCode)
+            await createNotification({
+              userId,
+              type: "PAYMENT",
+              title: "Pago recibido",
+              message: "Tu negocio quedó publicado y activo.",
+            }).catch(() => {})
+          }
+          if (pend) await prisma.pendingRegistration.delete({ where: { id: pendingId } }).catch(() => {})
         }
       }
     }

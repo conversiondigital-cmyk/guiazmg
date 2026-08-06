@@ -24,15 +24,19 @@ function CheckoutContent() {
 
   const plan = searchParams.get("plan")
   const businessIdParam = searchParams.get("businessId")
+  // Alta en espera de pago (cliente sin cupón): el negocio aún NO existe.
+  const pending = searchParams.get("pending")
   // Si el enlace no trae businessId (p. ej. viniendo de /planes), lo resolvemos del
   // usuario: null = aún cargando; "" = no tiene negocio; id = negocio a usar.
   const [resolvedBid, setResolvedBid] = useState<string | null>(businessIdParam)
   const businessId = businessIdParam || (resolvedBid || "")
+  const [summary, setSummary] = useState<{ name: string; addressText?: string; phone?: string } | null>(null)
 
   const membershipPlan = getPlanBySlug(plan)
 
+  // Solo resolvemos el negocio si NO es un alta pendiente (esa aún no tiene negocio).
   useEffect(() => {
-    if (businessIdParam || status !== "authenticated") return
+    if (pending || businessIdParam || status !== "authenticated") return
     let cancelled = false
     fetch("/api/business")
       .then((r) => (r.ok ? r.json() : []))
@@ -45,7 +49,22 @@ function CheckoutContent() {
     return () => {
       cancelled = true
     }
-  }, [businessIdParam, status])
+  }, [pending, businessIdParam, status])
+
+  // Resumen del alta pendiente para mostrarlo antes de pagar.
+  useEffect(() => {
+    if (!pending || status !== "authenticated") return
+    let cancelled = false
+    fetch(`/api/business/pending/${pending}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.name) setSummary({ name: d.name, addressText: d.addressText, phone: d.phone })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [pending, status])
 
   // Valida el cupón contra el servidor y muestra el precio con descuento ANTES de
   // pagar. No incrementa el uso (eso ocurre al concretarse el pago).
@@ -83,7 +102,7 @@ function CheckoutContent() {
   // Pago con Stripe (única pasarela). El webhook activa la membresía y el negocio.
   const pay = async () => {
     if (!membershipPlan) return
-    if (!businessId) {
+    if (!pending && !businessId) {
       toast.error("Primero registra tu negocio para poder pagar.")
       return
     }
@@ -93,7 +112,11 @@ function CheckoutContent() {
       const res = await fetch("/api/payments/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, businessId, ...(coupon ? { couponCode: coupon } : {}) }),
+        body: JSON.stringify({
+          plan,
+          ...(pending ? { pending } : { businessId }),
+          ...(coupon ? { couponCode: coupon } : {}),
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.url) {
@@ -160,6 +183,33 @@ function CheckoutContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {summary && (
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <p className="mb-2 text-sm font-semibold text-gray-700">Tu negocio</p>
+                    <dl className="space-y-1 text-sm">
+                      <div className="flex gap-2">
+                        <dt className="w-24 shrink-0 text-gray-500">Nombre</dt>
+                        <dd className="font-medium text-gray-900">{summary.name}</dd>
+                      </div>
+                      {summary.addressText && (
+                        <div className="flex gap-2">
+                          <dt className="w-24 shrink-0 text-gray-500">Dirección</dt>
+                          <dd className="text-gray-700">{summary.addressText}</dd>
+                        </div>
+                      )}
+                      {summary.phone && (
+                        <div className="flex gap-2">
+                          <dt className="w-24 shrink-0 text-gray-500">Teléfono</dt>
+                          <dd className="text-gray-700">{summary.phone}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    <p className="mt-3 text-xs text-gray-500">
+                      Se publicará al confirmar tu pago. Podrás <strong>editar</strong> toda la
+                      información (fotos, horarios, descripción, etc.) después, desde tu panel.
+                    </p>
+                  </div>
+                )}
                 {membershipPlan && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -226,7 +276,7 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                {resolvedBid === "" ? (
+                {!pending && resolvedBid === "" ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-800">
                     Primero registra tu negocio para poder contratar un plan.
                     <Link href="/registrar-negocio" className="mt-3 block">

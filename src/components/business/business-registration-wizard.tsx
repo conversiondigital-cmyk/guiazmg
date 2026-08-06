@@ -203,32 +203,44 @@ export function BusinessRegistrationWizard({
         hours: hoursArray,
       }
 
-      const res = await fetch("/api/business", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
+      const planSlug = profileType === "EMPRENDEDOR" ? "emprendedor" : "negocio"
 
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        toast.error(data.error || "Error al crear negocio")
-        return
-      }
-
-      if (data.coupon?.applied) {
-        // Cupón/trial: el negocio ya quedó activo por N días. Va al panel.
-        toast.success(`¡Listo! Activaste ${data.coupon.planName} gratis por ${data.coupon.days} días.`)
-        router.push("/dashboard/negocio")
-        router.refresh()
-      } else {
-        if (invitationCode.trim() && data.coupon?.error) {
-          toast.error(`El código no se aplicó: ${data.coupon.error}.`)
+      if (invitationCode.trim()) {
+        // CON cupón: se crea el negocio y se intenta canjear (activación inmediata,
+        // sin pago). Camino de siempre.
+        const res = await fetch("/api/business", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast.error(data.error || "Error al crear negocio")
+          return
         }
-        // Sin cupón: se registró, pero se ACTIVA al pagar. Lo mandamos directo al
-        // checkout de su plan con el businessId, para completar el pago.
-        toast.success("¡Negocio registrado! Completa tu pago para activarlo.")
-        const planSlug = profileType === "EMPRENDEDOR" ? "emprendedor" : "negocio"
-        router.push(`/checkout?plan=${planSlug}&businessId=${data.id}`)
+        if (data.coupon?.applied) {
+          toast.success(`¡Listo! Activaste ${data.coupon.planName} gratis por ${data.coupon.days} días.`)
+          router.push("/dashboard/negocio")
+          router.refresh()
+        } else {
+          // El código no aplicó: el negocio quedó registrado; se activa al pagar.
+          toast.error(`El código no se aplicó: ${data.coupon?.error || "inválido"}. Completa tu pago para activarlo.`)
+          router.push(`/checkout?plan=${planSlug}&businessId=${data.id}`)
+        }
+      } else {
+        // SIN cupón (cliente real): NO se crea el negocio todavía. Se guarda el alta
+        // en espera de pago y se va al checkout; el webhook lo crea al pagar.
+        const res = await fetch("/api/business/pending", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, plan: planSlug }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast.error(data.error || "No se pudo continuar")
+          return
+        }
+        router.push(`/checkout?plan=${planSlug}&pending=${data.id}`)
       }
     } catch {
       toast.error("Error al crear el negocio")
