@@ -70,8 +70,9 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold mb-2 inline-block">
-            <span className="text-green-700">Guía</span> ZMG
+          <Link href="/" className="mb-2 inline-flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Guía ZMG" className="h-9 w-auto" />
           </Link>
           <CardTitle className="text-xl">Crear cuenta</CardTitle>
           <CardDescription>Registra tu negocio o únete como usuario</CardDescription>

@@ -24,7 +24,7 @@ export async function ZonesSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-[#0b1c30] sm:text-3xl">Explora por zona</h2>
+            <h2 className="text-2xl font-bold text-[#003527] md:text-3xl">Explora por zona</h2>
             <p className="mt-1 text-gray-500">
               Encuentra negocios y servicios cerca de ti, por zona de la Zona Metropolitana de Guadalajara.
             </p>
@@ -42,7 +42,7 @@ export async function ZonesSection() {
             <Link
               key={`${z.municipality.slug}-${z.slug}`}
               href={`/${z.municipality.slug}/${z.slug}`}
-              className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-green-200 hover:shadow-md"
+              className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-green-200 hover:shadow-md"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
                 <MapPin className="h-4 w-4" />

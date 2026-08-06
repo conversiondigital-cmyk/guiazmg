@@ -27,7 +27,7 @@ export function LatestBlogPosts({ posts }: LatestBlogPostsProps) {
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Blog</p>
-            <h2 className="text-3xl font-black text-gray-900">Consejos para tu negocio</h2>
+            <h2 className="text-2xl font-bold text-[#003527] md:text-3xl">Consejos para tu negocio</h2>
             <p className="text-gray-500 mt-2 text-sm max-w-xl">
               Estrategias, tendencias y guías prácticas para hacer crecer tu negocio en la ZMG.
             </p>

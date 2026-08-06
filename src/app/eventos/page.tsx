@@ -28,7 +28,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-[#f8f9ff]" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
+      <main className="flex-1 bg-[#f8f9ff]">
         <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-14 text-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Eventos en la Zona Metropolitana</h1>

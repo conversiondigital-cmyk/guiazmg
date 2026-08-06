@@ -5,6 +5,9 @@ import type { Business } from "@/types"
 
 interface FeaturedBusinessesProps {
   businesses: Business[]
+  /** Variante compacta sin la banda de fondo y el header centrado gigante del
+   * home. Se usa dentro de contenedores ya acolchados como /cuenta. */
+  bare?: boolean
 }
 
 const CARD =
@@ -34,20 +37,27 @@ function VerifiedPill() {
   )
 }
 
-export function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
+export function FeaturedBusinesses({ businesses, bare = false }: FeaturedBusinessesProps) {
   if (!businesses.length) return null
   const [hero, ...rest] = businesses
   const smalls = rest.slice(0, 4)
 
   return (
-    <section className="bg-[#eff4ff] py-20">
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-3xl font-bold text-[#003527] sm:text-[32px]">Negocios Destacados</h2>
-          <p className="mx-auto max-w-2xl text-[#404944]">
-            Los establecimientos más recomendados por la comunidad tapatía por su calidad y servicio.
-          </p>
-        </div>
+    <section className={bare ? "" : "bg-[#eff4ff] py-20"}>
+      <div className={bare ? "" : "mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10"}>
+        {bare ? (
+          <div className="mb-5">
+            <h2 className="text-xl font-bold text-[#003527]">Negocios Destacados</h2>
+            <p className="text-sm text-[#404944]">Los más recomendados por la comunidad tapatía.</p>
+          </div>
+        ) : (
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-2xl font-bold text-[#003527] md:text-3xl">Negocios Destacados</h2>
+            <p className="mx-auto max-w-2xl text-[#404944]">
+              Los establecimientos más recomendados por la comunidad tapatía por su calidad y servicio.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
           {/* Hero card */}

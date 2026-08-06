@@ -106,8 +106,9 @@ export default function LoginPage() {
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-emerald-400/20 blur-3xl" />
 
-        <Link href="/" className="relative z-10 inline-flex w-fit items-center gap-1 text-2xl font-bold text-white">
-          <span className="rounded-lg bg-white/15 px-2 py-0.5 backdrop-blur-sm">Guía</span> ZMG
+        <Link href="/" className="relative z-10 inline-flex w-fit items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-white.svg" alt="Guía ZMG" className="h-11 w-auto" />
         </Link>
 
         <div className="relative z-10 max-w-md">

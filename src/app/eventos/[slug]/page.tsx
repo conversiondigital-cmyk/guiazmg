@@ -44,7 +44,7 @@ export default async function EventDetailPage({ params }: EventDetailProps) {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-[#f8f9ff]" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
+      <main className="flex-1 bg-[#f8f9ff]">
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
           <Link href="/eventos" className="mb-6 inline-flex items-center gap-1.5 text-sm text-green-700 hover:underline">
             <ArrowLeft className="h-4 w-4" /> Volver a eventos

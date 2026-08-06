@@ -44,55 +44,58 @@ export default async function CuentaPage() {
   ]
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}>
-      {/* Hero de bienvenida */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] p-5 text-white shadow-[0_8px_30px_-12px_rgba(0,53,39,0.5)]">
-        <div className="relative z-10 max-w-2xl">
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#4edea3]">Bienvenido de vuelta</p>
-          <h1 className="mb-1.5 text-xl font-extrabold leading-tight md:text-2xl">Hola, {firstName}</h1>
-          <p className="mb-4 max-w-xl text-sm text-white/85">
-            Descubre los mejores negocios locales, guarda tus favoritos y apoya a tu comunidad en Guadalajara.
-          </p>
-          <div className="flex flex-wrap gap-2.5">
+    <div className="space-y-6">
+      {/* Hero de bienvenida — compacto */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] px-5 py-4 text-white shadow-[0_8px_30px_-12px_rgba(0,53,39,0.5)]">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg font-extrabold leading-tight md:text-xl">Hola, {firstName}</h1>
+            <p className="mt-0.5 text-sm text-white/80">
+              Descubre negocios locales y apoya a tu comunidad en Guadalajara.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 rounded-full bg-[#4edea3] px-5 py-2.5 text-sm font-semibold text-[#003527] transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="inline-flex items-center gap-2 rounded-full bg-[#4edea3] px-4 py-2 text-sm font-semibold text-[#003527] transition-all hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <Search className="h-4 w-4" /> Explorar negocios
+              <Search className="h-4 w-4" /> Explorar
             </Link>
             <Link
               href="/feed"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
             >
-              <TrendingUp className="h-4 w-4" /> Ver tendencias
+              <TrendingUp className="h-4 w-4" /> Tendencias
             </Link>
           </div>
         </div>
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#4edea3]/10 blur-3xl" />
       </section>
 
-      {/* Resumen rápido */}
+      {/* Resumen rápido — tarjetas compactas horizontales */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ label, value, href, icon: Icon, tint }) => (
           <Link
             key={href}
             href={href}
-            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_4px_16px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(11,28,48,0.10)]"
+            className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_4px_16px_rgba(11,28,48,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(11,28,48,0.10)]"
           >
-            <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${tint}`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tint}`}>
               <Icon className="h-4 w-4" />
             </div>
-            <p className="text-xl font-extrabold text-[#0b1c30]">{value}</p>
-            <p className="text-sm text-[#404944]">{label}</p>
+            <div className="min-w-0">
+              <p className="text-lg font-extrabold leading-none text-[#0b1c30]">{value}</p>
+              <p className="mt-1 truncate text-xs text-[#404944]">{label}</p>
+            </div>
           </Link>
         ))}
       </div>
 
       {/* Categorías Populares */}
-      {categories.length > 0 && <CategoryGrid categories={categories as never} />}
+      {categories.length > 0 && <CategoryGrid categories={categories as never} bare />}
 
       {/* Negocios Destacados */}
-      {featured.length > 0 && <FeaturedBusinesses businesses={featured} />}
+      {featured.length > 0 && <FeaturedBusinesses businesses={featured} bare />}
 
       {/* CTA — registrar negocio */}
       <section className="relative overflow-hidden rounded-[32px] bg-[#064e3b] p-6 text-white md:p-8">

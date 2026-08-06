@@ -32,7 +32,7 @@ export function TestimonialsCarousel() {
   return (
     <section className="bg-white py-20">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
-        <h2 className="mb-16 text-center text-3xl font-bold text-[#003527] sm:text-[32px]">
+        <h2 className="mb-16 text-center text-2xl font-bold text-[#003527] md:text-3xl">
           Lo que dice nuestra comunidad
         </h2>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">

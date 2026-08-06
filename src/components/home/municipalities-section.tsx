@@ -16,7 +16,7 @@ export function MunicipalitiesSection({ municipalities }: MunicipalitiesSectionP
           <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2">
             Cobertura local
           </p>
-          <h2 className="text-3xl font-black text-gray-900">Municipios de la ZMG</h2>
+          <h2 className="text-2xl font-bold text-[#003527] md:text-3xl">Municipios de la ZMG</h2>
           <p className="mt-2 text-gray-500">
             Busca negocios cerca de ti en cualquier municipio del área metropolitana
           </p>

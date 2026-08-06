@@ -45,7 +45,7 @@ export async function HomeHighlights() {
           <span className="inline-block rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
             Destacado
           </span>
-          <h2 className="mt-3 text-2xl font-bold text-[#003527] sm:text-3xl">
+          <h2 className="mt-3 text-2xl font-bold text-[#003527] md:text-3xl">
             {title || "Lo destacado de la semana"}
           </h2>
           {subtitle && <p className="mt-1 text-[#404944]">{subtitle}</p>}

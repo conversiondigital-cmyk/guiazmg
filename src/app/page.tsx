@@ -43,10 +43,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema()) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema()) }} />
       <Header />
-      <main
-        className="flex-1 bg-[#f8f9ff] text-[#0b1c30]"
-        style={{ fontFamily: "var(--font-manrope), system-ui, sans-serif" }}
-      >
+      <main className="flex-1 bg-[#f8f9ff] text-[#0b1c30]">
         <HeroCarousel images={heroImages} config={heroConfig} />
         <HomeHighlights />
         <CategoryGrid categories={categories as any} />

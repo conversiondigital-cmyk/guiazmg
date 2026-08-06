@@ -16,6 +16,10 @@ interface CategoryWithCount extends Category {
 
 interface CategoryGridProps {
   categories: CategoryWithCount[]
+  /** Variante compacta sin el panel decorativo (fondo lila + margen negativo)
+   * del home. Se usa dentro de contenedores ya acolchados como /cuenta, donde
+   * ese margen negativo se comía las tarjetas de arriba. */
+  bare?: boolean
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -37,26 +41,31 @@ const PALETTE = [
   { bg: "bg-[#fde4de]", fg: "text-[#e76f51]" }, // coral
 ]
 
-export function CategoryGrid({ categories }: CategoryGridProps) {
+export function CategoryGrid({ categories, bare = false }: CategoryGridProps) {
   const shown = categories.slice(0, 6)
 
-  return (
-    <div className="relative z-10 -mt-8 rounded-t-[2rem] bg-[#f8f9ff]">
-      <section className="mx-auto max-w-[1080px] px-4 pb-20 pt-14 sm:px-6 sm:pt-16 lg:px-10">
-      <div className="mb-10 flex items-end justify-between">
+  const content = (
+    <>
+      <div className={`flex items-end justify-between ${bare ? "mb-5" : "mb-10"}`}>
         <div>
-          <h2 className="mb-2 text-3xl font-bold text-[#003527] sm:text-[32px]">Explora por Categorías</h2>
-          <p className="text-[#404944]">Todo lo que necesitas, a un clic de distancia.</p>
+          <h2
+            className={`font-bold text-[#003527] ${bare ? "mb-1 text-xl" : "mb-2 text-2xl md:text-3xl"}`}
+          >
+            Explora por Categorías
+          </h2>
+          <p className={`text-[#404944] ${bare ? "text-sm" : ""}`}>
+            Todo lo que necesitas, a un clic de distancia.
+          </p>
         </div>
         <Link
           href="/search"
-          className="flex items-center gap-1 text-sm font-semibold text-[#003527] hover:underline"
+          className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#003527] hover:underline"
         >
           Ver todas <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-6">
+      <div className={`grid grid-cols-3 sm:grid-cols-6 ${bare ? "gap-3" : "grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-6"}`}>
         {shown.map((cat, i) => {
           const Icon = ICON_MAP[cat.slug] ?? LayoutGrid
           const c = PALETTE[i % PALETTE.length]
@@ -64,16 +73,29 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             <Link
               key={cat.id}
               href={`/categoria/${cat.slug}`}
-              className="group flex flex-col items-center gap-3 rounded-3xl bg-white p-6 text-center shadow-[0_6px_24px_rgba(11,28,48,0.05)] ring-1 ring-black/[0.02] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)]"
+              className={`group flex flex-col items-center gap-3 rounded-2xl bg-white text-center shadow-[0_6px_24px_rgba(11,28,48,0.05)] ring-1 ring-black/[0.02] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(11,28,48,0.10)] ${bare ? "p-4" : "p-6"}`}
             >
-              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${c.bg}`}>
-                <Icon className={`h-7 w-7 ${c.fg}`} strokeWidth={1.8} />
+              <div
+                className={`flex items-center justify-center rounded-2xl ${c.bg} ${bare ? "h-11 w-11" : "h-16 w-16"}`}
+              >
+                <Icon className={`${bare ? "h-5 w-5" : "h-7 w-7"} ${c.fg}`} strokeWidth={1.8} />
               </div>
-              <span className="text-[15px] font-medium text-[#1a6453]">{cat.name}</span>
+              <span className={`font-medium text-[#1a6453] ${bare ? "text-[13px]" : "text-[15px]"}`}>
+                {cat.name}
+              </span>
             </Link>
           )
         })}
       </div>
+    </>
+  )
+
+  if (bare) return <section>{content}</section>
+
+  return (
+    <div className="relative z-10 -mt-8 rounded-t-[2rem] bg-[#f8f9ff]">
+      <section className="mx-auto max-w-[1080px] px-4 pb-20 pt-14 sm:px-6 sm:pt-16 lg:px-10">
+        {content}
       </section>
     </div>
   )
