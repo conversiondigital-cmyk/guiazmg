@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
-import { sendEmail, getAdminNotifyEmail } from "@/lib/email"
+import { sendEmail, getAdminNotifyEmail, sendBusinessActivatedEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
 import { redeemMembershipCoupon } from "@/lib/coupons/redeem-membership"
 import { z } from "zod"
@@ -225,6 +225,14 @@ export async function POST(request: NextRequest) {
           title: "Prueba activada",
           message: `Activaste ${res.planName} gratis por ${res.days} días en "${data.name}".`,
         }).catch(() => {})
+        // El cupón dejó el negocio ACTIVO y visible: avisa al dueño por correo.
+        if (session.user.email) {
+          await sendBusinessActivatedEmail(
+            session.user.email,
+            { businessName: data.name, ownerName: session.user.name, planName: res.planName },
+            session.user.id,
+          ).catch(() => {})
+        }
       } else {
         coupon = { applied: false, error: res.error }
       }

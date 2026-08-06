@@ -4,6 +4,11 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/lib/notifications/create"
 import { syncProfileToSearch } from "@/lib/search/sync"
+import {
+  sendBusinessActivatedEmail,
+  sendBusinessSuspendedEmail,
+  sendBusinessVerifiedEmail,
+} from "@/lib/email"
 
 // Revalida las páginas ISR afectadas por un cambio de negocio (perfil, home, categoría).
 async function revalidateProfile(
@@ -178,6 +183,49 @@ export async function PUT(
               ? `${business.name} ya está publicado y visible en Guía ZMG.`
               : `${business.name} fue rechazado. Revisa la información e inténtalo de nuevo.`,
         })
+      }
+
+      // Avisa al dueño cuando se suspende o se reactiva manualmente su negocio.
+      if (action === "SUSPEND" || action === "ACTIVATE") {
+        await createNotification({
+          userId: business.ownerId,
+          type: "SYSTEM",
+          title: action === "SUSPEND" ? "Tu negocio fue suspendido" : "Tu negocio fue reactivado",
+          message:
+            action === "SUSPEND"
+              ? `${business.name} dejó de mostrarse en Guía ZMG. Escríbenos si tienes dudas.`
+              : `${business.name} volvió a estar visible en Guía ZMG.`,
+        })
+      }
+
+      // Correo al dueño según el evento (activado / suspendido / verificado).
+      // Best-effort: si el correo falla, la acción del admin ya quedó aplicada.
+      if (["APPROVE", "ACTIVATE", "SUSPEND", "VERIFY"].includes(action)) {
+        const owner = await prisma.user.findUnique({
+          where: { id: business.ownerId },
+          select: { email: true, name: true },
+        })
+        if (owner?.email) {
+          if (action === "APPROVE" || action === "ACTIVATE") {
+            await sendBusinessActivatedEmail(
+              owner.email,
+              { businessName: business.name, ownerName: owner.name },
+              business.ownerId,
+            ).catch(() => {})
+          } else if (action === "SUSPEND") {
+            await sendBusinessSuspendedEmail(
+              owner.email,
+              { businessName: business.name, reason: "fue suspendido por el equipo de Guía ZMG" },
+              business.ownerId,
+            ).catch(() => {})
+          } else if (action === "VERIFY") {
+            await sendBusinessVerifiedEmail(
+              owner.email,
+              { businessName: business.name, profileSlug: updated.slug },
+              business.ownerId,
+            ).catch(() => {})
+          }
+        }
       }
 
       return NextResponse.json(updated)

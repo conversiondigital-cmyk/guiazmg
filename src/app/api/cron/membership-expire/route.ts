@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { touchRedis } from "@/lib/redis-keepalive"
 import { createNotification } from "@/lib/notifications/create"
-import { sendEmail } from "@/lib/email"
+import { sendEmail, sendBusinessSuspendedEmail } from "@/lib/email"
 import { getPublicAppUrl } from "@/lib/env"
 
 export const dynamic = "force-dynamic"
@@ -103,11 +103,34 @@ export async function GET(req: NextRequest) {
 
   let hidden = 0
   if (ids.length) {
+    // Toma los que de verdad se van a ocultar (con su dueño) para avisarles.
+    const toHide = await prisma.profile.findMany({
+      where: { id: { in: ids }, status: "ACTIVE", isFounder: false, deletedAt: null },
+      select: { id: true, name: true, owner: { select: { id: true, email: true } } },
+    })
     const res = await prisma.profile.updateMany({
       where: { id: { in: ids }, status: "ACTIVE", isFounder: false, deletedAt: null },
       data: { status: "INACTIVE" },
     })
     hidden = res.count
+    // Aviso al dueño: su negocio dejó de estar visible porque venció la membresía.
+    for (const b of toHide) {
+      if (b.owner?.id) {
+        await createNotification({
+          userId: b.owner.id,
+          type: "EXPIRATION",
+          title: "Tu negocio dejó de estar visible",
+          message: `"${b.name}" salió del directorio porque tu membresía venció. Renueva para reactivarlo.`,
+        }).catch(() => {})
+      }
+      if (b.owner?.email) {
+        await sendBusinessSuspendedEmail(
+          b.owner.email,
+          { businessName: b.name, reason: "tu membresía venció" },
+          b.owner.id,
+        ).catch(() => {})
+      }
+    }
   }
 
   return NextResponse.json({

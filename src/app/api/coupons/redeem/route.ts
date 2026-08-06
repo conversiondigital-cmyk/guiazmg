@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { enforceRateLimits } from "@/lib/security/request-rate-limit"
 import { getTrustedClientIp } from "@/lib/security/rate-limit"
+import { sendBusinessActivatedEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
@@ -160,6 +161,15 @@ export async function POST(req: NextRequest) {
         },
       })
       .catch(() => {})
+
+    // El canje dejó el negocio activo y visible: avisa al dueño por correo.
+    if (session.user.email) {
+      await sendBusinessActivatedEmail(
+        session.user.email,
+        { businessName: business.name, ownerName: session.user.name, planName: result.planName },
+        session.user.id,
+      ).catch(() => {})
+    }
 
     return NextResponse.json({
       success: true,

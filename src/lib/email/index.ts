@@ -34,6 +34,23 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
     subject: `Tu boost ha terminado${v.businessName ? ` - ${v.businessName}` : ""}`,
     html: `<h1>Tu boost ha terminado</h1><p>El boost de <strong>${v.businessName || "tu negocio"}</strong> ha finalizado.</p><p><a href="${v.boostUrl || "#"}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Activar nuevo boost</a></p>`,
   }),
+  // Al DUEÑO cuando su negocio/emprendimiento queda activo y visible en el directorio
+  // (por pago, cupón de prueba o aprobación del admin).
+  business_activated: (v) => ({
+    subject: `¡${v.businessName || "Tu negocio"} ya está activo en Guía ZMG!`,
+    html: `<h1>¡Ya estás en Guía ZMG${v.ownerName ? `, ${v.ownerName}` : ""}!</h1><p><strong>${v.businessName || "Tu negocio"}</strong> quedó activo y ya aparece en el directorio${v.planName ? ` con tu plan <strong>${v.planName}</strong>` : ""}.</p><p>Completa tu perfil (fotos, horarios, descripción) para atraer más clientes.</p><p><a href="${v.dashboardUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Ir a mi panel</a></p>`,
+  }),
+  // Al DUEÑO cuando su negocio deja de estar visible: suspensión por el admin o
+  // baja automática al vencer la membresía. `reason` explica el motivo.
+  business_suspended: (v) => ({
+    subject: `${v.businessName || "Tu negocio"} dejó de estar visible en Guía ZMG`,
+    html: `<h1>Tu negocio ya no aparece en el directorio</h1><p><strong>${v.businessName || "Tu negocio"}</strong> dejó de mostrarse en Guía ZMG${v.reason ? `: ${v.reason}` : "."}.</p><p>Para reactivarlo, renueva tu plan o escríbenos si crees que fue un error.</p><p><a href="${v.membershipUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Reactivar mi negocio</a></p><p style="font-size:13px;color:#6b7280">¿Dudas? Responde a este correo y te ayudamos.</p>`,
+  }),
+  // Al DUEÑO cuando su negocio obtiene la insignia de Verificado.
+  business_verified: (v) => ({
+    subject: `${v.businessName || "Tu negocio"} ya está verificado en Guía ZMG`,
+    html: `<h1>¡Tu negocio fue verificado! ✓</h1><p><strong>${v.businessName || "Tu negocio"}</strong> ahora muestra la insignia de <strong>Verificado</strong> en Guía ZMG, lo que da más confianza a tus clientes.</p><p><a href="${v.profileUrl || "#"}" style="background:#003527;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Ver mi perfil</a></p>`,
+  }),
   inactive_business: (v) => ({
     subject: `Tu negocio ${v.businessName || ""} - ¿Cómo podemos ayudarte?`,
     html: `<h1>Tu negocio sigue esperando</h1><p><a href="${v.dashboardUrl || "#"}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Completar mi perfil</a></p>`,
@@ -150,4 +167,58 @@ export async function sendVerificationEmail(
   userId?: string,
 ) {
   return sendEmail(email, "verify_email", { verifyUrl, name: name || "" }, userId)
+}
+
+// Avisa al dueño que su negocio quedó ACTIVO y visible (pago, cupón o aprobación).
+export async function sendBusinessActivatedEmail(
+  email: string,
+  data: { businessName: string; ownerName?: string | null; planName?: string | null },
+  userId?: string,
+) {
+  return sendEmail(
+    email,
+    "business_activated",
+    {
+      businessName: data.businessName,
+      ownerName: data.ownerName || "",
+      planName: data.planName || "",
+      dashboardUrl: `${APP_URL}/dashboard`,
+    },
+    userId,
+  )
+}
+
+// Avisa al dueño que su negocio dejó de estar visible (suspensión o vencimiento).
+export async function sendBusinessSuspendedEmail(
+  email: string,
+  data: { businessName: string; reason?: string | null },
+  userId?: string,
+) {
+  return sendEmail(
+    email,
+    "business_suspended",
+    {
+      businessName: data.businessName,
+      reason: data.reason || "",
+      membershipUrl: `${APP_URL}/dashboard/membresia`,
+    },
+    userId,
+  )
+}
+
+// Avisa al dueño que su negocio obtuvo la insignia de Verificado.
+export async function sendBusinessVerifiedEmail(
+  email: string,
+  data: { businessName: string; profileSlug?: string | null },
+  userId?: string,
+) {
+  return sendEmail(
+    email,
+    "business_verified",
+    {
+      businessName: data.businessName,
+      profileUrl: data.profileSlug ? `${APP_URL}/perfil/${data.profileSlug}` : `${APP_URL}/dashboard/negocio`,
+    },
+    userId,
+  )
 }

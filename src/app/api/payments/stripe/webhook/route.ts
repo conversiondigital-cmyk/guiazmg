@@ -6,6 +6,28 @@ import { createNotification } from "@/lib/notifications/create"
 import { incrementCouponUsage } from "@/lib/coupons"
 import { createBusinessForOwner } from "@/lib/business/create"
 import { businessSchema } from "@/lib/validations"
+import { sendBusinessActivatedEmail } from "@/lib/email"
+
+// Correo de "negocio activo" al dueño tras la primera activación por pago. No
+// bloquea el webhook: cualquier fallo de correo se traga (best-effort).
+async function notifyOwnerActivated(userId: string, businessId: string, planSlug: string) {
+  try {
+    const biz = await prisma.profile.findUnique({
+      where: { id: businessId },
+      select: { name: true, owner: { select: { email: true, name: true } } },
+    })
+    if (biz?.owner?.email) {
+      const planName = planSlug ? planSlug.charAt(0).toUpperCase() + planSlug.slice(1) : ""
+      await sendBusinessActivatedEmail(
+        biz.owner.email,
+        { businessName: biz.name, ownerName: biz.owner.name, planName },
+        userId,
+      )
+    }
+  } catch {
+    /* best-effort: el pago ya se procesó; el correo no debe romper el webhook */
+  }
+}
 
 export const dynamic = "force-dynamic"
 
@@ -148,6 +170,7 @@ export async function POST(request: Request) {
             title: "Pago recibido",
             message: "Tu membresía quedó activa.",
           }).catch(() => {})
+          await notifyOwnerActivated(userId, businessId, planSlug)
         }
       }
 
@@ -202,6 +225,7 @@ export async function POST(request: Request) {
                 title: "Pago recibido",
                 message: "Tu negocio quedó publicado y activo.",
               }).catch(() => {})
+              await notifyOwnerActivated(userId, bizId, planSlug)
             }
             // Solo se borra el pending si el pago se registró bien. Si falla, se
             // conserva para reintento/conciliación.
