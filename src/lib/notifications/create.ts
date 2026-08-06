@@ -17,6 +17,7 @@ export async function createNotification(input: {
   title: string
   message?: string | null
   type?: NotificationKind
+  link?: string | null
 }): Promise<void> {
   try {
     await prisma.notification.create({
@@ -25,6 +26,7 @@ export async function createNotification(input: {
         title: input.title,
         message: input.message ?? null,
         type: input.type ?? "SYSTEM",
+        link: input.link ?? null,
         isRead: false,
       },
     })

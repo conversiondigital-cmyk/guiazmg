@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { Bell } from "lucide-react"
 import { Metadata } from "next"
@@ -37,18 +38,31 @@ export default async function NotificacionesPage() {
         </div>
       ) : (
         <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden divide-y divide-gray-50">
-          {notifications.map((n) => (
-            <div key={n.id} className={`flex items-start gap-3 px-5 py-4 ${n.isRead ? "" : "bg-green-50/40"}`}>
-              {!n.isRead && <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-green-600" />}
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm ${n.isRead ? "text-gray-600" : "text-gray-900 font-medium"} line-clamp-2`}>{n.message}</p>
-                <p className="text-[10px] text-gray-400 mt-1">
-                  {new Date(n.createdAt).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                </p>
+          {notifications.map((n) => {
+            const inner = (
+              <>
+                {!n.isRead && <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-green-600" />}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm ${n.isRead ? "text-gray-700" : "text-gray-900"} font-semibold`}>{n.title}</p>
+                  {n.message && <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{n.message}</p>}
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    {new Date(n.createdAt).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                <span className="shrink-0 text-[9px] uppercase font-bold text-gray-300">{n.type}</span>
+              </>
+            )
+            const cls = `flex items-start gap-3 px-5 py-4 ${n.isRead ? "" : "bg-green-50/40"}`
+            return n.link ? (
+              <Link key={n.id} href={n.link} className={`${cls} hover:bg-gray-50 transition-colors`}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={n.id} className={cls}>
+                {inner}
               </div>
-              <span className="shrink-0 text-[9px] uppercase font-bold text-gray-300">{n.type}</span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

@@ -1212,6 +1212,7 @@ model Notification {
   title     String
   message   String?
   type      NotificationType @default(SYSTEM)
+  link      String? // destino al hacer clic; si es null se cae al mapeo por tipo
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
 

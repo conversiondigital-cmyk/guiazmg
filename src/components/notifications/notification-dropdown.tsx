@@ -60,6 +60,7 @@ interface Notification {
   title: string
   message: string | null
   type: string
+  link: string | null
   isRead: boolean
   createdAt: string
 }
@@ -143,6 +144,15 @@ export function NotificationDropdown() {
     router.refresh()
   }
 
+  // Clic en una notificación: la marca leída y, si trae un destino, navega ahí.
+  const handleOpen = (n: Notification) => {
+    handleMarkAsRead(n.id)
+    if (n.link) {
+      setOpen(false)
+      router.push(n.link)
+    }
+  }
+
   useEffect(() => {
     injectBellCss()
     fetchUnreadCount().then(setUnreadCount)
@@ -189,7 +199,7 @@ export function NotificationDropdown() {
                 return (
                   <button
                     key={notification.id}
-                    onClick={() => handleMarkAsRead(notification.id)}
+                    onClick={() => handleOpen(notification)}
                     className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b last:border-b-0"
                   >
                     <div

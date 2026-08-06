@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
           type: "SYSTEM",
           title: "Nuevo giro solicitado",
           message: `"${name}" — un usuario no encontró su giro en el catálogo.`,
+          link: "/admin/giros-solicitudes",
         }),
       ),
       sendEmail(

@@ -14,12 +14,13 @@ interface Notif {
   type: string
   title: string
   message: string | null
+  link: string | null
   isRead: boolean
   createdAt: string
 }
 
-// El modelo Notification no guarda un enlace; se navega según el tipo hacia la
-// sección de admin correspondiente.
+// Respaldo para notificaciones VIEJAS sin `link`: se navega según el tipo. Las
+// nuevas ya traen su propio destino en `link`.
 const DEST: Record<string, string> = {
   SYSTEM: "/admin/negocios",
   REVIEW: "/admin/reviews",
@@ -65,7 +66,7 @@ export function AdminNotifications() {
       setUnread((u) => Math.max(0, u - 1))
       setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)))
     }
-    router.push(DEST[n.type] ?? "/admin")
+    router.push(n.link || DEST[n.type] || "/admin")
   }
 
   const markAll = async () => {

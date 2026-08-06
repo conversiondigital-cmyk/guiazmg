@@ -192,6 +192,7 @@ export async function POST(request: NextRequest) {
             type: "SYSTEM",
             title: "Nuevo negocio por aprobar",
             message: `${data.name} se registró y espera aprobación.`,
+            link: `/admin/negocios/${business.id}`,
           })
         )
       )
