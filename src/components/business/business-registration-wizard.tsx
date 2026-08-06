@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon } from "@/lib/icons"
+import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon, Gift } from "@/lib/icons"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
@@ -59,9 +59,16 @@ const steps = [
 export function BusinessRegistrationWizard({
   mapsApiKey = "",
   profileType: initialProfileType = "NEGOCIO",
+  promoCoupons,
 }: {
   mapsApiKey?: string
   profileType?: "EMPRENDEDOR" | "NEGOCIO"
+  // Cupón de días gratis vigente por tipo de perfil (lo trae el server). Se
+  // autocompleta al clasificar para que el alta active la prueba sin pago.
+  promoCoupons?: {
+    EMPRENDEDOR: { code: string; days: number } | null
+    NEGOCIO: { code: string; days: number } | null
+  }
 }) {
   const router = useRouter()
   // El tipo de perfil ahora es ESTADO: lo auto-clasifica la pantalla de 3 preguntas
@@ -232,6 +239,13 @@ export function BusinessRegistrationWizard({
     setProfileType(type)
     setHasLocation(suggestedLocation)
     if (suggestedModel) setOperationModel(suggestedModel)
+    // Autocompleta el cupón de la promo que corresponde al plan elegido, salvo que
+    // la persona ya haya escrito un código propio. Así el alta activa la prueba de
+    // 60 días sin que tengan que teclear nada.
+    const promo = promoCoupons?.[type]
+    if (promo && (!invitationCode.trim() || invitationCode === promoCoupons?.EMPRENDEDOR?.code || invitationCode === promoCoupons?.NEGOCIO?.code)) {
+      setInvitationCode(promo.code)
+    }
     setClassified(true)
   }
 
@@ -713,26 +727,69 @@ export function BusinessRegistrationWizard({
         </div>
       )}
 
-      {/* Código de invitación (promo 60 días) — último paso */}
-      {step === 4 && (
-        <div className="mt-6 rounded-xl border border-[#006c49]/20 bg-[#f5faf8] p-4">
-          <Label htmlFor="invitationCode" className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
-            ¿Tienes un código de invitación?
-          </Label>
-          <p className="mt-0.5 mb-2 text-xs text-gray-500">
-            Actívalo aquí y prueba tu plan Emprendedor o Negocio <strong>60 días gratis</strong>, sin
-            pagar. Es opcional; si no tienes, puedes canjearlo después en tu panel.
-          </p>
-          <Input
-            id="invitationCode"
-            value={invitationCode}
-            onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
-            placeholder="CÓDIGO (opcional)"
-            autoCapitalize="characters"
-            className="max-w-xs uppercase"
-          />
-        </div>
-      )}
+      {/* Código de invitación (promo días gratis) — último paso */}
+      {step === 4 && (() => {
+        const planLabel = profileType === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"
+        const promo = promoCoupons?.[profileType] ?? null
+        const promoApplied = !!promo && invitationCode.trim().toUpperCase() === promo.code
+        return (
+          <div className="mt-6 rounded-xl border border-[#006c49]/20 bg-[#f5faf8] p-4">
+            {promoApplied ? (
+              <>
+                <div className="flex items-start gap-2.5">
+                  <Gift className="mt-0.5 h-5 w-5 shrink-0 text-[#006c49]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#00583b]">
+                      {promo!.days} días gratis aplicados para tu plan {planLabel}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-600">
+                      Se activará con el código{" "}
+                      <strong className="font-mono">{promo!.code}</strong> al registrarte — no pagas
+                      los primeros {promo!.days} días. Después podrás renovar con pago.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInvitationCode("")}
+                  className="mt-2 text-xs font-medium text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                >
+                  Quitar código
+                </button>
+              </>
+            ) : (
+              <>
+                <Label htmlFor="invitationCode" className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+                  ¿Tienes un código de invitación?
+                </Label>
+                <p className="mt-0.5 mb-2 text-xs text-gray-500">
+                  Actívalo aquí y prueba tu plan {planLabel} <strong>gratis</strong>, sin pagar. Es
+                  opcional; si no tienes, puedes canjearlo después en tu panel.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    id="invitationCode"
+                    value={invitationCode}
+                    onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
+                    placeholder="CÓDIGO (opcional)"
+                    autoCapitalize="characters"
+                    className="max-w-xs uppercase"
+                  />
+                  {promo && (
+                    <button
+                      type="button"
+                      onClick={() => setInvitationCode(promo.code)}
+                      className="rounded-lg bg-[#006c49] px-3 py-2 text-xs font-semibold text-white hover:bg-[#00583b]"
+                    >
+                      Aplicar {promo.days} días gratis
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Navigation */}
       <div className="mt-8 flex items-center justify-between border-t pt-6">

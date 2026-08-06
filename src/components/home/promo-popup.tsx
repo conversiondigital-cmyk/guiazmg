@@ -72,8 +72,8 @@ export function PromoPopup() {
             <p className="mt-5 text-6xl font-black leading-none tracking-tight sm:text-7xl">60</p>
             <p className="mt-1 text-xl font-bold">días gratis</p>
             <p className="mx-auto mt-3 max-w-sm text-sm text-white/90">
-              Registra tu <strong>negocio</strong> y activa tu plan Emprendedor o Negocio con tu
-              código de invitación, sin pagar los primeros 60 días.
+              Registra tu <strong>negocio</strong> y llévate 60 días gratis en tu plan Emprendedor o
+              Negocio. El código se aplica <strong>solo</strong> al registrarte, sin pagar.
             </p>
           </div>
         </div>

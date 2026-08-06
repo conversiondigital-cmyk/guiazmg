@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessRegistrationWizard } from "@/components/business/business-registration-wizard"
 import { getGoogleMapsApiKey } from "@/lib/maps-config"
+import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
 
 export const dynamic = "force-dynamic"
 
@@ -10,7 +11,10 @@ export default async function RegistrarNegocioPage({
 }: {
   searchParams: Promise<{ tipo?: string }>
 }) {
-  const mapsApiKey = await getGoogleMapsApiKey()
+  const [mapsApiKey, promoCoupons] = await Promise.all([
+    getGoogleMapsApiKey(),
+    getActivePromoCoupons(),
+  ])
   const { tipo } = await searchParams
   // El tipo real lo decide la pantalla de 3 preguntas dentro del wizard; el ?tipo
   // solo sesga el valor inicial (compatibilidad con enlaces existentes).
@@ -30,7 +34,11 @@ export default async function RegistrarNegocioPage({
               aparecer en las búsquedas de Guía ZMG.
             </p>
           </div>
-          <BusinessRegistrationWizard mapsApiKey={mapsApiKey} profileType={profileType} />
+          <BusinessRegistrationWizard
+            mapsApiKey={mapsApiKey}
+            profileType={profileType}
+            promoCoupons={promoCoupons}
+          />
         </div>
       </main>
       <Footer />
