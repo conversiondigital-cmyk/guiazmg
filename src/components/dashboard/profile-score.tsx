@@ -57,7 +57,7 @@ export function ProfileScoreCard({ business }: ProfileScoreCardProps) {
       </CardHeader>
       <CardContent>
         <div className="mb-4 text-center">
-          <span className={`text-3xl font-bold ${getColor()}`}>{percentage}%</span>
+          <span className={`text-2xl font-bold ${getColor()}`}>{percentage}%</span>
           <p className="text-xs text-gray-500 mt-1">
             {percentage >= 80
               ? "¡Perfil completo!"

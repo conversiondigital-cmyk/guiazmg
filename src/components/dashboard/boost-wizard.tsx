@@ -251,7 +251,7 @@ export default function BoostWizard({ businesses, listings, boostDefinitions }: 
                     <Calendar className="h-5 w-5 text-green-700" />
                     <span className="font-semibold text-gray-900">{d.name}</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">{d.durationDays}</p>
+                  <p className="text-2xl font-bold text-gray-900">{d.durationDays}</p>
                   <p className="text-sm text-gray-500 mb-3">días</p>
                   <div className="flex items-center gap-2 text-sm">
                      <CreditCard className="h-4 w-4 text-amber-500" />

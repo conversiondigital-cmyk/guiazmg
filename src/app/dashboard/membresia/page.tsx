@@ -145,7 +145,7 @@ export default async function MembresiaPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-green-700">
+                <p className="text-2xl font-bold text-green-700">
                   {activeMembership.plan.maxListings}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Productos</p>
@@ -153,7 +153,7 @@ export default async function MembresiaPage() {
             </Card>
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-green-700">
+                <p className="text-2xl font-bold text-green-700">
                   {activeMembership.plan.maxServices}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Servicios</p>
@@ -161,7 +161,7 @@ export default async function MembresiaPage() {
             </Card>
             <Card>
               <CardContent className="p-5 text-center">
-                <p className="text-3xl font-bold text-green-700">
+                <p className="text-2xl font-bold text-green-700">
                   {activeMembership.plan.maxGalleryImages}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Imágenes por publicación</p>
@@ -240,7 +240,7 @@ export default async function MembresiaPage() {
               return (
                 <div
                   key={plan.id}
-                  className={`relative flex flex-col rounded-2xl border bg-white p-6 transition-shadow hover:shadow-md ${
+                  className={`relative flex flex-col rounded-xl border bg-white p-6 transition-shadow hover:shadow-md ${
                     isActive
                       ? "border-green-600 ring-1 ring-green-200"
                       : recommended

@@ -51,12 +51,12 @@ export default async function ResenasPage() {
         <Link href="/dashboard/resenas" className="block">
           <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
-                <Star className="h-7 w-7 text-amber-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                <Star className="h-5 w-5 text-amber-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Calificación promedio</p>
-                <p className="text-3xl font-bold text-gray-900">{avgRating}</p>
+                <p className="text-2xl font-bold text-gray-900">{avgRating}</p>
               </div>
             </CardContent>
           </Card>
@@ -64,12 +64,12 @@ export default async function ResenasPage() {
         <Link href="/dashboard/resenas" className="block">
           <Card className="h-full transition-shadow hover:border-green-200 hover:shadow-md">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-                <MessageCircle className="h-7 w-7 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                <MessageCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Número de reseñas</p>
-                <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
               </div>
             </CardContent>
           </Card>
