@@ -11,14 +11,20 @@ interface Props {
   lat?: number | null
   lng?: number | null
   onChange: (lat: number, lng: number) => void
+  // Al mover el pin, devuelve también la dirección (reverse-geocoding) para
+  // actualizar el campo de dirección de arriba.
+  onAddress?: (address: string) => void
 }
 
-export function GoogleMapPicker({ apiKey, lat, lng, onChange }: Props) {
+export function GoogleMapPicker({ apiKey, lat, lng, onChange, onAddress }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
+  const geocoderRef = useRef<any>(null)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  const onAddressRef = useRef(onAddress)
+  onAddressRef.current = onAddress
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -35,11 +41,26 @@ export function GoogleMapPicker({ apiKey, lat, lng, onChange }: Props) {
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          // "greedy": el scroll hace zoom directo, sin tener que presionar Ctrl.
+          gestureHandling: "greedy",
         })
         const marker = new g.maps.Marker({ position: center, map, draggable: true })
         mapRef.current = map
         markerRef.current = marker
-        const emit = (pos: any) => onChangeRef.current(pos.lat(), pos.lng())
+        if (g.maps.Geocoder) geocoderRef.current = new g.maps.Geocoder()
+        const emit = (pos: any) => {
+          const la = pos.lat()
+          const lo = pos.lng()
+          onChangeRef.current(la, lo)
+          // Reverse-geocoding: al mover el pin, actualiza la dirección de arriba.
+          if (geocoderRef.current && onAddressRef.current) {
+            geocoderRef.current.geocode({ location: { lat: la, lng: lo } }, (res: any, status: string) => {
+              if (status === "OK" && res?.[0]?.formatted_address) {
+                onAddressRef.current?.(res[0].formatted_address)
+              }
+            })
+          }
+        }
         marker.addListener("dragend", () => emit(marker.getPosition()))
         map.addListener("click", (e: any) => {
           marker.setPosition(e.latLng)

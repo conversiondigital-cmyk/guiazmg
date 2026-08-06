@@ -112,7 +112,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 max-w-md">
           <h2 className="text-3xl font-bold leading-tight text-white xl:text-4xl">
-            Bienvenido de vuelta
+            Tu guía local de negocios
           </h2>
           <p className="mt-4 text-green-50/90">
             Administra tu negocio, conecta con más clientes y destaca en el directorio local de Guadalajara.
@@ -137,9 +137,9 @@ export default function LoginPage() {
       {/* Formulario */}
       <main className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-10 sm:px-6 lg:w-1/2">
         <div className="w-full max-w-md">
-          {/* Logotipo real de Guía ZMG (fondo claro: se ve bien; visible también en
-              móvil, donde el panel de marca de la izquierda se oculta). */}
-          <Link href="/" className="mb-8 flex items-center justify-center lg:justify-start">
+          {/* Logotipo solo en móvil: en escritorio la marca ya está en el panel
+              izquierdo, así no se duplica dentro del formulario. */}
+          <Link href="/" className="mb-8 flex items-center justify-center lg:hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="Guía ZMG" className="h-10 w-auto" />
           </Link>
@@ -234,7 +234,10 @@ export default function LoginPage() {
             className="w-full"
             onClick={async () => {
               try {
-                await signIn("google", { callbackUrl: "/dashboard" })
+                // Respeta el destino real (p. ej. /registrar-negocio) para no romper
+                // el flujo de quien venía a registrar su negocio.
+                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/dashboard"
+                await signIn("google", { callbackUrl: cb })
               } catch {
                 toast.error("No se pudo conectar con Google. Inténtalo de nuevo.")
               }

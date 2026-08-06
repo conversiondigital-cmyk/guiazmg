@@ -127,6 +127,28 @@ export function BusinessRegistrationWizard({
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Geocodifica el código postal y mueve el mapa/pin (además de la dirección).
+  const geocodePostal = () => {
+    const cp = form.postalCode.trim()
+    if (!/^\d{5}$/.test(cp)) return
+    const g = (window as any).google
+    if (!g?.maps?.Geocoder) return
+    new g.maps.Geocoder().geocode(
+      { address: cp, componentRestrictions: { country: "MX" } },
+      (res: any, status: string) => {
+        if (status === "OK" && res?.[0]?.geometry?.location) {
+          const loc = res[0].geometry.location
+          setForm((p) => ({
+            ...p,
+            latitude: loc.lat().toFixed(6),
+            longitude: loc.lng().toFixed(6),
+            addressText: p.addressText || res[0].formatted_address || p.addressText,
+          }))
+        }
+      },
+    )
+  }
+
   const handleCategoryChange = (v: string | null) => {
     if (v) { setSelectedCategory(v); setSelectedSubcategory("") }
   }
@@ -651,12 +673,13 @@ export function BusinessRegistrationWizard({
               onChange={(la, lo) =>
                 setForm((p) => ({ ...p, latitude: la.toFixed(6), longitude: lo.toFixed(6) }))
               }
+              onAddress={(a) => setForm((p) => ({ ...p, addressText: a }))}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <Label htmlFor="postalCode">Código Postal</Label>
-              <Input id="postalCode" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} />
+              <Input id="postalCode" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} onBlur={geocodePostal} inputMode="numeric" maxLength={5} placeholder="45138" />
             </div>
             <div>
               <Label htmlFor="latitude">Latitud</Label>
