@@ -163,10 +163,10 @@ function CheckoutContent() {
     <>
       <Header />
       <main className="flex-1 bg-gray-50">
-        <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-20">
+        <section className="bg-gradient-to-br from-[#003527] via-[#064e3b] to-[#006c49] py-12">
           <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-bold text-white">Confirmar compra</h1>
-            <p className="mt-4 text-xl text-white/85">
+            <h1 className="text-2xl font-bold text-white md:text-3xl">Confirmar compra</h1>
+            <p className="mt-2 text-base text-white/85">
               Revisa los detalles antes de continuar
             </p>
           </div>
