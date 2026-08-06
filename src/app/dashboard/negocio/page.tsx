@@ -48,10 +48,10 @@ export default async function MiNegocioPage() {
         subcategories: {
           where: { isActive: true },
           select: { id: true, name: true },
-          orderBy: { sortOrder: "asc" },
+          orderBy: { name: "asc" },
         },
       },
-      orderBy: { sortOrder: "asc" },
+      orderBy: { name: "asc" },
     }),
   ])
 
