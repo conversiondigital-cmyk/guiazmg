@@ -24,8 +24,10 @@ import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-addr
 const INPUT_TENUE =
   "h-9 w-full min-w-0 rounded-md border border-input bg-slate-50/70 px-3 py-1 text-sm shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus:bg-white focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
 
-// Pestaña activa en verde de marca (como la referencia del usuario) + más aire.
-const TAB_ACTIVE = "px-3.5 data-active:!bg-[#006c49] data-active:!text-white"
+// Pestañas como píldoras con borde (sin el riel gris del componente): inactivas
+// blancas con borde suave, activa en verde de marca.
+const TAB_ACTIVE =
+  "h-auto grow-0 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-gray-600 data-active:!border-[#006c49] data-active:!bg-[#006c49] data-active:!text-white"
 
 const DAY_LABELS: Record<number, string> = {
   0: "Domingo",
@@ -453,7 +455,7 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="mb-6 max-w-full gap-1.5 overflow-x-auto overflow-y-clip [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TabsList className="mb-6 !h-auto w-fit max-w-full gap-2 overflow-x-auto !bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="general" className={TAB_ACTIVE}>
             <Store className="size-4" />
             Información General
