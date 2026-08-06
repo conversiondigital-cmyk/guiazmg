@@ -290,7 +290,7 @@ function CheckoutContent() {
                     className="w-full bg-slate-900 hover:bg-slate-800"
                     size="lg"
                     onClick={pay}
-                    disabled={loading || !businessId}
+                    disabled={loading || (!pending && !businessId)}
                   >
                     {loading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

@@ -25,20 +25,27 @@ export async function createBusinessForOwner(opts: {
   userId: string
   data: BusinessData
   status?: "PENDING_REVIEW" | "ACTIVE"
+  // En el path YA PAGADO (webhook) NO se debe rechazar por nombre duplicado: el
+  // cliente ya pagó. Se crea igual con un slug único. La validación de nombre se
+  // hizo al guardar el pending; si se tomó entre medias, no es motivo para no
+  // entregar lo pagado.
+  allowDuplicateName?: boolean
 }): Promise<{ id: string; slug: string; name: string }> {
-  const { userId, data, status = "PENDING_REVIEW" } = opts
+  const { userId, data, status = "PENDING_REVIEW", allowDuplicateName = false } = opts
 
   // Nombre único (sin distinguir mayúsculas/acentos, vía slug del nombre).
   const nameSlug = slugify(data.name)
-  const dupName = await prisma.profile.findFirst({
-    where: { slug: { equals: nameSlug }, deletedAt: null },
-    select: { id: true },
-  })
-  if (dupName) {
-    throw new BusinessCreateError(
-      "DUPLICATE_NAME",
-      "Ya existe un negocio con ese nombre. Si es una sucursal, contáctanos para agregarla.",
-    )
+  if (!allowDuplicateName) {
+    const dupName = await prisma.profile.findFirst({
+      where: { slug: { equals: nameSlug }, deletedAt: null },
+      select: { id: true },
+    })
+    if (dupName) {
+      throw new BusinessCreateError(
+        "DUPLICATE_NAME",
+        "Ya existe un negocio con ese nombre. Si es una sucursal, contáctanos para agregarla.",
+      )
+    }
   }
 
   const slug = await generateUniqueSlug(nameSlug, async (s) =>

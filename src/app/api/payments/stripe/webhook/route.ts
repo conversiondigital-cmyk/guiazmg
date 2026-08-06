@@ -162,15 +162,25 @@ export async function POST(request: Request) {
           select: { id: true },
         })
         let bizId: string | null = existing?.id ?? null
+        let createError: string | null = null
         if (!bizId && pend) {
           const parsed = businessSchema.safeParse(pend.data)
           if (parsed.success) {
             try {
-              const created = await createBusinessForOwner({ userId, data: parsed.data, status: "ACTIVE" })
+              // allowDuplicateName: el cliente ya pagó, no se rechaza por nombre.
+              const created = await createBusinessForOwner({
+                userId,
+                data: parsed.data,
+                status: "ACTIVE",
+                allowDuplicateName: true,
+              })
               bizId = created.id
             } catch (e) {
-              console.error("[stripe-webhook] pending create failed:", e instanceof Error ? e.message : e)
+              createError = e instanceof Error ? e.message : String(e)
+              console.error("[stripe-webhook] pending create failed:", createError)
             }
+          } else {
+            createError = "datos del alta inválidos"
           }
         }
         if (bizId) {
@@ -183,16 +193,47 @@ export async function POST(request: Request) {
             amount,
             metadata: { source: "stripe", sessionId: s.id },
           })
-          if (result.ok && !result.alreadyProcessed) {
-            await incrementCouponUsage(s.metadata?.couponCode)
-            await createNotification({
-              userId,
-              type: "PAYMENT",
-              title: "Pago recibido",
-              message: "Tu negocio quedó publicado y activo.",
-            }).catch(() => {})
+          if (result.ok) {
+            if (!result.alreadyProcessed) {
+              await incrementCouponUsage(s.metadata?.couponCode)
+              await createNotification({
+                userId,
+                type: "PAYMENT",
+                title: "Pago recibido",
+                message: "Tu negocio quedó publicado y activo.",
+              }).catch(() => {})
+            }
+            // Solo se borra el pending si el pago se registró bien. Si falla, se
+            // conserva para reintento/conciliación.
+            if (pend) await prisma.pendingRegistration.delete({ where: { id: pendingId } }).catch(() => {})
+          } else {
+            createError = `membresía no activada (${result.reason ?? "error"})`
           }
-          if (pend) await prisma.pendingRegistration.delete({ where: { id: pendingId } }).catch(() => {})
+        }
+        // COBRÓ PERO ALGO FALLÓ: alerta a los admins para conciliar manualmente (el
+        // cargo existe en Stripe; no se pierde el rastro). No se borra el pending.
+        if (createError) {
+          await createNotification({
+            userId,
+            type: "SYSTEM",
+            title: "Pago recibido — requiere revisión",
+            message: `Se recibió un pago pero el alta necesita revisión: ${createError}. Contáctanos para activar tu negocio.`,
+          }).catch(() => {})
+          const admins = await prisma.user.findMany({
+            where: { role: "ADMIN", isActive: true },
+            select: { id: true },
+          })
+          await Promise.allSettled(
+            admins.map((a) =>
+              createNotification({
+                userId: a.id,
+                type: "SYSTEM",
+                title: "Pago sin negocio creado (conciliar)",
+                message: `Pago ${s.id} de usuario ${userId}: ${createError}. Revisar pending_registrations.`,
+                link: "/admin/pagos",
+              }),
+            ),
+          )
         }
       }
     }
