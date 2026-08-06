@@ -106,7 +106,7 @@ Guía ZMG podrá modificar precios, beneficios o condiciones de planes y boosts.
 
 ## 10. Pagos, facturación, renovaciones y cancelaciones
 
-Los pagos podrán procesarse mediante proveedores externos, como Mercado Pago, Stripe u otros que se habiliten. El usuario acepta que dichos proveedores pueden tener sus propios términos, políticas y condiciones.
+Los pagos se procesan a través de una pasarela de pago segura de terceros (Stripe). El usuario acepta que dicho proveedor tiene sus propios términos, políticas y condiciones. **Guía ZMG no almacena ni tiene acceso a los datos completos de tu tarjeta o medio de pago**: esa información la captura y resguarda directamente la pasarela (Stripe), que cumple con los estándares de seguridad de la industria (PCI DSS). Guía ZMG solo conserva datos mínimos de la transacción (por ejemplo, plan, monto e identificador de pago) para efectos de facturación, soporte y control de tu membresía.
 
 Salvo que se indique lo contrario:
 

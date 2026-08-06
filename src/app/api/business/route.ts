@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ slug: business.slug, coupon }, { status: 201 })
+    return NextResponse.json({ id: business.id, slug: business.slug, coupon }, { status: 201 })
   } catch (error) {
     console.error("[BUSINESS_CREATE]", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al crear el negocio" }, { status: 500 })

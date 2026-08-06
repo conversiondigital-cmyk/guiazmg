@@ -20,6 +20,8 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
   const inputRef = useRef<HTMLInputElement>(null)
   const onPlaceRef = useRef(onPlace)
   onPlaceRef.current = onPlace
+  const geocoderRef = useRef<any>(null)
+  const lastGeocoded = useRef<string>("")
 
   useEffect(() => {
     if (!apiKey || !inputRef.current) return
@@ -30,6 +32,8 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
       .then(() => {
         if (cancelled || !inputRef.current) return
         const g = (window as any).google
+        // Geocoder para el respaldo: mueve el mapa aunque NO se elija una sugerencia.
+        if (g?.maps?.Geocoder) geocoderRef.current = new g.maps.Geocoder()
         if (!g?.maps?.places) return
         autocomplete = new g.maps.places.Autocomplete(inputRef.current, {
           componentRestrictions: { country: "mx" },
@@ -40,6 +44,7 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
           const place = autocomplete.getPlace()
           const loc = place?.geometry?.location
           if (loc) {
+            lastGeocoded.current = place.formatted_address || inputRef.current?.value || ""
             onPlaceRef.current({
               address: place.formatted_address || "",
               lat: loc.lat(),
@@ -59,12 +64,40 @@ export function AddressAutocomplete({ apiKey, value, onChange, onPlace, placehol
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey])
 
+  // Respaldo: geocodifica la dirección tecleada (sin depender de elegir sugerencia)
+  // para que el mapa se mueva "en automático" al salir del campo o presionar Enter.
+  const geocodeTyped = () => {
+    const text = (inputRef.current?.value || value).trim()
+    if (!text || !geocoderRef.current || text === lastGeocoded.current) return
+    lastGeocoded.current = text
+    geocoderRef.current.geocode(
+      { address: text, componentRestrictions: { country: "MX" } },
+      (results: any, status: string) => {
+        if (status === "OK" && results?.[0]?.geometry?.location) {
+          const loc = results[0].geometry.location
+          onPlaceRef.current({
+            address: results[0].formatted_address || text,
+            lat: loc.lat(),
+            lng: loc.lng(),
+          })
+        }
+      },
+    )
+  }
+
   return (
     <input
       id={id}
       ref={inputRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={geocodeTyped}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          geocodeTyped()
+        }
+      }}
       placeholder={placeholder}
       className={className}
       autoComplete="off"

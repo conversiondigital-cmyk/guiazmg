@@ -40,7 +40,7 @@ export default function PromoRegistroPage() {
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="bg-[#006c49] text-white hover:bg-[#00583b]">
-                <Link href="/registrar-negocio">
+                <Link href="/registrar-negocio?promo=1">
                   Registrar mi negocio <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -140,7 +140,7 @@ export default function PromoRegistroPage() {
 
           <div className="mt-10 text-center">
             <Button asChild size="lg" className="bg-[#006c49] text-white hover:bg-[#00583b]">
-              <Link href="/registrar-negocio">
+              <Link href="/registrar-negocio?promo=1">
                 Empezar ahora <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

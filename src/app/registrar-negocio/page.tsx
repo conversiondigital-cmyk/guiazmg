@@ -9,13 +9,17 @@ export const dynamic = "force-dynamic"
 export default async function RegistrarNegocioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string }>
+  searchParams: Promise<{ tipo?: string; promo?: string }>
 }) {
+  const { tipo, promo } = await searchParams
+  // La promo de 60 días SOLO se autocompleta si se entra por el enlace de la promo
+  // (/promociones/registro → /registrar-negocio?promo=1). En un registro normal no
+  // se aplica ningún cupón automáticamente.
+  const wantsPromo = promo === "1" || promo === "true"
   const [mapsApiKey, promoCoupons] = await Promise.all([
     getGoogleMapsApiKey(),
-    getActivePromoCoupons(),
+    wantsPromo ? getActivePromoCoupons() : Promise.resolve(null),
   ])
-  const { tipo } = await searchParams
   // El tipo real lo decide la pantalla de 3 preguntas dentro del wizard; el ?tipo
   // solo sesga el valor inicial (compatibilidad con enlaces existentes).
   const profileType = tipo === "emprendedor" ? "EMPRENDEDOR" : "NEGOCIO"
@@ -37,7 +41,7 @@ export default async function RegistrarNegocioPage({
           <BusinessRegistrationWizard
             mapsApiKey={mapsApiKey}
             profileType={profileType}
-            promoCoupons={promoCoupons}
+            promoCoupons={promoCoupons ?? undefined}
           />
         </div>
       </main>

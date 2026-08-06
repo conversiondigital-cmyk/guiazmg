@@ -87,7 +87,7 @@ export function PromoPopup() {
             Ver la promoción <ArrowRight className="h-5 w-5" />
           </Link>
           <Link
-            href="/registrar-negocio"
+            href="/registrar-negocio?promo=1"
             onClick={close}
             className="block w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-center font-semibold text-gray-700 transition-colors hover:border-[#006c49]/40 hover:bg-gray-50"
           >

@@ -65,13 +65,17 @@ export async function fulfillMembership(opts: {
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
+        // Reinicia la bandera de aviso: el periodo nuevo debe poder recibir su
+        // propio recordatorio previo al vencimiento (si no, solo se avisa una vez).
+        renewalNotifiedAt: null,
       },
     })
 
-    // Reactiva el negocio si estaba oculto por vencimiento (INACTIVE → ACTIVE).
-    // No toca perfiles suspendidos/rechazados por el admin ni borrados.
+    // Pagar activa el negocio: tanto los recién registrados (PENDING_REVIEW) como
+    // los que quedaron ocultos por vencimiento (INACTIVE) pasan a ACTIVE. No toca
+    // perfiles SUSPENDED (suspendidos por el admin) ni borrados.
     await tx.profile.updateMany({
-      where: { id: opts.businessId, status: "INACTIVE", deletedAt: null },
+      where: { id: opts.businessId, status: { in: ["INACTIVE", "PENDING_REVIEW"] }, deletedAt: null },
       data: { status: "ACTIVE" },
     })
     return true

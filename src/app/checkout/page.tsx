@@ -17,15 +17,35 @@ function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { status } = useSession()
-  const [loading, setLoading] = useState<"STRIPE" | "MERCADO_PAGO" | null>(null)
+  const [loading, setLoading] = useState(false)
   const [couponCode, setCouponCode] = useState("")
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState<{ final: number; code: string } | null>(null)
 
   const plan = searchParams.get("plan")
-  const businessId = searchParams.get("businessId")
+  const businessIdParam = searchParams.get("businessId")
+  // Si el enlace no trae businessId (p. ej. viniendo de /planes), lo resolvemos del
+  // usuario: null = aún cargando; "" = no tiene negocio; id = negocio a usar.
+  const [resolvedBid, setResolvedBid] = useState<string | null>(businessIdParam)
+  const businessId = businessIdParam || (resolvedBid || "")
 
   const membershipPlan = getPlanBySlug(plan)
+
+  useEffect(() => {
+    if (businessIdParam || status !== "authenticated") return
+    let cancelled = false
+    fetch("/api/business")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: Array<{ id: string; deletedAt: string | null }>) => {
+        if (cancelled) return
+        const own = Array.isArray(list) ? list.find((b) => !b.deletedAt) : null
+        setResolvedBid(own?.id ?? "")
+      })
+      .catch(() => setResolvedBid(""))
+    return () => {
+      cancelled = true
+    }
+  }, [businessIdParam, status])
 
   // Valida el cupón contra el servidor y muestra el precio con descuento ANTES de
   // pagar. No incrementa el uso (eso ocurre al concretarse el pago).
@@ -60,53 +80,31 @@ function CheckoutContent() {
     }
   }, [status, router, plan, businessId])
 
-  // Un solo handler para ambos proveedores. Stripe y Mercado Pago comparten el
-  // mismo externalReference (membership:plan:userId:businessId) y el mismo
-  // fulfillment vía webhook; solo cambia a qué endpoint se pide la sesión y qué
-  // campo trae la URL de redirección (Stripe: `url`; MP: `initPoint`).
-  const pay = async (provider: "STRIPE" | "MERCADO_PAGO") => {
+  // Pago con Stripe (única pasarela). El webhook activa la membresía y el negocio.
+  const pay = async () => {
     if (!membershipPlan) return
-    setLoading(provider)
+    if (!businessId) {
+      toast.error("Primero registra tu negocio para poder pagar.")
+      return
+    }
+    setLoading(true)
     try {
       const coupon = applied?.code
-      if (provider === "STRIPE") {
-        const res = await fetch("/api/payments/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan, businessId, ...(coupon ? { couponCode: coupon } : {}) }),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok || !data.url) {
-          toast.error(data.error || "Error al procesar el pago")
-          return
-        }
-        window.location.href = data.url
-        return
-      }
-
-      const res = await fetch("/api/payments/create-preference", {
+      const res = await fetch("/api/payments/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "membership",
-          plan,
-          ...(businessId ? { businessId } : {}),
-          ...(coupon ? { couponCode: coupon } : {}),
-        }),
+        body: JSON.stringify({ plan, businessId, ...(coupon ? { couponCode: coupon } : {}) }),
       })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        toast.error(err.error || "Error al procesar el pago")
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) {
+        toast.error(data.error || "Error al procesar el pago")
         return
       }
-      const data = await res.json()
-      if (data.initPoint) {
-        window.location.href = data.initPoint
-      }
+      window.location.href = data.url
     } catch {
       toast.error("Error al procesar el pago")
     } finally {
-      setLoading(null)
+      setLoading(false)
     }
   }
 
@@ -209,13 +207,13 @@ function CheckoutContent() {
                         }}
                         placeholder="Escribe tu código"
                         className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase placeholder:normal-case focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600"
-                        disabled={applying || loading !== null}
+                        disabled={applying || loading}
                       />
                       <Button
                         type="button"
                         variant="outline"
                         onClick={applyCouponCode}
-                        disabled={applying || loading !== null || !couponCode.trim()}
+                        disabled={applying || loading || !couponCode.trim()}
                       >
                         {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
                       </Button>
@@ -228,14 +226,23 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                {resolvedBid === "" ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-800">
+                    Primero registra tu negocio para poder contratar un plan.
+                    <Link href="/registrar-negocio" className="mt-3 block">
+                      <Button className="w-full" size="lg">
+                        Registrar mi negocio <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
                   <Button
                     className="w-full bg-slate-900 hover:bg-slate-800"
                     size="lg"
-                    onClick={() => pay("STRIPE")}
-                    disabled={loading !== null}
+                    onClick={pay}
+                    disabled={loading || !businessId}
                   >
-                    {loading === "STRIPE" ? (
+                    {loading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
@@ -244,26 +251,11 @@ function CheckoutContent() {
                       </>
                     )}
                   </Button>
-                  <Button
-                    className="w-full bg-sky-600 hover:bg-sky-700"
-                    size="lg"
-                    onClick={() => pay("MERCADO_PAGO")}
-                    disabled={loading !== null}
-                  >
-                    {loading === "MERCADO_PAGO" ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        Mercado Pago
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </div>
+                )}
 
                 <p className="text-xs text-center text-gray-400">
-                  Serás redirigido a la pasarela segura del método que elijas
-                  (tarjeta con Stripe, o Mercado Pago) para completar el pago.
+                  Serás redirigido a la pasarela de pago segura (Stripe) para completar tu compra.
+                  Guía ZMG no almacena los datos de tu tarjeta.
                 </p>
               </CardContent>
             </Card>

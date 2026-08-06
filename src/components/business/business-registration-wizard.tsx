@@ -194,15 +194,20 @@ export function BusinessRegistrationWizard({
       }
 
       if (data.coupon?.applied) {
+        // Cupón/trial: el negocio ya quedó activo por N días. Va al panel.
         toast.success(`¡Listo! Activaste ${data.coupon.planName} gratis por ${data.coupon.days} días.`)
+        router.push("/dashboard/negocio")
+        router.refresh()
       } else {
         if (invitationCode.trim() && data.coupon?.error) {
-          toast.error(`Negocio registrado, pero el código no se aplicó: ${data.coupon.error}. Puedes canjearlo en Panel → Membresía.`)
+          toast.error(`El código no se aplicó: ${data.coupon.error}.`)
         }
-        toast.success("¡Negocio registrado! Está en revisión; aparecerá en el directorio cuando un administrador lo apruebe.")
+        // Sin cupón: se registró, pero se ACTIVA al pagar. Lo mandamos directo al
+        // checkout de su plan con el businessId, para completar el pago.
+        toast.success("¡Negocio registrado! Completa tu pago para activarlo.")
+        const planSlug = profileType === "EMPRENDEDOR" ? "emprendedor" : "negocio"
+        router.push(`/checkout?plan=${planSlug}&businessId=${data.id}`)
       }
-      router.push("/dashboard/negocio")
-      router.refresh()
     } catch {
       toast.error("Error al crear el negocio")
     } finally {

@@ -115,6 +115,8 @@ export async function POST(req: NextRequest) {
           cancelAtPeriodEnd: true,
           provider: "MERCADO_PAGO",
           providerSubscriptionId: `coupon:${coupon.code}`,
+          // Reinicia la bandera para que el periodo nuevo reciba su aviso previo.
+          renewalNotifiedAt: null,
         },
         create: {
           businessId,
@@ -127,9 +129,10 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // Reactiva el negocio si estaba oculto por vencimiento (INACTIVE → ACTIVE).
+      // El cupón activa el negocio: recién registrado (PENDING_REVIEW) u oculto por
+      // vencimiento (INACTIVE) → ACTIVE.
       await tx.profile.updateMany({
-        where: { id: businessId, status: "INACTIVE", deletedAt: null },
+        where: { id: businessId, status: { in: ["INACTIVE", "PENDING_REVIEW"] }, deletedAt: null },
         data: { status: "ACTIVE" },
       })
 
