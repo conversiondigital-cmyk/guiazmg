@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +18,7 @@ const HIGHLIGHTS = [
 
 export default function LoginPage() {
   const router = useRouter()
+  const { status } = useSession()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -25,6 +26,11 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
   const [resending, setResending] = useState(false)
+
+  // Si ya hay sesión, esta página no aplica: manda al panel (el layout enruta por rol).
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/dashboard")
+  }, [status, router])
 
   // Mensajes de OAuth (?error=) y de activación de cuenta (?verified / ?verify_error).
   useEffect(() => {
@@ -97,6 +103,16 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Mientras se resuelve la sesión (o si ya está autenticado y va a redirigir), no
+  // se muestra el formulario: evita el "flash" de login a quien ya inició sesión.
+  if (status !== "unauthenticated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-green-700" />
+      </div>
+    )
   }
 
   return (

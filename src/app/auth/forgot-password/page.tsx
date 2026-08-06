@@ -1,9 +1,14 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
+import { auth } from "@/lib/auth"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form"
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  // Si ya hay sesión, no tiene sentido "recuperar contraseña": va a su panel.
+  const session = await auth()
+  if (session?.user) redirect("/dashboard")
   return (
     <>
       <Header />

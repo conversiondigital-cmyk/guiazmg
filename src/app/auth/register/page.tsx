@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2 } from "@/lib/icons"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { status } = useSession()
   const [loading, setLoading] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -23,6 +24,11 @@ export default function RegisterPage() {
   const [acceptedCommunity, setAcceptedCommunity] = useState(false)
 
   const canSubmit = acceptedTerms && acceptedPrivacy && acceptedCommunity
+
+  // Ya con sesión, no se muestra el registro: va al panel (el layout enruta por rol).
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/dashboard")
+  }, [status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,6 +70,14 @@ export default function RegisterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (status !== "unauthenticated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-green-700" />
+      </div>
+    )
   }
 
   return (
