@@ -46,6 +46,16 @@ const TEMPLATES: Record<string, (vars: Record<string, string>) => { subject: str
     subject: "Activa tu cuenta de Guía ZMG",
     html: `<h1>¡Casi listo${v.name ? `, ${v.name}` : ""}!</h1><p>Confirma tu correo para activar tu cuenta en Guía ZMG.</p><p><a href="${v.verifyUrl || "#"}" style="background:#059669;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Activar mi cuenta</a></p><p>El enlace expira en 24 horas. Si no creaste esta cuenta, ignora este correo.</p>`,
   }),
+  // Se envía al correo NUEVO: el cambio solo se aplica al confirmar este enlace.
+  verify_email_change: (v) => ({
+    subject: "Confirma tu nuevo correo — Guía ZMG",
+    html: `<h1>Confirma tu nuevo correo</h1><p>Se solicitó cambiar el correo de una cuenta de Guía ZMG a esta dirección. Para confirmarlo y activarlo, haz clic:</p><p><a href="${v.verifyUrl || "#"}" style="background:#059669;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Confirmar nuevo correo</a></p><p>El enlace expira en 24 horas. Si no fuiste tú, ignora este correo: la cuenta seguirá con su correo actual.</p>`,
+  }),
+  // Aviso de seguridad al correo ANTERIOR cuando alguien pide cambiarlo.
+  email_change_alert: (v) => ({
+    subject: "Se solicitó cambiar el correo de tu cuenta — Guía ZMG",
+    html: `<h1>Solicitud de cambio de correo</h1><p>Se pidió cambiar el correo de tu cuenta de Guía ZMG a <strong>${v.newEmail || ""}</strong>. El cambio solo se aplica cuando se confirme desde ese correo nuevo.</p><p>Si <strong>no</strong> fuiste tú, cambia tu contraseña de inmediato y contáctanos: el cambio aún no se ha aplicado.</p>`,
+  }),
 }
 
 // Construye el transporte SMTP leyendo la config del admin (Admin → Configuración
