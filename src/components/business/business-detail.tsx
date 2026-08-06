@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Clock, Tag, Star } from "@/lib/icons"
+import { MapPin, Tag, Star } from "@/lib/icons"
 import type { Business } from "@/types"
 
 interface BusinessDetailProps {
@@ -94,24 +94,8 @@ export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDet
           </div>
         )}
 
-        {business.hours && business.hours.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Horario</h2>
-            <div className="flex items-start gap-2 text-gray-600">
-              <Clock className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
-              <div className="text-sm">
-                {business.hours.map((h) => (
-                  <div key={h.dayOfWeek} className="flex gap-4">
-                    <span className="font-medium w-24">
-                      {["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][h.dayOfWeek]}:
-                    </span>
-                    <span>{h.isClosed ? "Cerrado" : `${h.opensAt} - ${h.closesAt}`}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* El horario se muestra en la tarjeta "Horarios" (BusinessHours) más
+            abajo — aquí se quitó para no duplicarlo. */}
       </div>
     </div>
   )

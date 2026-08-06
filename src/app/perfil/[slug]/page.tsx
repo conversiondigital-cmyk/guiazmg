@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { BusinessDetail } from "@/components/business/business-detail"
 import { BusinessActions } from "@/components/business/business-actions"
+import { BusinessSaveShare } from "@/components/business/business-save-share"
 import { BusinessMap } from "@/components/business/business-map"
 import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import { TrackBusinessView } from "@/components/business/track-business-view"
@@ -230,11 +231,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               )}
             </div>
             <div className="mt-6 lg:mt-0">
-              <div className="lg:sticky lg:top-24">
+              <div className="space-y-4 lg:sticky lg:top-24">
+                {isPublished && (
+                  <BusinessSaveShare businessId={business.id} businessName={business.name} />
+                )}
                 <BusinessActions business={business} />
-                <div className="mt-4">
-                  <ClaimButton businessId={business.id} businessName={business.name} />
-                </div>
+                <ClaimButton businessId={business.id} businessName={business.name} />
               </div>
             </div>
           </div>

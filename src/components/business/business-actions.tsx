@@ -54,6 +54,7 @@ export function BusinessActions({ business }: BusinessActionsProps) {
           </a>
         )}
 
+        {(business.facebookUrl || business.instagramUrl || business.tiktokUrl) && (
         <div className="pt-3 border-t">
           <h3 className="text-sm font-medium text-gray-900 mb-2">Redes sociales</h3>
           <div className="flex flex-wrap gap-2">
@@ -74,6 +75,7 @@ export function BusinessActions({ business }: BusinessActionsProps) {
             )}
           </div>
         </div>
+        )}
       </CardContent>
     </Card>
   )
