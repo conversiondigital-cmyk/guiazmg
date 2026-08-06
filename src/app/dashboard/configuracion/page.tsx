@@ -26,7 +26,7 @@ export default async function ConfiguracionPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
         <p className="text-gray-500">Administra tu cuenta y preferencias</p>
