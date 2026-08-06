@@ -8,25 +8,33 @@ export async function DELETE() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  // Corta los vínculos de acceso ANTES de anonimizar: si no, el Account de OAuth
-  // (Google) sigue apuntando a este usuario ya inactivo y bloquea volver a entrar
-  // o registrarse con el mismo Google. Al borrarlos, un futuro login con Google se
-  // trata como cuenta NUEVA. También se borran las sesiones abiertas.
-  await prisma.account.deleteMany({ where: { userId: session.user.id } })
-  await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {})
+  try {
+    // Corta los vínculos de acceso ANTES de anonimizar: si no, el Account de OAuth
+    // (Google) sigue apuntando a este usuario ya inactivo y bloquea volver a entrar
+    // o registrarse con el mismo Google. Al borrarlos, un futuro login con Google se
+    // trata como cuenta NUEVA. También se borran las sesiones abiertas.
+    await prisma.account.deleteMany({ where: { userId: session.user.id } })
+    await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {})
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      isActive: false,
-      deletedAt: new Date(),
-      sessionVersion: { increment: 1 },
-      email: `${session.user.email || session.user.id}+deleted@guiazmg.local`,
-      name: null,
-      image: null,
-      passwordHash: null,
-    },
-  })
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+        sessionVersion: { increment: 1 },
+        // Correo anonimizado ÚNICO: incluye el id del usuario para que, si la misma
+        // persona vuelve a registrarse y borrar su cuenta, NO choque con el
+        // "+deleted" de un borrado anterior (el email es único → daría P2002).
+        email: `deleted+${session.user.id}@guiazmg.local`,
+        name: null,
+        image: null,
+        passwordHash: null,
+      },
+    })
 
-  return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[DELETE_ACCOUNT]", error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: "No se pudo eliminar la cuenta" }, { status: 500 })
+  }
 }
