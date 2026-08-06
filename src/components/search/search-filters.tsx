@@ -19,19 +19,9 @@ export function SearchFilters({ categories, municipalities }: SearchFiltersProps
   const currentCategory = searchParams.get("category")
   const currentMunicipio = searchParams.get("municipio")
 
-  // Acordeón: solo se despliegan las subcategorías de la categoría abierta. Arranca
-  // abierta la categoría cuyo giro está seleccionado (para no perder el contexto).
-  const [openCats, setOpenCats] = useState<Set<string>>(() => {
-    const s = new Set<string>()
-    if (currentCategory) {
-      for (const cat of categories) {
-        if (cat.slug === currentCategory || cat.subcategories?.some((c) => c.slug === currentCategory)) {
-          s.add(cat.slug)
-        }
-      }
-    }
-    return s
-  })
+  // Acordeón: TODAS las categorías arrancan colapsadas para que la gente solo dé
+  // clic en la que le interesa (se abre una a la vez).
+  const [openCats, setOpenCats] = useState<Set<string>>(new Set())
 
   const toggle = (slug: string) =>
     setOpenCats((prev) => {

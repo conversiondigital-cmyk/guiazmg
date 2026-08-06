@@ -121,3 +121,23 @@ select:-webkit-autofill {
 html {
   scrollbar-gutter: stable;
 }
+
+/* Carrusel de fondo del login (panel verde): cruza fotos de GDL en bucle, sin
+   interacción. Cada slide comparte la misma animación y se escalona con delay.
+   Respeta prefers-reduced-motion: si el usuario lo pide, no anima (queda la 1ª). */
+@keyframes loginSlideFade {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  21%  { opacity: 1; }
+  25%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+.login-slide {
+  opacity: 0; /* base oculto; la animación (o el fallback) decide qué se ve */
+  animation: loginSlideFade 32s ease-in-out infinite;
+  will-change: opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-slide { animation: none; }
+  .login-slide:first-child { opacity: 1; } /* sin animación: queda fija la 1ª foto */
+}

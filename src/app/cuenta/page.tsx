@@ -72,6 +72,26 @@ export default async function CuentaPage() {
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#4edea3]/10 blur-3xl" />
       </section>
 
+      {/* Buscador del directorio (form GET → /search, sin JS) */}
+      <form action="/search" method="get" className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="search"
+            name="q"
+            placeholder="Busca negocios, servicios o categorías…"
+            aria-label="Buscar en el directorio"
+            className="h-11 w-full rounded-2xl border border-gray-200 bg-white pl-10 pr-3 text-sm shadow-sm outline-none transition-colors focus:border-[#006c49] focus:ring-2 focus:ring-[#006c49]/20"
+          />
+        </div>
+        <button
+          type="submit"
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-[#006c49] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#00583b]"
+        >
+          <Search className="h-4 w-4" /> Buscar
+        </button>
+      </form>
+
       {/* Resumen rápido — tarjetas compactas horizontales */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ label, value, href, icon: Icon, tint }) => (

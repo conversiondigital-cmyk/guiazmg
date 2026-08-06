@@ -119,6 +119,22 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       {/* Panel de marca — solo escritorio */}
       <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-green-800 via-green-700 to-emerald-600 p-12 lg:flex xl:p-16">
+        {/* Carrusel de fondo con lugares emblemáticos de GDL. Decorativo y sin
+            interacción: las fotos se cruzan solas y un difuminado verde encima
+            mantiene la identidad de marca y la legibilidad del texto. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          {["/inicio/catedral.jpg", "/inicio/teatro-degollado.jpg", "/inicio/arcos.jpg", "/inicio/templo-expiatorio.jpg"].map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              alt=""
+              className="login-slide absolute inset-0 h-full w-full object-cover"
+              style={{ animationDelay: `${i * 8}s` }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#003527]/92 via-[#064e3b]/74 to-[#006c49]/45 backdrop-blur-[2px]" />
+        </div>
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-emerald-400/20 blur-3xl" />
 
