@@ -223,11 +223,31 @@ export function UserActions({ user }: { user: UserRow }) {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  if (linkInfo?.url) {
-                    navigator.clipboard.writeText(linkInfo.url).then(
-                      () => toast.success("Enlace copiado"),
-                      () => toast.error("No se pudo copiar"),
-                    )
+                  const url = linkInfo?.url
+                  if (!url) return
+                  const ok = () => toast.success("Enlace copiado")
+                  // Respaldo sincrónico: la API de clipboard falla si la pestaña
+                  // perdió el foco; execCommand sobre un textarea temporal no.
+                  const fallback = () => {
+                    try {
+                      const ta = document.createElement("textarea")
+                      ta.value = url
+                      ta.style.position = "fixed"
+                      ta.style.opacity = "0"
+                      document.body.appendChild(ta)
+                      ta.focus()
+                      ta.select()
+                      const done = document.execCommand("copy")
+                      document.body.removeChild(ta)
+                      done ? ok() : toast.error("No se pudo copiar. Selecciona el texto y usa Ctrl+C.")
+                    } catch {
+                      toast.error("No se pudo copiar. Selecciona el texto y usa Ctrl+C.")
+                    }
+                  }
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(url).then(ok, fallback)
+                  } else {
+                    fallback()
                   }
                 }}
               >
