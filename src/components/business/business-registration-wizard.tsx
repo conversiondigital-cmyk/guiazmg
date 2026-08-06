@@ -410,7 +410,7 @@ export function BusinessRegistrationWizard({
 
       {/* Step 1: Basic Info */}
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <h2 className="text-xl font-semibold">Información básica</h2>
           <div>
             <Label htmlFor="name">Nombre del negocio *</Label>
@@ -524,9 +524,9 @@ export function BusinessRegistrationWizard({
 
       {/* Step 2: Contact */}
       {step === 2 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <h2 className="text-xl font-semibold">Información de contacto</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="phone">Teléfono *</Label>
               <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="3312345678" required />
@@ -544,7 +544,7 @@ export function BusinessRegistrationWizard({
               <Input id="websiteUrl" value={form.websiteUrl} onChange={(e) => updateField("websiteUrl", e.target.value)} placeholder="https://ejemplo.com" />
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-3">
             <div>
               <Label htmlFor="facebookUrl">Facebook</Label>
               <Input id="facebookUrl" value={form.facebookUrl} onChange={(e) => updateField("facebookUrl", e.target.value)} placeholder="URL de Facebook" />
@@ -563,7 +563,7 @@ export function BusinessRegistrationWizard({
 
       {/* Step 3: Location */}
       {step === 3 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <h2 className="text-xl font-semibold">{isEmprendedor ? "Zona" : "Ubicación"}</h2>
           {isEmprendedor && (
             <p className="text-sm text-gray-500">
@@ -615,7 +615,7 @@ export function BusinessRegistrationWizard({
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="municipio">Municipio *</Label>
               <Select value={selectedMunicipio} onValueChange={(v) => v && setSelectedMunicipio(v)} items={Object.fromEntries(municipalities.map((m) => [m.id, m.name]))}>
@@ -676,7 +676,7 @@ export function BusinessRegistrationWizard({
               onAddress={(a) => setForm((p) => ({ ...p, addressText: a }))}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-3">
             <div>
               <Label htmlFor="postalCode">Código Postal</Label>
               <Input id="postalCode" value={form.postalCode} onChange={(e) => updateField("postalCode", e.target.value)} onBlur={geocodePostal} inputMode="numeric" maxLength={5} placeholder="45138" />
@@ -695,7 +695,7 @@ export function BusinessRegistrationWizard({
 
       {/* Step 4: Hours */}
       {step === 4 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <h2 className="text-xl font-semibold">Horarios</h2>
           <p className="text-sm text-gray-500">Define los horarios de atención de tu negocio</p>
           <div className="space-y-3">
