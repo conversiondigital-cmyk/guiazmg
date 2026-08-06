@@ -3,11 +3,12 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { Settings, User, Bell, Shield } from "lucide-react"
+import { Settings, User, Bell, Shield, AlertTriangle } from "lucide-react"
 import { Metadata } from "next"
 import { SecuritySection } from "@/components/dashboard/security-section"
 import { NotificationPreferencesForm } from "@/components/dashboard/notification-preferences"
 import { PersonalInfoForm } from "@/components/dashboard/personal-info-form"
+import { DeleteAccountSection } from "@/components/dashboard/delete-account-section"
 
 export const metadata: Metadata = { title: "Configuración | Guía ZMG" }
 
@@ -66,6 +67,15 @@ export default async function ConfiguracionPage() {
           <h2 className="font-bold text-gray-900">Seguridad</h2>
         </div>
         <SecuritySection userId={user.id} />
+      </div>
+
+      {/* Zona de peligro: eliminar cuenta */}
+      <div className="rounded-2xl bg-white border border-red-100 p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <h2 className="font-bold text-gray-900">Eliminar cuenta</h2>
+        </div>
+        <DeleteAccountSection />
       </div>
     </div>
   )

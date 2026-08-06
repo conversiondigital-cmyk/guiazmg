@@ -55,7 +55,10 @@ export default function RegisterPage() {
       }
 
       toast.success("Cuenta creada exitosamente")
-      router.push("/auth/login")
+      // Conserva el destino: tras iniciar sesión, continúa a donde iba (p. ej.
+      // /registrar-negocio), en vez de perder el flujo en /auth/login.
+      const cb = new URLSearchParams(window.location.search).get("callbackUrl")
+      router.push(cb ? `/auth/login?callbackUrl=${encodeURIComponent(cb)}` : "/auth/login")
     } catch {
       toast.error("Error al registrarse")
     } finally {
@@ -157,12 +160,21 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <p className="mb-3 text-center text-[11px] text-gray-400">
+            Al continuar con Google aceptas nuestros{" "}
+            <Link href="/terminos" className="underline hover:text-gray-600">términos</Link>,{" "}
+            <Link href="/privacidad" className="underline hover:text-gray-600">privacidad</Link> y{" "}
+            <Link href="/normas-comunidad" className="underline hover:text-gray-600">normas</Link>.
+          </p>
           <Button
             variant="outline"
             className="w-full"
             onClick={async () => {
               try {
-                await signIn("google", { callbackUrl: "/dashboard" })
+                // Respeta el destino real (p. ej. /registrar-negocio) en vez de forzar
+                // /dashboard, para no romper el flujo de quien venía a crear su negocio.
+                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/dashboard"
+                await signIn("google", { callbackUrl: cb })
               } catch {
                 toast.error("No se pudo conectar con Google. Inténtalo de nuevo.")
               }

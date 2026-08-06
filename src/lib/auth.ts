@@ -23,7 +23,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/login",
     signOut: "/auth/signout",
-    newUser: "/auth/register",
+    // Sin `newUser`: un usuario nuevo de Google (OAuth) debe ir directo a su
+    // destino (callbackUrl → /dashboard), NO a la página de registro. Antes esto
+    // apuntaba a /auth/register y dejaba al recién registrado de vuelta en el
+    // formulario de alta aunque su cuenta YA estaba creada y con sesión.
     error: "/auth/login",
   },
   providers: [
