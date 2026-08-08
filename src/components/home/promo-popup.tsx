@@ -93,10 +93,17 @@ export function PromoPopup() {
           >
             Registrar mi negocio
           </Link>
+          {/* Aclara que registrar un negocio es opcional: crear cuenta es gratis. */}
+          <p className="pt-1 text-center text-xs text-gray-500">
+            ¿Solo quieres explorar, guardar favoritos y reseñar?{" "}
+            <Link href="/auth/register" onClick={close} className="font-semibold text-[#006c49] hover:underline">
+              Crea tu cuenta gratis
+            </Link>
+          </p>
           <button
             type="button"
             onClick={close}
-            className="block w-full pt-1 text-center text-sm text-gray-400 hover:text-gray-600"
+            className="block w-full text-center text-sm text-gray-400 hover:text-gray-600"
           >
             Ahora no
           </button>

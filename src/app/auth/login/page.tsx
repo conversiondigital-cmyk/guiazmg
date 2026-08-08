@@ -269,8 +269,10 @@ export default function LoginPage() {
               try {
                 // Respeta el destino real (p. ej. /registrar-negocio) para no romper
                 // el flujo de quien venía a registrar su negocio.
-                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/dashboard"
-                await signIn("google", { callbackUrl: cb })
+                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/cuenta"
+                // Pasa por la bienvenida: confirma datos + acepta términos si es su
+                // primer ingreso (usuarios ya aceptados entran directo a `next`).
+                await signIn("google", { callbackUrl: `/auth/bienvenido?next=${encodeURIComponent(cb)}` })
               } catch {
                 toast.error("No se pudo conectar con Google. Inténtalo de nuevo.")
               }

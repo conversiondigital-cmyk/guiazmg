@@ -89,7 +89,10 @@ export default function RegisterPage() {
             <img src="/logo.svg" alt="Guía ZMG" className="h-9 w-auto" />
           </Link>
           <CardTitle className="text-xl">Crear cuenta</CardTitle>
-          <CardDescription>Registra tu negocio o únete como usuario</CardDescription>
+          <CardDescription>
+            Crear tu cuenta es <strong>gratis</strong> — para guardar favoritos, dejar reseñas y
+            seguir a tus negocios. Registrar un negocio es aparte y opcional.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -188,8 +191,10 @@ export default function RegisterPage() {
               try {
                 // Respeta el destino real (p. ej. /registrar-negocio) en vez de forzar
                 // /dashboard, para no romper el flujo de quien venía a crear su negocio.
-                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/dashboard"
-                await signIn("google", { callbackUrl: cb })
+                const cb = new URLSearchParams(window.location.search).get("callbackUrl") || "/cuenta"
+                // Pasa por la bienvenida: confirma datos + acepta términos si es su
+                // primer ingreso (usuarios ya aceptados entran directo a `next`).
+                await signIn("google", { callbackUrl: `/auth/bienvenido?next=${encodeURIComponent(cb)}` })
               } catch {
                 toast.error("No se pudo conectar con Google. Inténtalo de nuevo.")
               }
