@@ -16,6 +16,15 @@ export default async function CuentaLayout({ children }: { children: React.React
   if (role === "SALES_AGENT")   redirect("/agente")
   if (role === "BUSINESS_OWNER") redirect("/dashboard")
 
+  // Consentimiento OBLIGATORIO: si la cuenta no aceptó términos (p. ej. registro
+  // con Google donde dieron "atrás" en la bienvenida), no puede usar el área
+  // privada; vuelve a la bienvenida hasta aceptar. Evita cuentas "sin consentir".
+  const acc = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { acceptedTermsAt: true },
+  })
+  if (!acc?.acceptedTermsAt) redirect("/auth/bienvenido?next=/cuenta")
+
   // Dueño de un negocio cuyo rol quedó en USER (no se promovió al registrar):
   // su área también es el dashboard del negocio, no la cuenta de usuario. Así
   // no queda atorado sin enlace para editar su negocio.

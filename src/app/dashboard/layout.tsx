@@ -19,6 +19,14 @@ export default async function DashboardLayout({
   if (role === "EDITOR")       redirect("/editor")
   if (role === "SALES_AGENT")  redirect("/agente")
 
+  // Consentimiento OBLIGATORIO: quien no aceptó términos (p. ej. registro con
+  // Google que dio "atrás" en la bienvenida) vuelve a la bienvenida hasta aceptar.
+  const acc = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { acceptedTermsAt: true },
+  })
+  if (!acc?.acceptedTermsAt) redirect("/auth/bienvenido?next=/dashboard")
+
   // El dashboard es para DUEÑOS de negocio, detectado por PROPIEDAD (tiene un
   // Profile) y no solo por rol: si alguien registró su negocio pero su rol quedó
   // en USER (no se promovió), igual debe poder entrar a administrarlo.
