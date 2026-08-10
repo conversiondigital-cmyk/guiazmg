@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { requireConsent } from "@/lib/auth/consent"
 import { prisma } from "@/lib/prisma"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
+    const consent = await requireConsent()
+    if (!consent.ok) return NextResponse.json({ error: consent.error }, { status: consent.status })
 
     // Anti-abuso: tope de publicaciones por minuto (usuario e IP).
     const rateLimited = await enforceRateLimits([

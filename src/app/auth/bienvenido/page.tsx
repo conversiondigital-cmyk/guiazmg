@@ -23,8 +23,17 @@ export default async function BienvenidoPage({
   })
   if (!user) redirect("/auth/login")
 
-  // Solo se permiten destinos internos (evita open-redirect).
-  const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/cuenta"
+  // Solo se permiten destinos internos (evita open-redirect). Se rechaza `//` y
+  // también `\` / `%5c`: los navegadores normalizan `\`→`/`, así que `/\evil.com`
+  // se volvería protocol-relative (//evil.com) y saldría del sitio.
+  const dest =
+    next &&
+    next.startsWith("/") &&
+    !next.startsWith("//") &&
+    !next.includes("\\") &&
+    !next.toLowerCase().includes("%5c")
+      ? next
+      : "/cuenta"
   if (user.acceptedTermsAt) redirect(dest)
 
   return <WelcomeConsent name={user.name} email={user.email ?? ""} next={dest} />

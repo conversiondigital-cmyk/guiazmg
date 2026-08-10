@@ -7,11 +7,15 @@ import { getPublicAppUrl } from "@/lib/env"
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json()
+    const { email: rawEmail } = await req.json()
 
-    if (!email || typeof email !== "string") {
+    if (!rawEmail || typeof rawEmail !== "string") {
       return NextResponse.json({ error: "Email requerido" }, { status: 400 })
     }
+    // El registro guarda el correo en minúsculas; normaliza aquí para que un
+    // correo escrito con mayúsculas no dé "no existe" ni genere un token con un
+    // identifier que reset-password no pueda mapear de vuelta al usuario.
+    const email = rawEmail.toLowerCase().trim()
 
     const ip = getClientIp(req)
     const rateLimited = await enforceRateLimits([

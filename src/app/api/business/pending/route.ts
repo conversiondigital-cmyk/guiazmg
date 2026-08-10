@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { requireConsent } from "@/lib/auth/consent"
 import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
 import { slugify } from "@/lib/utils"
@@ -15,6 +16,8 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
+    const consent = await requireConsent()
+    if (!consent.ok) return NextResponse.json({ error: consent.error }, { status: consent.status })
 
     const raw = await request.json().catch(() => ({}))
     const plan = typeof raw?.plan === "string" ? raw.plan : ""

@@ -26,7 +26,9 @@ export async function GET(req: NextRequest) {
   try {
     await prisma.user.update({
       where: { id: userId },
-      data: { email: newEmail, emailVerified: new Date() },
+      // sessionVersion++ invalida las sesiones anteriores: tras cambiar el correo
+      // de login, cualquier sesión previa (posiblemente comprometida) se revoca.
+      data: { email: newEmail, emailVerified: new Date(), sessionVersion: { increment: 1 } },
     })
   } catch (e) {
     // P2002: carrera por el índice único del correo.

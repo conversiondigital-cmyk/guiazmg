@@ -146,9 +146,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Google ya verificó el correo → marca la cuenta como verificada (una
         // sola vez; updateMany con emailVerified:null es idempotente). Corre en
         // el jwt porque el adapter crea al usuario nuevo ANTES de este callback.
+        // SEGURIDAD: si la cuenta se vincula a Google estando SIN verificar, su
+        // passwordHash NO es de fiar (pudo pre-registrarla otra persona con el
+        // correo de la víctima). Se borra para que esa contraseña no sirva; el
+        // dueño real entra con Google (o restablece contraseña). No se toca
+        // sessionVersion aquí (invalidaría el propio token que se está emitiendo).
         if (account?.provider === "google") {
           await prisma.user
-            .updateMany({ where: { id: dbUser.id, emailVerified: null }, data: { emailVerified: new Date() } })
+            .updateMany({
+              where: { id: dbUser.id, emailVerified: null },
+              data: { emailVerified: new Date(), passwordHash: null },
+            })
             .catch(() => {})
         }
       }
