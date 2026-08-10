@@ -15,6 +15,7 @@ type AuthToken = Omit<JWT, "id" | "role"> & {
   role?: string
   sessionVersion?: number
   lastCheck?: number
+  acceptedTerms?: boolean
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -112,7 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       const authToken = token as AuthToken
       let dbUser: any = null
 
@@ -123,12 +124,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         dbUser = lookupId
           ? await prisma.user.findUnique({
               where: { id: lookupId },
-              select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true },
+              select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true, acceptedTermsAt: true },
             })
           : lookupEmail
             ? await prisma.user.findUnique({
                 where: { email: lookupEmail },
-                select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true },
+                select: { id: true, role: true, isActive: true, deletedAt: true, sessionVersion: true, acceptedTermsAt: true },
               })
             : null
 
@@ -142,6 +143,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         authToken.id = dbUser.id
         authToken.role = dbUser.role
         authToken.sessionVersion = dbUser.sessionVersion
+        // Bandera de consentimiento que lee el middleware (candado global).
+        authToken.acceptedTerms = !!dbUser.acceptedTermsAt
 
         // Google ya verificó el correo → marca la cuenta como verificada (una
         // sola vez; updateMany con emailVerified:null es idempotente). Corre en
@@ -175,10 +178,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // a lo sumo esta ventana (60s) en vez de ser inmediata.
       const REVALIDATE_MS = 60_000
       const lastCheck = (authToken.lastCheck as number | undefined) ?? 0
-      if (authToken.id && Date.now() - lastCheck > REVALIDATE_MS) {
+      // Re-valida cada 60s, o de inmediato cuando el cliente llama update() (p. ej.
+      // justo tras aceptar términos, para refrescar la bandera sin esperar 60s).
+      if (authToken.id && (trigger === "update" || Date.now() - lastCheck > REVALIDATE_MS)) {
         const fresh = await prisma.user.findUnique({
           where: { id: authToken.id },
-          select: { role: true, isActive: true, deletedAt: true, sessionVersion: true },
+          select: { role: true, isActive: true, deletedAt: true, sessionVersion: true, acceptedTermsAt: true },
         })
         if (!fresh || !fresh.isActive || fresh.deletedAt || fresh.sessionVersion !== authToken.sessionVersion) {
           delete authToken.id
@@ -187,6 +192,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return token
         }
         authToken.role = fresh.role
+        authToken.acceptedTerms = !!fresh.acceptedTermsAt
         authToken.lastCheck = Date.now()
       }
       return token

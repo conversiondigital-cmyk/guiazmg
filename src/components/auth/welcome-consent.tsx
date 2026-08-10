@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signOut, useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Loader2, Check, Mail } from "@/lib/icons"
 import { User as UserIcon } from "lucide-react"
@@ -21,8 +22,10 @@ export function WelcomeConsent({
   next: string
 }) {
   const router = useRouter()
+  const { update } = useSession()
   const [accepted, setAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [canceling, setCanceling] = useState(false)
 
   const submit = async () => {
     if (!accepted) return
@@ -30,11 +33,24 @@ export function WelcomeConsent({
     try {
       const res = await fetch("/api/user/accept-terms", { method: "POST" })
       if (!res.ok) throw new Error()
+      // Refresca el token (acceptedTerms -> true) ANTES de redirigir; si no, el
+      // middleware vería la bandera vieja y rebotaría de vuelta a esta pantalla.
+      await update()
       router.push(next)
       router.refresh()
     } catch {
       toast.error("No se pudo continuar. Inténtalo de nuevo.")
       setLoading(false)
+    }
+  }
+
+  // Cancelar: borra la cuenta sin consentir y cierra sesión.
+  const cancel = async () => {
+    setCanceling(true)
+    try {
+      await fetch("/api/user/abandon-registration", { method: "POST" }).catch(() => {})
+    } finally {
+      await signOut({ callbackUrl: "/" })
     }
   }
 
@@ -88,10 +104,19 @@ export function WelcomeConsent({
           </span>
         </label>
 
-        <Button onClick={submit} disabled={!accepted || loading} className="mt-5 w-full" size="lg">
+        <Button onClick={submit} disabled={!accepted || loading || canceling} className="mt-5 w-full" size="lg">
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
           Aceptar y continuar
         </Button>
+
+        <button
+          type="button"
+          onClick={cancel}
+          disabled={loading || canceling}
+          className="mt-3 block w-full text-center text-sm text-gray-400 transition-colors hover:text-gray-600"
+        >
+          {canceling ? "Cancelando…" : "No, gracias — cancelar registro"}
+        </button>
       </div>
     </div>
   )

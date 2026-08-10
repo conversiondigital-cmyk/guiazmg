@@ -79,6 +79,29 @@ export async function proxy(req: NextRequest) {
     return res
   }
 
+  // Candado GLOBAL de consentimiento: un usuario logueado que NO aceptó términos
+  // (p. ej. registro con Google donde dio "atrás") NO puede usar el sitio logueado;
+  // se le manda a /auth/bienvenido hasta que acepte (o cancele). Con OAuth la cuenta
+  // se crea al autenticar, así que sin este candado global la sesión quedaba usable
+  // sin consentir. Staff (admin/editor/agente) exento. Se excluyen las páginas de
+  // auth (incl. la propia bienvenida y signout) y las APIs para no romper el flujo
+  // de aceptar/cancelar.
+  const acceptedTerms = (token as { acceptedTerms?: boolean } | null)?.acceptedTerms
+  const isStaff = role === "ADMIN" || role === "EDITOR" || role === "SALES_AGENT"
+  if (
+    isLoggedIn &&
+    acceptedTerms === false &&
+    !isStaff &&
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/_next") &&
+    pathname !== "/favicon.ico"
+  ) {
+    const url = new URL("/auth/bienvenido", req.url)
+    url.searchParams.set("next", pathname)
+    return redirectWith(url)
+  }
+
   const origin = req.headers.get("origin") || ""
   const allowedOrigins = [
     "http://localhost:3100",
