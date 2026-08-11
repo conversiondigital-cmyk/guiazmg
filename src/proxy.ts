@@ -88,13 +88,15 @@ export async function proxy(req: NextRequest) {
   // de aceptar/cancelar.
   const acceptedTerms = (token as { acceptedTerms?: boolean } | null)?.acceptedTerms
   const isStaff = role === "ADMIN" || role === "EDITOR" || role === "SALES_AGENT"
-  // Se gatea cuando NO es explícitamente true: cubre acceptedTerms=false (nuevos
-  // registros con Google) y también acceptedTerms=undefined (sesiones viejas cuyo
-  // token aún no trae la bandera). La bienvenida refresca el token de los ya
-  // consentidos (via update()) antes de reenviarlos, así que no hay loop.
+  // Se gatea solo cuando el token dice EXPLÍCITAMENTE que no aceptó (===false).
+  // Los nuevos registros con Google traen la bandera desde el login, así que se
+  // gatean de inmediato. Un token viejo (bandera ausente = undefined) NO se gatea
+  // aquí para no arriesgar loops a usuarios ya consentidos; se resuelve solo en
+  // cuanto su token se refresca (o con re-login). Los layouts privados igual
+  // exigen aceptación por BD como respaldo.
   if (
     isLoggedIn &&
-    acceptedTerms !== true &&
+    acceptedTerms === false &&
     !isStaff &&
     !pathname.startsWith("/auth") &&
     !pathname.startsWith("/api") &&
