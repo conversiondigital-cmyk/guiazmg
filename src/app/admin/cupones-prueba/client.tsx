@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { Gift, Loader2 } from "@/lib/icons"
+import { Gift, Loader2, ChevronDown } from "@/lib/icons"
 
 type Plan = { id: string; name: string }
 type Coupon = {
@@ -18,6 +18,16 @@ type Coupon = {
   isActive: boolean
   note: string | null
   plan: { name: string }
+}
+
+type Redemption = {
+  id: string
+  days: number
+  redeemedAt: string
+  userName: string | null
+  userEmail: string | null
+  businessName: string | null
+  businessSlug: string | null
 }
 
 export function MembershipCouponsClient({
@@ -39,6 +49,35 @@ export function MembershipCouponsClient({
   })
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }))
+
+  // Detalle de "quién canjeó" por cupón: se carga bajo demanda al desplegar.
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [reds, setReds] = useState<Record<string, Redemption[]>>({})
+  const [loadingReds, setLoadingReds] = useState<string | null>(null)
+
+  const toggleDetail = async (c: Coupon) => {
+    if (openId === c.id) {
+      setOpenId(null)
+      return
+    }
+    setOpenId(c.id)
+    if (reds[c.id]) return // ya cargado
+    setLoadingReds(c.id)
+    try {
+      const res = await fetch(`/api/admin/membership-coupons/${c.id}/redemptions`)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error()
+      setReds((m) => ({ ...m, [c.id]: data.redemptions ?? [] }))
+    } catch {
+      toast.error("No se pudo cargar quién canjeó")
+      setOpenId((cur) => (cur === c.id ? null : cur))
+    } finally {
+      setLoadingReds(null)
+    }
+  }
+
+  const fmtDate = (s: string) =>
+    new Date(s).toLocaleString("es-MX", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -162,31 +201,97 @@ export function MembershipCouponsClient({
                   </td>
                 </tr>
               ) : (
-                coupons.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-50 last:border-0">
-                    <td className="px-4 py-3 font-mono font-semibold text-gray-900">{c.code}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.plan.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{c.days}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {c.redemptionCount}
-                      {c.maxRedemptions !== null ? ` / ${c.maxRedemptions}` : ""}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("es-MX") : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => toggle(c)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          c.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {c.isActive ? "Activo" : "Inactivo"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                coupons.map((c) => {
+                  const isOpen = openId === c.id
+                  const usable = c.redemptionCount > 0
+                  const list = reds[c.id] ?? []
+                  return (
+                    <Fragment key={c.id}>
+                      <tr className={`border-b border-gray-50 last:border-0 ${isOpen ? "bg-[#f5faf8]" : ""}`}>
+                        <td className="px-4 py-3 font-mono font-semibold text-gray-900">{c.code}</td>
+                        <td className="px-4 py-3 text-gray-600">{c.plan.name}</td>
+                        <td className="px-4 py-3 text-gray-600">{c.days}</td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {usable ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleDetail(c)}
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold text-[#0f7a52] transition-colors hover:bg-[#e6f4ee]"
+                              title="Ver quién canjeó"
+                            >
+                              {c.redemptionCount}
+                              {c.maxRedemptions !== null ? ` / ${c.maxRedemptions}` : ""}
+                              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                            </button>
+                          ) : (
+                            <span>
+                              {c.redemptionCount}
+                              {c.maxRedemptions !== null ? ` / ${c.maxRedemptions}` : ""}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("es-MX") : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => toggle(c)}
+                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              c.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            {c.isActive ? "Activo" : "Inactivo"}
+                          </button>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="border-b border-gray-100 bg-[#f5faf8]">
+                          <td colSpan={6} className="px-4 py-3">
+                            {loadingReds === c.id ? (
+                              <p className="flex items-center gap-2 text-sm text-gray-500">
+                                <Loader2 className="h-4 w-4 animate-spin" /> Cargando canjes…
+                              </p>
+                            ) : list.length === 0 ? (
+                              <p className="text-sm text-gray-500">Sin canjes registrados.</p>
+                            ) : (
+                              <div className="overflow-hidden rounded-lg border border-[#006c49]/15 bg-white">
+                                <p className="border-b border-gray-100 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                  Quién canjeó {c.code} ({list.length})
+                                </p>
+                                <ul className="divide-y divide-gray-50">
+                                  {list.map((r) => (
+                                    <li key={r.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-sm">
+                                      <span className="min-w-0">
+                                        <span className="font-medium text-gray-900">{r.userName ?? "—"}</span>
+                                        {r.userEmail && <span className="text-gray-500"> · {r.userEmail}</span>}
+                                      </span>
+                                      <span className="text-gray-600">
+                                        {r.businessSlug ? (
+                                          <a
+                                            href={`/perfil/${r.businessSlug}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-[#0f7a52] hover:underline"
+                                          >
+                                            {r.businessName ?? "negocio"}
+                                          </a>
+                                        ) : (
+                                          r.businessName ?? "—"
+                                        )}
+                                      </span>
+                                      <span className="text-xs text-gray-400">{fmtDate(r.redeemedAt)}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })
               )}
             </tbody>
           </table>
