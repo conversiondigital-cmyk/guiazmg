@@ -56,7 +56,7 @@ export async function proxy(req: NextRequest) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self' https://*.mercadopago.com https://*.stripe.com https://sentry.io https://o*.sentry.io wss://*.sentry.io https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://cloudflareinsights.com",
+    "connect-src 'self' https://*.mercadopago.com https://*.stripe.com https://sentry.io https://*.ingest.sentry.io wss://*.sentry.io https://va.vercel-scripts.com https://maps.googleapis.com https://maps.gstatic.com https://places.googleapis.com https://cloudflareinsights.com",
     "frame-src https://*.mercadopago.com https://*.stripe.com",
     "object-src 'none'",
     "base-uri 'self'",
@@ -189,7 +189,10 @@ export async function proxy(req: NextRequest) {
 
   if (requiresAuth && !isLoggedIn) {
     const loginUrl = new URL("/auth/login", req.url)
-    loginUrl.searchParams.set("callbackUrl", pathname)
+    // Se conserva la query string, no solo el pathname: así el enlace de la promo
+    // (/registrar-negocio?promo=1) sobrevive el rebote a login y el ida-y-vuelta de
+    // Google, y el código de días gratis se autocompleta al final del registro.
+    loginUrl.searchParams.set("callbackUrl", pathname + req.nextUrl.search)
     return redirectWith(loginUrl)
   }
 

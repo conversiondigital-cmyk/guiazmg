@@ -3,9 +3,10 @@ export const dynamic = "force-dynamic"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { Heart, Star, Package, Bell, Search, ArrowRight, Store, Rocket, TrendingUp } from "lucide-react"
+import { Heart, Star, Package, Bell, Search, ArrowRight, Store, Rocket, TrendingUp, Gift } from "lucide-react"
 import { Metadata } from "next"
 import { getCategories, getFeaturedBusinesses } from "@/lib/queries"
+import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
 import { CategoryGrid } from "@/components/home/category-grid"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 
@@ -35,6 +36,18 @@ export default async function CuentaPage() {
   } catch {
     // BD no disponible — renderiza con estado vacío
   }
+
+  // Promo de lanzamiento (días gratis). Solo se anuncia mientras HAYA cupones
+  // disponibles: si un plan se agota, se anuncia solo el que queda; si se agotan
+  // ambos, no aparece el aviso. El enlace lleva ?promo=1 para autocompletar el
+  // código al final del registro.
+  const promo = await getActivePromoCoupons().catch(() => ({ EMPRENDEDOR: null, NEGOCIO: null }))
+  const promoDays = promo.NEGOCIO?.days ?? promo.EMPRENDEDOR?.days ?? 0
+  const promoPlans = [promo.NEGOCIO ? "Negocio" : null, promo.EMPRENDEDOR ? "Emprendedor" : null].filter(
+    Boolean,
+  ) as string[]
+  const promoPlanLabel =
+    promoPlans.length === 2 ? "Emprendedor o Negocio" : promoPlans[0] ?? ""
 
   const stats = [
     { label: "Favoritos", value: favCount, href: "/cuenta/favoritos", icon: Heart, tint: "bg-rose-50 text-rose-600" },
@@ -110,6 +123,32 @@ export default async function CuentaPage() {
           </Link>
         ))}
       </div>
+
+      {/* Aviso de la promo de lanzamiento — solo si aún quedan códigos */}
+      {promoPlans.length > 0 && promoDays > 0 && (
+        <Link
+          href="/registrar-negocio?promo=1"
+          className="group flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-[#006c49] to-[#00583b] px-5 py-4 text-white shadow-[0_8px_30px_-12px_rgba(0,53,39,0.5)] transition-shadow hover:shadow-xl"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              <Gift className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-bold sm:text-base">
+                Promoción de lanzamiento — {promoDays} días gratis
+              </p>
+              <p className="mt-0.5 text-xs text-white/80 sm:text-sm">
+                Registra tu negocio y activa tu plan {promoPlanLabel} sin pagar los primeros{" "}
+                {promoDays} días. El código se aplica solo al registrarte.
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[#006c49] transition-transform group-hover:translate-x-0.5">
+            Aprovechar <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+      )}
 
       {/* Categorías Populares */}
       {categories.length > 0 && <CategoryGrid categories={categories as never} bare />}

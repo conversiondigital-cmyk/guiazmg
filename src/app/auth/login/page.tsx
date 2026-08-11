@@ -94,8 +94,22 @@ export default function LoginPage() {
       // Redirige a cada rol a su panel (evita caer en /dashboard en blanco).
       const sess = await fetch("/api/auth/session").then((r) => r.json()).catch(() => null)
       const role = sess?.user?.role
+      // Para un miembro normal, si venía con un destino seguro (p. ej. la promo
+      // /registrar-negocio?promo=1), se respeta para que el código no se pierda.
+      // El staff siempre va a su panel.
+      const cbParam = new URLSearchParams(window.location.search).get("callbackUrl")
+      const safeCb =
+        cbParam && cbParam.startsWith("/") && !cbParam.startsWith("//") && !cbParam.includes("\\")
+          ? cbParam
+          : null
       const dest =
-        role === "ADMIN" ? "/admin" : role === "SALES_AGENT" ? "/agente" : role === "EDITOR" ? "/editor" : "/dashboard"
+        role === "ADMIN"
+          ? "/admin"
+          : role === "SALES_AGENT"
+          ? "/agente"
+          : role === "EDITOR"
+          ? "/editor"
+          : safeCb || "/dashboard"
       router.push(dest)
     } catch {
       setError("No se pudo iniciar sesión. Inténtalo de nuevo.")
