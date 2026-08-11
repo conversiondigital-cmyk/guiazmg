@@ -88,9 +88,13 @@ export async function proxy(req: NextRequest) {
   // de aceptar/cancelar.
   const acceptedTerms = (token as { acceptedTerms?: boolean } | null)?.acceptedTerms
   const isStaff = role === "ADMIN" || role === "EDITOR" || role === "SALES_AGENT"
+  // Se gatea cuando NO es explícitamente true: cubre acceptedTerms=false (nuevos
+  // registros con Google) y también acceptedTerms=undefined (sesiones viejas cuyo
+  // token aún no trae la bandera). La bienvenida refresca el token de los ya
+  // consentidos (via update()) antes de reenviarlos, así que no hay loop.
   if (
     isLoggedIn &&
-    acceptedTerms === false &&
+    acceptedTerms !== true &&
     !isStaff &&
     !pathname.startsWith("/auth") &&
     !pathname.startsWith("/api") &&
