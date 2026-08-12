@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { Loader2, Eye, EyeOff, Store, MapPin, Star } from "@/lib/icons"
+import { Loader2, Eye, EyeOff, Store, MapPin, Star, Check } from "@/lib/icons"
 
 const HIGHLIGHTS = [
   { icon: Store, text: "Miles de negocios de Guadalajara y la ZMG" },
@@ -204,9 +204,10 @@ export default function LoginPage() {
           {info && (
             <div
               role="status"
-              className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-medium text-emerald-700"
+              className="mb-4 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-medium text-emerald-700"
             >
-              {info}
+              <Check className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{info}</span>
             </div>
           )}
           {error && (

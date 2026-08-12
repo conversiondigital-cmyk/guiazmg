@@ -60,11 +60,14 @@ export default function RegisterPage() {
         return
       }
 
-      toast.success("Cuenta creada exitosamente")
-      // Conserva el destino: tras iniciar sesión, continúa a donde iba (p. ej.
-      // /registrar-negocio), en vez de perder el flujo en /auth/login.
+      toast.success("Cuenta creada. Revisa tu correo para activarla.")
+      // Con la verificación obligatoria, la cuenta NO puede entrar hasta activar por
+      // el enlace. Se manda a "Revisa tu correo" (antes caía en el login sin saber
+      // qué hacer). Conserva el destino para retomarlo tras iniciar sesión.
       const cb = new URLSearchParams(window.location.search).get("callbackUrl")
-      router.push(cb ? `/auth/login?callbackUrl=${encodeURIComponent(cb)}` : "/auth/login")
+      const qs = new URLSearchParams({ email })
+      if (cb) qs.set("callbackUrl", cb)
+      router.push(`/auth/verifica-correo?${qs.toString()}`)
     } catch {
       toast.error("Error al registrarse")
     } finally {
