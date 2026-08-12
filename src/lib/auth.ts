@@ -3,11 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import { headers } from "next/headers"
 import type { JWT } from "next-auth/jwt"
 import { prisma } from "@/lib/prisma"
-import { enforceRateLimits } from "@/lib/security/request-rate-limit"
-import { getTrustedClientIp } from "@/lib/security/rate-limit"
 import { getSettingBool } from "@/lib/settings"
 
 type AuthToken = Omit<JWT, "id" | "role"> & {
@@ -40,16 +37,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
 
         const email = String(credentials.email).toLowerCase()
-        const requestHeaders = await headers()
-        const ip = getTrustedClientIp(new Request("http://localhost", { headers: requestHeaders }))
 
-        const rateLimited = await enforceRateLimits([
-          { key: `auth:login:ip:${ip}`, windowMs: 60_000, maxRequests: 10 },
-          { key: `auth:login:email:${email}`, windowMs: 60_000, maxRequests: 5 },
-        ])
-
-        if (rateLimited) return null
-
+        // El rate-limiting del login lo aplica el proxy (una sola vez por POST) sobre
+        // /api/auth/callback/credentials. Antes se repetía aquí con las MISMAS llaves,
+        // así que cada intento contaba DOBLE y bloqueaba al usuario tras ~2-3 intentos
+        // aunque la contraseña fuera correcta ("No se pudo iniciar sesión"). Se quitó
+        // el duplicado; el proxy sigue protegiendo contra fuerza bruta.
         const user = await prisma.user.findUnique({
           where: { email },
         })
