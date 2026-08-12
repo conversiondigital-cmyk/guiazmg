@@ -86,8 +86,13 @@ export default function LoginPage() {
 
       // Falla si no hubo respuesta, si trae error, o si ok === false.
       if (!result || result.error || result.ok === false) {
-        setError("Correo o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.")
-        toast.error("Correo o contraseña incorrectos")
+        // Puede ser contraseña incorrecta O una cuenta nueva sin activar (con la
+        // verificación obligatoria activada). El mensaje cubre ambos casos sin
+        // revelar cuál, y abajo queda el botón para reenviar el enlace de activación.
+        setError(
+          "No se pudo iniciar sesión. Si tu cuenta es nueva, actívala con el enlace que te enviamos por correo (revisa spam) o reenvíalo aquí abajo. Si ya la activaste, revisa tu correo y contraseña.",
+        )
+        toast.error("No se pudo iniciar sesión")
         return
       }
 
