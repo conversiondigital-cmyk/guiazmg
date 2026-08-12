@@ -6,6 +6,19 @@ import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limi
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // Consolidación de dominio para SEO: si se entra por un alias *.vercel.app del
+  // deploy de PRODUCCIÓN (p. ej. guiazmg.vercel.app, que Google estaba indexando
+  // como duplicado), se redirige 308 (permanente) a guiazmg.com. Los previews
+  // (VERCEL_ENV="preview", host con hash) NO se redirigen, para poder probarlos.
+  const host = req.headers.get("host") || ""
+  const isProdVercelHost =
+    host.endsWith(".vercel.app") &&
+    (process.env.VERCEL_ENV === "production" || host === "guiazmg.vercel.app")
+  if (isProdVercelHost) {
+    const canonical = new URL(req.nextUrl.pathname + req.nextUrl.search, "https://guiazmg.com")
+    return NextResponse.redirect(canonical, 308)
+  }
+
   // Auth.js v5 cifra la cookie de sesión usando salt = nombre de la cookie, y en
   // HTTPS la nombra con prefijo __Secure-. getToken por defecto (sin NEXTAUTH_URL,
   // que v5 ya no usa) busca la cookie SIN prefijo y con salt equivocado, por lo que

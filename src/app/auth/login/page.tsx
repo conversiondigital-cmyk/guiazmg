@@ -25,6 +25,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
+  const [notice, setNotice] = useState("")
+  const [showResend, setShowResend] = useState(false)
   const [resending, setResending] = useState(false)
 
   // Si ya hay sesión, esta página no aplica: manda al panel (el layout enruta por rol).
@@ -41,11 +43,16 @@ export default function LoginPage() {
     }
     if (params.get("verify_error")) {
       setError("El enlace de activación no es válido o ya expiró. Escribe tu correo abajo y reenvíalo.")
+      setShowResend(true)
       return
     }
     const code = params.get("error")
     if (!code) return
-    if (code === "OAuthAccountNotLinked") {
+    // Cancelar el acceso con Google NO es un error del usuario: se muestra un aviso
+    // neutral (gris), sin el botón de reenviar activación (que aquí no aplica).
+    if (code === "access_denied" || code === "Callback") {
+      setNotice("Cancelaste el acceso con Google. Cuando quieras, vuelve a intentarlo o entra con tu correo y contraseña.")
+    } else if (code === "OAuthAccountNotLinked") {
       setError("Ese correo ya está registrado con contraseña. Inicia sesión con tu correo y contraseña.")
     } else {
       setError("No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa tu correo y contraseña.")
@@ -75,6 +82,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setNotice("")
+    setShowResend(false)
     setLoading(true)
 
     try {
@@ -92,6 +101,7 @@ export default function LoginPage() {
         setError(
           "No se pudo iniciar sesión. Si tu cuenta es nueva, actívala con el enlace que te enviamos por correo (revisa spam) o reenvíalo aquí abajo. Si ya la activaste, revisa tu correo y contraseña.",
         )
+        setShowResend(true)
         toast.error("No se pudo iniciar sesión")
         return
       }
@@ -210,20 +220,30 @@ export default function LoginPage() {
               <span>{info}</span>
             </div>
           )}
+          {notice && (
+            <div
+              role="status"
+              className="mb-4 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-600"
+            >
+              {notice}
+            </div>
+          )}
           {error && (
             <div
               role="alert"
               className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
             >
               {error}
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resending}
-                className="mt-1 block font-semibold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-60"
-              >
-                {resending ? "Reenviando…" : "Reenviar enlace de activación"}
-              </button>
+              {showResend && (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="mt-1 block font-semibold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-60"
+                >
+                  {resending ? "Reenviando…" : "Reenviar enlace de activación"}
+                </button>
+              )}
             </div>
           )}
 
