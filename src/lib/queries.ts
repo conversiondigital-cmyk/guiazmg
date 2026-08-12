@@ -173,6 +173,10 @@ export async function getCategoryListing(categoryId: string, page = 1, limit = 2
         slug: true,
         name: true,
         shortDescription: true,
+        // Imagen de la tarjeta: sin estos campos, el BusinessCard caía siempre al
+        // placeholder aunque el negocio tuviera portada/logo.
+        coverImageUrl: true,
+        logoUrl: true,
         phone: true,
         whatsapp: true,
         websiteUrl: true,
@@ -227,6 +231,10 @@ export async function getProfilesByType(profileType: "EMPRENDEDOR" | "NEGOCIO", 
         slug: true,
         name: true,
         shortDescription: true,
+        // Imagen de la tarjeta: sin estos campos, el BusinessCard caía siempre al
+        // placeholder aunque el negocio tuviera portada/logo.
+        coverImageUrl: true,
+        logoUrl: true,
         phone: true,
         whatsapp: true,
         websiteUrl: true,
@@ -295,6 +303,10 @@ export async function getLocalListing(opts: {
         slug: true,
         name: true,
         shortDescription: true,
+        // Imagen de la tarjeta: sin estos campos, el BusinessCard caía siempre al
+        // placeholder aunque el negocio tuviera portada/logo.
+        coverImageUrl: true,
+        logoUrl: true,
         phone: true,
         whatsapp: true,
         websiteUrl: true,
