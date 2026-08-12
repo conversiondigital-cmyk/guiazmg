@@ -104,13 +104,16 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
   // en el perfil público. Se toma la primera imagen de cada producto como portada.
   const catalog = await prisma.listing.findMany({
     where: { businessId: business.id, status: "ACTIVE", deletedAt: null },
-    orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
-    take: 60,
+    // Destacados primero, luego ALFABÉTICO por título: el catálogo se ve ordenado
+    // aunque tenga muchos productos (antes era por fecha, sin orden legible).
+    orderBy: [{ isBoosted: "desc" }, { title: "asc" }],
+    take: 210, // cubre el tope del plan (100 productos + 100 servicios) con holgura
     select: {
       id: true,
       title: true,
       description: true,
       price: true,
+      type: true,
       isBoosted: true,
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { imageUrl: true } },
     },
@@ -120,6 +123,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     title: p.title,
     description: p.description,
     price: p.price != null ? Number(p.price) : null,
+    type: p.type,
     image: p.images[0]?.imageUrl ?? null,
     isBoosted: p.isBoosted,
   }))
