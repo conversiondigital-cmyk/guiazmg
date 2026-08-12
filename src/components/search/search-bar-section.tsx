@@ -30,8 +30,10 @@ export function SearchBarSection({ initialQuery = "" }: SearchBarSectionProps) {
   return (
     <div className="bg-white border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition-all">
+        <form onSubmit={handleSubmit} className="mx-auto flex max-w-3xl items-center gap-2">
+          {/* Buscador (crece) + "Cerca de mí" a un lado, misma fila: sin la fila extra
+              de abajo que dejaba un hueco. */}
+          <div className="flex flex-1 items-center gap-2 rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-green-600 focus-within:ring-1 focus-within:ring-green-600 transition-all">
             <div className="relative flex-1">
               <SearchAutocomplete
                 value={query}
@@ -48,9 +50,7 @@ export function SearchBarSection({ initialQuery = "" }: SearchBarSectionProps) {
               Buscar
             </Button>
           </div>
-          <div className="mt-2 flex justify-center sm:justify-end">
-            <NearMeButton query={query} />
-          </div>
+          <NearMeButton query={query} className="shrink-0 whitespace-nowrap" />
         </form>
       </div>
     </div>
