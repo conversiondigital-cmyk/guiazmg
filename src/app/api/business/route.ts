@@ -282,7 +282,7 @@ export async function PATCH(request: NextRequest) {
 
     const business = await prisma.profile.findFirst({
       where: { ownerId: session.user.id, deletedAt: null },
-      select: { id: true, categoryId: true },
+      select: { id: true, categoryId: true, subcategoryId: true },
     })
     if (!business) {
       return NextResponse.json({ error: "No tienes un negocio registrado" }, { status: 404 })
@@ -299,9 +299,15 @@ export async function PATCH(request: NextRequest) {
       const cat = await prisma.category.findFirst({ where: { id: categoryId, isActive: true }, select: { id: true } })
       if (!cat) return NextResponse.json({ error: "Categoría inválida" }, { status: 400 })
     }
-    // La subcategoría (si viene) debe pertenecer a la categoría efectiva.
+    // La subcategoría solo se valida cuando CAMBIA de verdad (subcategoría o categoría
+    // distintas a las guardadas). Si el formulario reenvía la MISMA subcategoría que
+    // ya tiene el negocio (p. ej. al guardar solo imágenes), se acepta sin revalidar:
+    // así un cambio de catálogo (dedupe/desactivación de un giro) no bloquea guardar
+    // portada, galería u otros campos. Solo un cambio real exige que sea válida.
     const effectiveCategoryId = categoryId ?? business.categoryId
-    if (subcategoryId) {
+    const subcatChanged = subcategoryId !== undefined && subcategoryId !== business.subcategoryId
+    const catChanged = categoryId !== undefined && categoryId !== business.categoryId
+    if (subcategoryId && (subcatChanged || catChanged)) {
       const sub = await prisma.subcategory.findFirst({
         where: { id: subcategoryId, isActive: true, categoryId: effectiveCategoryId ?? undefined },
         select: { id: true },
