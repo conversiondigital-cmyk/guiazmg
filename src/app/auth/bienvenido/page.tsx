@@ -35,10 +35,16 @@ export default async function BienvenidoPage({
     !next.toLowerCase().includes("%5c")
       ? next
       : "/cuenta"
-  // Ya aceptó: si su token aún no trae la bandera (sesión previa), se refresca en
-  // el cliente y se reenvía (evita loop con el candado global). No un redirect
-  // server-side, que dejaría el token viejo y volvería a rebotar.
-  if (user.acceptedTermsAt) return <RedirectAfterConsent next={dest} />
+  // Ya aceptó términos (login recurrente). En el caso común (login nuevo con la
+  // bandera en true, o sesión vieja con la bandera ausente) el proxy NO rebota, así
+  // que se redirige DIRECTO desde el servidor: instantáneo, sin spinner. Solo si el
+  // token trae `false` EXPLÍCITO (aceptó pero el token no se refrescó) se pasa por el
+  // refresco en cliente para no chocar con el candado del proxy (=== false).
+  if (user.acceptedTermsAt) {
+    const tokenFlag = (session.user as { acceptedTerms?: boolean }).acceptedTerms
+    if (tokenFlag === false) return <RedirectAfterConsent next={dest} />
+    redirect(dest)
+  }
 
   return <WelcomeConsent name={user.name} email={user.email ?? ""} next={dest} />
 }

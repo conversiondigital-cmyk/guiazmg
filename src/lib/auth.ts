@@ -205,6 +205,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } else {
           delete session.user.role
         }
+        // Se expone la bandera del TOKEN (puede diferir de la BD si el token está
+        // viejo) para que /auth/bienvenido decida si redirige directo o refresca
+        // primero. undefined = token previo a la función; no gateado por el proxy.
+        ;(session.user as { acceptedTerms?: boolean }).acceptedTerms =
+          (token as { acceptedTerms?: boolean }).acceptedTerms
       }
       return session
     },

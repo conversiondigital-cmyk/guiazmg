@@ -1,31 +1,35 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Loader2 } from "@/lib/icons"
 
-// Para un usuario que YA aceptó términos pero cuyo token todavía no trae la
-// bandera (sesión previa a la función). Refresca el token (update() → acceptedTerms
-// = true) y luego lo reenvía a su destino. Sin esto, el candado global lo mandaría
-// una y otra vez a la bienvenida (loop) porque el token seguiría "sin aceptar".
+// Caso RARO: el usuario YA aceptó términos (BD) pero su token trae la bandera en
+// `false` EXPLÍCITO (firmó antes de consentir y el token no se refrescó). Un
+// redirect directo haría bucle con el candado del proxy (=== false), así que aquí
+// se refresca el token (update() → acceptedTerms=true) y luego se reenvía. Blindado
+// para NO poder colgarse: corre una sola vez y el update() compite contra un tope de
+// tiempo, tras el cual se redirige de todos modos (la revalidación del jwt lo sana).
 export function RedirectAfterConsent({ next }: { next: string }) {
   const router = useRouter()
   const { update } = useSession()
+  const ran = useRef(false)
 
   useEffect(() => {
-    let done = false
+    if (ran.current) return
+    ran.current = true
     ;(async () => {
       try {
-        await update()
+        await Promise.race([
+          update(),
+          new Promise((resolve) => setTimeout(resolve, 4000)),
+        ])
       } catch {
-        /* aunque falle, se intenta reenviar */
+        /* aunque falle, se reenvía */
       }
-      if (!done) router.replace(next)
+      router.replace(next)
     })()
-    return () => {
-      done = true
-    }
   }, [update, next, router])
 
   return (
