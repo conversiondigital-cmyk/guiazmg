@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon, ChevronDown, Gift } from "@/lib/icons"
+import { Home, Globe, Bike, Tent, Sparkles } from "lucide-react"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
@@ -84,6 +85,7 @@ export function BusinessRegistrationWizard({
   const [loading, setLoading] = useState(false)
   const [municipalities, setMunicipalities] = useState<Municipality[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [catsLoading, setCatsLoading] = useState(true)
   const [selectedMunicipio, setSelectedMunicipio] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
@@ -121,8 +123,12 @@ export function BusinessRegistrationWizard({
   })
 
   useEffect(() => {
-    fetch("/api/municipalities").then((r) => r.json()).then(setMunicipalities)
-    fetch("/api/categories").then((r) => r.json()).then(setCategories)
+    fetch("/api/municipalities").then((r) => r.json()).then((d) => setMunicipalities(Array.isArray(d) ? d : [])).catch(() => {})
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setCatsLoading(false))
   }, [])
 
   const updateField = (field: string, value: string) => {
@@ -302,11 +308,11 @@ export function BusinessRegistrationWizard({
 
   // ── Clasificación por modelo de operación (Persona/Empresa) ──────────────────
   const Q1_OPTIONS = [
-    { value: "local", label: "Tengo un establecimiento fijo", model: "Local comercial", loc: true },
-    { value: "puesto", label: "Tengo un puesto fijo o semifijo", model: "Puesto fijo / semifijo", loc: true },
-    { value: "casa", label: "Trabajo desde casa / por pedido", model: "Desde casa / sobre pedido", loc: false },
-    { value: "domicilio", label: "Trabajo a domicilio", model: "A domicilio", loc: false },
-    { value: "online", label: "Solo vendo por internet o redes", model: "En línea / redes", loc: false },
+    { value: "local", label: "Tengo un establecimiento fijo", model: "Local comercial", loc: true, icon: Store },
+    { value: "puesto", label: "Tengo un puesto fijo o semifijo", model: "Puesto fijo / semifijo", loc: true, icon: Tent },
+    { value: "casa", label: "Trabajo desde casa / por pedido", model: "Desde casa / sobre pedido", loc: false, icon: Home },
+    { value: "domicilio", label: "Trabajo a domicilio", model: "A domicilio", loc: false, icon: Bike },
+    { value: "online", label: "Solo vendo por internet o redes", model: "En línea / redes", loc: false, icon: Globe },
   ] as const
 
   const q1def = Q1_OPTIONS.find((o) => o.value === q1)
@@ -331,67 +337,108 @@ export function BusinessRegistrationWizard({
   }
 
   if (!classified) {
-    const OptBtn = ({
-      active, onClick, children,
-    }: { active: boolean; onClick: () => void; children: string }) => (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-          active ? "border-[#006c49] bg-[#f0faf6] font-medium text-gray-900" : "border-gray-200 hover:border-[#006c49]/40"
-        }`}
-      >
-        {children}
-      </button>
+    const QLabel = ({ n, children }: { n: number; children: string }) => (
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#006c49] text-xs font-bold text-white">
+          {n}
+        </span>
+        <span className="text-sm font-semibold text-gray-900">{children}</span>
+      </div>
+    )
+    const YesNo = ({ value, onSet }: { value: boolean | null; onSet: (v: boolean) => void }) => (
+      <div className="grid max-w-xs grid-cols-2 gap-2.5">
+        {[true, false].map((v) => {
+          const active = value === v
+          return (
+            <button
+              key={String(v)}
+              type="button"
+              onClick={() => onSet(v)}
+              className={`rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition-all ${
+                active
+                  ? "border-[#006c49] bg-[#f0faf6] text-[#006c49]"
+                  : "border-gray-200 text-gray-600 hover:border-[#006c49]/50 hover:bg-gray-50"
+              }`}
+            >
+              {v ? "Sí" : "No"}
+            </button>
+          )
+        })}
+      </div>
     )
     return (
-      <div className="rounded-xl border bg-white p-6 sm:p-8">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Cuéntanos cómo operas</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Con esto te registramos como <strong>Emprendedor</strong> o <strong>Negocio</strong>, lo que mejor te queda. Podrás cambiarlo.
-          </p>
+      <div className="rounded-2xl border bg-white p-6 shadow-sm sm:p-8">
+        <div className="mb-7 flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e6f4ee] text-[#006c49]">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Cuéntanos cómo operas</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Con 3 preguntas rápidas te ubicamos como <strong>Emprendedor</strong> o{" "}
+              <strong>Negocio</strong>. Podrás cambiarlo cuando quieras.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-7">
           <div>
-            <Label className="mb-2 block text-sm font-semibold text-gray-800">
-              1. ¿Cómo ofreces tus productos o servicios?
-            </Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {Q1_OPTIONS.map((o) => (
-                <OptBtn key={o.value} active={q1 === o.value} onClick={() => setQ1(o.value)}>
-                  {o.label}
-                </OptBtn>
-              ))}
+            <QLabel n={1}>¿Cómo ofreces tus productos o servicios?</QLabel>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {Q1_OPTIONS.map((o) => {
+                const active = q1 === o.value
+                const Icon = o.icon
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setQ1(o.value)}
+                    className={`group flex items-center gap-3 rounded-xl border-2 px-3.5 py-3 text-left transition-all ${
+                      active
+                        ? "border-[#006c49] bg-[#f0faf6]"
+                        : "border-gray-200 hover:border-[#006c49]/50 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                        active
+                          ? "bg-[#006c49] text-white"
+                          : "bg-gray-100 text-gray-500 group-hover:bg-[#e6f4ee] group-hover:text-[#006c49]"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className={`flex-1 text-sm ${active ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                      {o.label}
+                    </span>
+                    {active && <Check className="h-4 w-4 shrink-0 text-[#006c49]" />}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
           <div>
-            <Label className="mb-2 block text-sm font-semibold text-gray-800">
-              2. ¿Atiendes al público en un lugar específico?
-            </Label>
-            <div className="flex gap-2">
-              <OptBtn active={q2 === true} onClick={() => setQ2(true)}>Sí</OptBtn>
-              <OptBtn active={q2 === false} onClick={() => setQ2(false)}>No</OptBtn>
-            </div>
+            <QLabel n={2}>¿Atiendes al público en un lugar específico?</QLabel>
+            <YesNo value={q2} onSet={setQ2} />
           </div>
 
           <div>
-            <Label className="mb-2 block text-sm font-semibold text-gray-800">
-              3. ¿Tienes horarios de atención?
-            </Label>
-            <div className="flex gap-2">
-              <OptBtn active={q3 === true} onClick={() => setQ3(true)}>Sí</OptBtn>
-              <OptBtn active={q3 === false} onClick={() => setQ3(false)}>No</OptBtn>
-            </div>
+            <QLabel n={3}>¿Tienes horarios de atención?</QLabel>
+            <YesNo value={q3} onSet={setQ3} />
           </div>
 
           {answered && (
-            <div className="rounded-xl border border-[#006c49]/20 bg-[#f5faf8] p-4">
-              <p className="text-sm text-gray-700">
+            <div className="rounded-2xl border border-[#006c49]/25 bg-gradient-to-br from-[#f0faf6] to-white p-5">
+              <div className="flex items-center gap-1.5 text-[#006c49]">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wide">Recomendación</span>
+              </div>
+              <p className="mt-2 text-[15px] text-gray-800">
                 Te sugerimos registrarte como{" "}
-                <strong>{suggestedType === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"}</strong>
+                <strong className="text-[#006c49]">
+                  {suggestedType === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"}
+                </strong>
                 {suggestedModel ? (
                   <>
                     {" "}· modelo <strong>{suggestedModel}</strong>
@@ -399,7 +446,7 @@ export function BusinessRegistrationWizard({
                 ) : null}
                 .
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2.5">
                 <Button
                   type="button"
                   onClick={() => confirmClassification(suggestedType)}
@@ -498,7 +545,18 @@ export function BusinessRegistrationWizard({
             })()}
             {/* Acordeón: categorías colapsadas; se expanden para ver y elegir el giro. */}
             <div className="mt-1 max-h-80 divide-y overflow-y-auto rounded-lg border">
-              {categories.map((cat) => {
+              {catsLoading ? (
+                <div className="space-y-2 p-3">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-9 animate-pulse rounded-md bg-gray-100" />
+                  ))}
+                </div>
+              ) : categories.length === 0 ? (
+                <p className="p-4 text-sm text-gray-500">
+                  No pudimos cargar las categorías. Recarga la página, o usa la opción “Solicítalo” de aquí abajo.
+                </p>
+              ) : (
+                categories.map((cat) => {
                 // Solo los giros del perfil elegido (Emprendedor/Negocio).
                 const giros = (cat.subcategories ?? []).filter(
                   (s) => !s.meta?.perfil || s.meta.perfil === profileType,
@@ -543,7 +601,8 @@ export function BusinessRegistrationWizard({
                     )}
                   </div>
                 )
-              })}
+              })
+              )}
             </div>
             <SuggestGiro />
 
