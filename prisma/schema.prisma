@@ -735,6 +735,7 @@ model Listing {
   slug            String
   description     String?
   price           Decimal?      @db.Decimal(10, 2)
+  unit            String?       // unidad de medida del precio: pieza, kg, litro… (ver src/lib/units.ts)
   type            ListingType   @default(PRODUCT)
   status          ListingStatus @default(DRAFT)
   startsAt        DateTime?

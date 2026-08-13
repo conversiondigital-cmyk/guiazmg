@@ -19,6 +19,7 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
       title: true,
       description: true,
       price: true,
+      unit: true,
       profile: { select: { ownerId: true } },
       images: { orderBy: { sortOrder: "asc" }, select: { imageUrl: true } },
     },
@@ -32,6 +33,7 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     title: listing.title,
     description: listing.description,
     price: listing.price != null ? Number(listing.price) : null,
+    unit: listing.unit,
     images: listing.images.map((i) => i.imageUrl),
   }
 

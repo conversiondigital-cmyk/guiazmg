@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { PRODUCT_UNIT_VALUES } from "@/lib/units"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -20,6 +21,7 @@ const updateSchema = z.object({
     z.coerce.number().min(0).max(9999999).nullable().optional()
   ),
   subcategoryId: z.preprocess(blankToNull, z.string().nullable().optional()),
+  unit: z.preprocess(blankToNull, z.enum(PRODUCT_UNIT_VALUES).nullable().optional()),
   images: z.array(imageUrl).max(10).optional(),
   // Activar / pausar (ARCHIVED = oculto del perfil público, recuperable).
   status: z.enum(["ACTIVE", "ARCHIVED"]).optional(),
@@ -56,7 +58,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
     }
-    const { title, description, price, subcategoryId, images, status } = parsed.data
+    const { title, description, price, subcategoryId, unit, images, status } = parsed.data
 
     if (subcategoryId) {
       const sub = await prisma.subcategory.findFirst({
@@ -72,6 +74,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         ...(title !== undefined ? { title } : {}),
         ...(description !== undefined ? { description } : {}),
         ...(price !== undefined ? { price } : {}),
+        ...(unit !== undefined ? { unit } : {}),
         ...(subcategoryId !== undefined ? { subcategoryId } : {}),
         ...(status !== undefined ? { status } : {}),
         // La galería se reemplaza completa, en el orden recibido.

@@ -4,12 +4,14 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Package, X } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
+import { priceUnitSuffix } from "@/lib/units"
 
 export interface CatalogItem {
   id: string
   title: string
   description: string | null
   price: number | null
+  unit?: string | null
   image: string | null
   type?: "PRODUCT" | "SERVICE"
   isBoosted?: boolean
@@ -51,7 +53,7 @@ function Card({ item, onOpen }: { item: CatalogItem; onOpen: () => void }) {
         <h3 className="line-clamp-2 text-sm font-medium text-gray-900">{item.title}</h3>
         {item.description && <p className="mt-1 line-clamp-1 text-xs text-gray-500">{item.description}</p>}
         <p className="mt-1.5 text-sm font-semibold text-green-700">
-          {item.price != null ? formatCurrency(item.price) : "Preguntar precio"}
+          {item.price != null ? `${formatCurrency(item.price)}${priceUnitSuffix(item.unit)}` : "Preguntar precio"}
         </p>
       </div>
     </button>
@@ -127,7 +129,7 @@ function Lightbox({ item, onClose }: { item: CatalogItem; onClose: () => void })
           <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
           {item.description && <p className="mt-1 text-sm text-gray-600">{item.description}</p>}
           <p className="mt-3 text-xl font-bold text-green-700">
-            {item.price != null ? formatCurrency(item.price) : "Preguntar precio"}
+            {item.price != null ? `${formatCurrency(item.price)}${priceUnitSuffix(item.unit)}` : "Preguntar precio"}
           </p>
         </div>
       </div>

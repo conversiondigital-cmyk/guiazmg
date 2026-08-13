@@ -10,12 +10,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2, X, Camera } from "@/lib/icons"
+import { PRODUCT_UNITS } from "@/lib/units"
 
 export interface EditProduct {
   id: string
   title: string
   description: string | null
   price: number | null
+  unit: string | null
   images: string[]
 }
 
@@ -48,6 +50,7 @@ export function ProductForm({ product, kind = "PRODUCT" }: { product?: EditProdu
     title: product?.title ?? "",
     description: product?.description ?? "",
     price: product?.price != null ? String(product.price) : "",
+    unit: product?.unit ?? "",
   })
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }))
@@ -125,6 +128,7 @@ export function ProductForm({ product, kind = "PRODUCT" }: { product?: EditProdu
         title: form.title.trim(),
         description: form.description.trim() || null,
         price,
+        unit: form.unit || null,
         images,
         // El tipo solo importa al crear; en edición el backend no lo cambia.
         ...(isEdit ? {} : { type: kind }),
@@ -177,20 +181,41 @@ export function ProductForm({ product, kind = "PRODUCT" }: { product?: EditProdu
             />
           </div>
 
-          <div>
-            <Label htmlFor="price">Precio (MXN)</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.price}
-              onChange={(e) => updateField("price", e.target.value)}
-              placeholder="Ej: 35"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Opcional. Déjalo vacío si el precio es variable o &ldquo;a preguntar&rdquo;.
-            </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="price">Precio (MXN)</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => updateField("price", e.target.value)}
+                placeholder="Ej: 35"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Opcional. Déjalo vacío si el precio es variable o &ldquo;a preguntar&rdquo;.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="unit">Unidad de medida</Label>
+              <select
+                id="unit"
+                value={form.unit}
+                onChange={(e) => updateField("unit", e.target.value)}
+                className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <option value="">Sin unidad</option>
+                {PRODUCT_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Cómo se vende: por pieza, kilo, litro… Se muestra junto al precio.
+              </p>
+            </div>
           </div>
 
           <div>

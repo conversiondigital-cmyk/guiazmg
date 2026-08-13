@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
+import { PRODUCT_UNIT_VALUES } from "@/lib/units"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -24,6 +25,9 @@ const productSchema = z.object({
     z.coerce.number().min(0).max(9999999).nullable().optional()
   ),
   subcategoryId: z.preprocess(blankToNull, z.string().nullable().optional()),
+  // Unidad de medida del precio (pieza, kg, litro…). Opcional; se valida contra la
+  // lista de unidades conocidas para no guardar basura.
+  unit: z.preprocess(blankToNull, z.enum(PRODUCT_UNIT_VALUES).nullable().optional()),
   images: z.array(imageUrl).max(10).optional(),
   // PRODUCT (default) o SERVICE. Cada tipo tiene su propio tope de plan.
   type: z.enum(["PRODUCT", "SERVICE"]).default("PRODUCT"),
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 })
     }
-    const { title, description, price, subcategoryId, images, type } = parsed.data
+    const { title, description, price, subcategoryId, unit, images, type } = parsed.data
     const isService = type === "SERVICE"
     const noun = isService ? "servicios" : "productos"
 
@@ -113,6 +117,7 @@ export async function POST(request: NextRequest) {
             slug,
             description: description ?? null,
             price: price ?? null,
+            unit: unit ?? null,
             type,
             // El negocio ya pasó moderación; sus publicaciones entran visibles de una vez.
             status: "ACTIVE",
