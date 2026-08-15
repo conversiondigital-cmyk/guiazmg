@@ -670,6 +670,7 @@ model ProfileMembership {
   planId                String
   provider              PaymentProvider
   providerSubscriptionId String?
+  providerCustomerId    String?  // id de cliente de Stripe (para portal de cancelación)
   status                String   @default("ACTIVE")
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime

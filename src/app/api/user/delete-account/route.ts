@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getStripe } from "@/lib/stripe"
 
 export async function DELETE() {
   const session = await auth()
@@ -15,6 +16,27 @@ export async function DELETE() {
     // trata como cuenta NUEVA. También se borran las sesiones abiertas.
     await prisma.account.deleteMany({ where: { userId: session.user.id } })
     await prisma.session.deleteMany({ where: { userId: session.user.id } }).catch(() => {})
+
+    // Cancela en Stripe cualquier suscripción de pago del usuario para NO seguir
+    // cobrando tras borrar la cuenta (best-effort; no bloquea el borrado). Los
+    // trials por cupón ("coupon:…") no son suscripciones, se ignoran.
+    try {
+      const memberships = await prisma.profileMembership.findMany({
+        where: { profile: { ownerId: session.user.id }, provider: "STRIPE", providerSubscriptionId: { not: null } },
+        select: { providerSubscriptionId: true },
+      })
+      const subs = memberships
+        .map((m) => m.providerSubscriptionId)
+        .filter((id): id is string => !!id && !id.startsWith("coupon:"))
+      if (subs.length) {
+        const stripe = await getStripe()
+        if (stripe) {
+          for (const id of subs) await stripe.subscriptions.cancel(id).catch(() => {})
+        }
+      }
+    } catch (e) {
+      console.error("[DELETE_ACCOUNT] stripe cancel:", e instanceof Error ? e.message : e)
+    }
 
     // Desactiva (oculta) los negocios del usuario: salen del directorio público y
     // quedan marcados como borrados. No se hard-deletean para conservar registros

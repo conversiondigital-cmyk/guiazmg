@@ -14,13 +14,20 @@ export async function fulfillMembership(opts: {
   providerPaymentId: string
   amount: number
   metadata?: unknown
+  // Suscripción recurrente de Stripe (opcional). Si viene, se guardan el id de
+  // suscripción y de cliente (para el portal de cancelación), y el fin de período
+  // lo dicta Stripe (current_period_end) en vez del +30 días fijo.
+  subscriptionId?: string | null
+  customerId?: string | null
+  periodEnd?: Date | null
 }): Promise<{ ok: boolean; reason?: string; alreadyProcessed?: boolean }> {
   const slug = opts.planSlug.toLowerCase()
   const plan = await prisma.membershipPlan.findUnique({ where: { slug } })
   if (!plan) return { ok: false, reason: "plan-not-found" }
 
   const now = new Date()
-  const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  const periodEnd = opts.periodEnd ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  const subId = opts.subscriptionId ?? opts.providerPaymentId
   const db = prisma as any
 
   const activated: boolean = await db.$transaction(async (tx: any) => {
@@ -55,16 +62,24 @@ export async function fulfillMembership(opts: {
         businessId: opts.businessId,
         planId: plan.id,
         provider: opts.provider,
-        providerSubscriptionId: opts.providerPaymentId,
+        providerSubscriptionId: subId,
+        providerCustomerId: opts.customerId ?? null,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
+        // Suscripción real → NO cancelar al final del periodo (renueva sola). Trial
+        // por cupón sí queda con cancelAtPeriodEnd=true (lo pone redeem-membership).
+        cancelAtPeriodEnd: false,
       },
       update: {
         planId: plan.id,
+        provider: opts.provider,
+        providerSubscriptionId: subId,
+        ...(opts.customerId ? { providerCustomerId: opts.customerId } : {}),
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: false,
         // Reinicia la bandera de aviso: el periodo nuevo debe poder recibir su
         // propio recordatorio previo al vencimiento (si no, solo se avisa una vez).
         renewalNotifiedAt: null,

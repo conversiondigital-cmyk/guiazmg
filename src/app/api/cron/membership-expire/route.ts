@@ -47,6 +47,10 @@ export async function GET(req: NextRequest) {
       status: { in: ["ACTIVE", "TRIAL"] },
       currentPeriodEnd: { gt: now, lte: remindCutoff },
       renewalNotifiedAt: null,
+      // Excluye suscripciones de Stripe que se AUTO-RENUEVAN (no van a vencer, se
+      // cobran solas): avisarles "renueva o sales del directorio" sería falso. Sí se
+      // avisa a trials por cupón y a suscripciones que el dueño puso a cancelar.
+      NOT: { provider: "STRIPE", cancelAtPeriodEnd: false },
     },
     select: {
       id: true,

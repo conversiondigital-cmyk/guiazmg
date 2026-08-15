@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getStripe } from "@/lib/stripe"
 
 export const dynamic = "force-dynamic"
 
@@ -38,10 +39,23 @@ export async function PATCH(req: NextRequest) {
 
     const membership = await prisma.profileMembership.findUnique({
       where: { businessId },
-      select: { status: true },
+      select: { status: true, provider: true, providerSubscriptionId: true },
     })
     if (!membership || !(membership.status === "ACTIVE" || membership.status === "TRIAL")) {
       return NextResponse.json({ error: "No hay una membresía activa" }, { status: 400 })
+    }
+
+    // Suscripción REAL de Stripe: se refleja la intención en Stripe (el webhook
+    // customer.subscription.updated sincroniza al confirmar). Los trials por cupón
+    // (providerSubscriptionId "coupon:…") solo tocan la BD: no hay nada que cobrar.
+    const subId = membership.providerSubscriptionId
+    if (membership.provider === "STRIPE" && subId && !subId.startsWith("coupon:")) {
+      const stripe = await getStripe()
+      if (stripe) {
+        await stripe.subscriptions
+          .update(subId, { cancel_at_period_end: cancelAtPeriodEnd })
+          .catch((e) => console.error("[MEMBERSHIP_CANCEL] stripe:", e instanceof Error ? e.message : e))
+      }
     }
 
     await prisma.profileMembership.update({

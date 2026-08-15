@@ -80,6 +80,8 @@ export async function POST(request: Request) {
         amount_total?: number | null
         payment_status?: string | null
         metadata?: Record<string, string> | null
+        subscription?: string | null
+        customer?: string | null
       }
       if (s.payment_status !== "paid") {
         // Pago aún no confirmado (p. ej. voucher OXXO generado pero no pagado):
@@ -95,6 +97,21 @@ export async function POST(request: Request) {
       const parts = externalRef.split(":")
       const [kind, planSlug, userId, businessId] = parts
       const amount = (s.amount_total ?? 0) / 100
+
+      // Suscripción recurrente: guarda el id de la suscripción y del cliente (para el
+      // portal de cancelación) y el fin de periodo REAL que dicta Stripe. Las
+      // renovaciones futuras las maneja `invoice.paid` (abajo).
+      const subscriptionId = typeof s.subscription === "string" ? s.subscription : null
+      const customerId = typeof s.customer === "string" ? s.customer : null
+      let subPeriodEnd: Date | null = null
+      if (subscriptionId) {
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId)
+          subPeriodEnd = new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000)
+        } catch {
+          /* si falla, fulfillMembership usa +30 días de respaldo */
+        }
+      }
 
       // Boost de una publicación de marketplace: mktboost:<boostDefId>:<userId>:<listingId>
       if (kind === "mktboost") {
@@ -157,6 +174,9 @@ export async function POST(request: Request) {
           providerPaymentId: s.id,
           amount,
           metadata: { source: "stripe", sessionId: s.id },
+          subscriptionId,
+          customerId,
+          periodEnd: subPeriodEnd,
         })
         // Solo notifica en la PRIMERA activación (evita re-notificar en webhooks
         // duplicados que Stripe entrega "al menos una vez").
@@ -215,6 +235,9 @@ export async function POST(request: Request) {
             providerPaymentId: s.id,
             amount,
             metadata: { source: "stripe", sessionId: s.id },
+            subscriptionId,
+            customerId,
+            periodEnd: subPeriodEnd,
           })
           if (result.ok) {
             if (!result.alreadyProcessed) {
@@ -260,6 +283,67 @@ export async function POST(request: Request) {
           )
         }
       }
+    }
+
+    // ── Suscripción recurrente (renovación y cancelación) ───────────────────
+    // Renovación mensual: cada invoice.paid extiende el periodo de la membresía.
+    if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
+      const inv = event.data.object as { subscription?: string | null }
+      const subId = typeof inv.subscription === "string" ? inv.subscription : null
+      if (subId) {
+        try {
+          const sub = (await stripe.subscriptions.retrieve(subId)) as unknown as {
+            current_period_start: number
+            current_period_end: number
+            cancel_at_period_end: boolean
+          }
+          await prisma.profileMembership.updateMany({
+            where: { providerSubscriptionId: subId },
+            data: {
+              status: "ACTIVE",
+              currentPeriodStart: new Date(sub.current_period_start * 1000),
+              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              cancelAtPeriodEnd: sub.cancel_at_period_end,
+              renewalNotifiedAt: null,
+            },
+          })
+        } catch (e) {
+          console.error("[stripe-webhook] invoice.paid sync:", e instanceof Error ? e.message : e)
+        }
+      }
+    }
+
+    // Cambios de la suscripción (incluye "cancelar al final del periodo" desde el
+    // portal): se sincroniza el flag y el fin de periodo. El negocio sigue activo
+    // hasta que termine el periodo pagado; el cron lo baja al vencer (con aviso).
+    if (event.type === "customer.subscription.updated") {
+      const sub = event.data.object as {
+        id: string
+        status: string
+        current_period_end: number
+        cancel_at_period_end: boolean
+      }
+      await prisma.profileMembership
+        .updateMany({
+          where: { providerSubscriptionId: sub.id },
+          data: {
+            cancelAtPeriodEnd: sub.cancel_at_period_end,
+            currentPeriodEnd: new Date(sub.current_period_end * 1000),
+            ...(sub.status === "active" || sub.status === "trialing" ? { status: "ACTIVE" } : {}),
+          },
+        })
+        .catch(() => {})
+    }
+
+    // Cancelación efectiva: la membresía pasa a EXPIRED. El negocio lo oculta el cron.
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object as { id: string }
+      await prisma.profileMembership
+        .updateMany({
+          where: { providerSubscriptionId: sub.id },
+          data: { status: "EXPIRED", cancelAtPeriodEnd: true },
+        })
+        .catch(() => {})
     }
 
     if (webhookEventId) {

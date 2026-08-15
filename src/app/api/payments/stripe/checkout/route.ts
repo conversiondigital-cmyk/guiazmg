@@ -4,22 +4,20 @@ import { prisma } from "@/lib/prisma"
 import { getStripe } from "@/lib/stripe"
 import { getPlanBySlug } from "@/lib/constants"
 import { getPublicAppUrl } from "@/lib/env"
-import { resolveCoupon, applyCoupon } from "@/lib/coupons"
 
-// Crea una sesión de Stripe Checkout para una membresía. Espeja el flujo de
-// Mercado Pago (mismo external_reference) pero con Stripe. Credential-ready:
-// si no hay stripe_api_key, responde 400 "no configurado".
+// Crea una sesión de Stripe Checkout en modo SUSCRIPCIÓN (cobro recurrente mensual)
+// para una membresía. El webhook activa/renueva. Credential-ready: si no hay
+// stripe_api_key, responde 400 "no configurado".
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { plan, businessId, pending, couponCode } = (await request.json().catch(() => ({}))) as {
+  const { plan, businessId, pending } = (await request.json().catch(() => ({}))) as {
     plan?: string
     businessId?: string
     pending?: string
-    couponCode?: string
   }
 
   const planDef = getPlanBySlug(plan)
@@ -56,21 +54,6 @@ export async function POST(request: Request) {
     externalReference = `membership:${plan}:${session.user.id}:${businessId}`
   }
 
-  // Cupón de descuento (opcional). El descuento se calcula aquí; a Stripe solo le
-  // llega el monto final. El código se guarda en metadata para que el webhook
-  // registre el uso al concretarse el pago.
-  const resolution = await resolveCoupon(couponCode, planDef.price)
-  if (!resolution.ok) {
-    return NextResponse.json({ error: resolution.error }, { status: 400 })
-  }
-  const finalAmount = applyCoupon(planDef.price, resolution.coupon)
-  if (finalAmount <= 0) {
-    return NextResponse.json(
-      { error: "Con este cupón el total queda en $0. Para activar sin pago usa un cupón de prueba (canjéalo en tu panel de Membresía)." },
-      { status: 400 }
-    )
-  }
-
   const stripe = await getStripe()
   if (!stripe) {
     return NextResponse.json(
@@ -79,23 +62,32 @@ export async function POST(request: Request) {
     )
   }
 
+  // Correo del usuario: asocia el cliente de Stripe (necesario para el portal de
+  // cancelación y para ligar la suscripción a la persona).
+  const dbUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true } })
+
   const baseUrl = getPublicAppUrl()
+  // SUSCRIPCIÓN recurrente: Stripe cobra el plan cada mes automáticamente hasta que
+  // el dueño cancele desde el portal. El webhook activa el alta y cada renovación
+  // (invoice.paid) extiende el periodo.
   const checkout = await stripe.checkout.sessions.create({
-    mode: "payment",
+    mode: "subscription",
+    customer_email: dbUser?.email ?? undefined,
     line_items: [
       {
         quantity: 1,
         price_data: {
           currency: "mxn",
-          unit_amount: Math.round(finalAmount * 100),
+          unit_amount: Math.round(planDef.price * 100),
+          recurring: { interval: "month" },
           product_data: { name: `Membresía ${planDef.name} · Guía ZMG` },
         },
       },
     ],
-    metadata: {
-      externalReference,
-      couponCode: resolution.coupon?.code ?? "",
-    },
+    // El externalReference viaja en la sesión Y en la suscripción, para que tanto el
+    // alta inicial como las renovaciones sepan a qué negocio corresponden.
+    metadata: { externalReference },
+    subscription_data: { metadata: { externalReference } },
     success_url: `${baseUrl}/dashboard?pago=exitoso`,
     cancel_url: `${baseUrl}/planes?pago=cancelado`,
   })

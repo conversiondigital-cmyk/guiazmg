@@ -18,9 +18,6 @@ function CheckoutContent() {
   const searchParams = useSearchParams()
   const { status } = useSession()
   const [loading, setLoading] = useState(false)
-  const [couponCode, setCouponCode] = useState("")
-  const [applying, setApplying] = useState(false)
-  const [applied, setApplied] = useState<{ final: number; code: string } | null>(null)
 
   const plan = searchParams.get("plan")
   const businessIdParam = searchParams.get("businessId")
@@ -66,33 +63,6 @@ function CheckoutContent() {
     }
   }, [pending, status])
 
-  // Valida el cupón contra el servidor y muestra el precio con descuento ANTES de
-  // pagar. No incrementa el uso (eso ocurre al concretarse el pago).
-  const applyCouponCode = async () => {
-    const code = couponCode.trim()
-    if (!code) return
-    setApplying(true)
-    try {
-      const res = await fetch("/api/coupons/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, plan }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.ok || !data.coupon) {
-        setApplied(null)
-        toast.error(data.error || "Cupón inválido")
-        return
-      }
-      setApplied({ final: data.final, code: data.coupon.code })
-      toast.success("Cupón aplicado")
-    } catch {
-      toast.error("No se pudo validar el cupón")
-    } finally {
-      setApplying(false)
-    }
-  }
-
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push(`/auth/login?callbackUrl=/checkout?plan=${plan || ""}&businessId=${businessId || ""}`)
@@ -108,14 +78,12 @@ function CheckoutContent() {
     }
     setLoading(true)
     try {
-      const coupon = applied?.code
       const res = await fetch("/api/payments/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
           ...(pending ? { pending } : { businessId }),
-          ...(coupon ? { couponCode: coupon } : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -213,20 +181,16 @@ function CheckoutContent() {
                 {membershipPlan && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Precio mensual</span>
-                      {applied ? (
-                        <span className="flex items-baseline gap-2">
-                          <span className="text-base text-gray-400 line-through">
-                            {formatCurrency(membershipPlan.price)}
-                          </span>
-                          <span className="text-2xl font-bold text-green-700">
-                            {formatCurrency(applied.final)}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-2xl font-bold">{formatCurrency(membershipPlan.price)}</span>
-                      )}
+                      <span className="text-gray-500">Suscripción mensual</span>
+                      <span className="text-2xl font-bold">
+                        {formatCurrency(membershipPlan.price)}
+                        <span className="text-sm font-normal text-gray-500"> /mes</span>
+                      </span>
                     </div>
+                    <p className="-mt-1 text-xs text-gray-500">
+                      Se cobra cada mes automáticamente. <strong>Cancela cuando quieras</strong> desde tu
+                      panel; tu negocio sigue activo hasta el final del período ya pagado.
+                    </p>
                     <div className="border-t pt-4">
                       <p className="text-sm font-medium text-gray-700 mb-2">Incluye:</p>
                       <ul className="space-y-2">
@@ -238,41 +202,6 @@ function CheckoutContent() {
                         ))}
                       </ul>
                     </div>
-                  </div>
-                )}
-
-                {membershipPlan && (
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <label htmlFor="coupon" className="mb-2 block text-sm font-medium text-gray-700">
-                      ¿Tienes un cupón de descuento?
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        id="coupon"
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => {
-                          setCouponCode(e.target.value)
-                          setApplied(null)
-                        }}
-                        placeholder="Escribe tu código"
-                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase placeholder:normal-case focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600"
-                        disabled={applying || loading}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={applyCouponCode}
-                        disabled={applying || loading || !couponCode.trim()}
-                      >
-                        {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
-                      </Button>
-                    </div>
-                    {applied && (
-                      <p className="mt-2 text-sm font-medium text-green-700">
-                        Cupón {applied.code} aplicado — pagas {formatCurrency(applied.final)}.
-                      </p>
-                    )}
                   </div>
                 )}
 
