@@ -14,21 +14,32 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { formatCurrency } from "@/lib/utils"
+import { BillingPortalButton } from "@/components/dashboard/billing-portal-button"
 
+// Estados reales del enum PaymentStatus (APPROVED es el de un pago exitoso).
 const STATUS_COLORS: Record<string, string> = {
-  COMPLETED: "bg-green-100 text-green-700",
+  APPROVED: "bg-green-100 text-green-700",
+  AUTHORIZED: "bg-green-100 text-green-700",
   PENDING: "bg-yellow-100 text-yellow-700",
-  FAILED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-green-100 text-green-800",
+  REJECTED: "bg-red-100 text-red-700",
+  REFUNDED: "bg-blue-100 text-blue-700",
   CANCELLED: "bg-gray-100 text-gray-700",
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: "Completado",
+  APPROVED: "Completado",
+  AUTHORIZED: "Autorizado",
   PENDING: "Pendiente",
-  FAILED: "Fallido",
+  REJECTED: "Rechazado",
   REFUNDED: "Reembolsado",
   CANCELLED: "Cancelado",
+}
+
+// Concepto legible por tipo de pago (en vez del valor crudo del enum).
+const TYPE_LABELS: Record<string, string> = {
+  MEMBERSHIP: "Membresía",
+  BOOST: "Boost",
+  LISTING: "Publicación",
 }
 
 export default async function PagosPage() {
@@ -53,11 +64,33 @@ export default async function PagosPage() {
     .filter((p) => p.status === "APPROVED")
     .reduce((s, p) => s + Number(p.amount), 0)
 
+  // ¿El usuario tiene una suscripción de pago (cliente de Stripe)? Solo entonces
+  // tiene sentido el botón del portal (ahí ve/descarga sus facturas en PDF).
+  const business = await prisma.profile.findFirst({
+    where: { ownerId: session.user.id, deletedAt: null },
+    select: { id: true },
+  })
+  const membership = business
+    ? await prisma.profileMembership.findUnique({
+        where: { businessId: business.id },
+        select: { providerCustomerId: true },
+      })
+    : null
+  const hasStripeBilling = !!membership?.providerCustomerId
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pagos</h1>
-        <p className="text-gray-500">Historial de transacciones y facturación</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Pagos</h1>
+          <p className="text-gray-500">Historial de transacciones y facturación</p>
+        </div>
+        {hasStripeBilling && (
+          <div className="text-right">
+            <BillingPortalButton label="Ver recibos y facturas" />
+            <p className="mt-1 text-xs text-gray-400">Descarga tus recibos en PDF desde Stripe.</p>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -118,14 +151,11 @@ export default async function PagosPage() {
                       })}
                     </TableCell>
                     <TableCell>
-                    <span className="text-sm font-medium text-gray-900">
-                      {p.type}
+                      <span className="text-sm font-medium text-gray-900">
+                        {TYPE_LABELS[p.type] || p.type}
+                      </span>
                       {p.profile && (
-                        <span className="text-xs text-gray-400 ml-1">({p.profile.name})</span>
-                      )}
-                    </span>
-                      {p.profile && (
-                        <span className="text-xs text-gray-400 ml-1">({p.profile.name})</span>
+                        <span className="ml-1 text-xs text-gray-400">({p.profile.name})</span>
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{formatCurrency(Number(p.amount))}</TableCell>
