@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Loader2, Check, Store, MapPin, Clock, Phone, ChevronRightIcon, ChevronDown, Gift } from "@/lib/icons"
-import { Home, Globe, Bike, Tent, Sparkles } from "lucide-react"
+import { Home, Globe, Bike, Tent, Sparkles, Search } from "lucide-react"
 import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
@@ -33,6 +33,8 @@ interface Category {
 type GiroMeta = {
   perfil?: string // "EMPRENDEDOR" | "NEGOCIO"
   modelo?: string // modelo de operación sugerido
+  keywords?: string // términos de búsqueda del catálogo (coma-separados)
+  sinonimos?: string // sinónimos del giro (coma-separados)
 }
 
 // El catálogo guarda el perfil CAPITALIZADO ("Emprendedor"/"Negocio"), pero
@@ -41,6 +43,43 @@ type GiroMeta = {
 function perfilOf(meta?: GiroMeta | null): "EMPRENDEDOR" | "NEGOCIO" | "" {
   const p = meta?.perfil?.toUpperCase()
   return p === "EMPRENDEDOR" || p === "NEGOCIO" ? p : ""
+}
+
+// ── Búsqueda y detección automática de giro ─────────────────────────────────
+// Normaliza texto: minúsculas, sin acentos, solo alfanumérico + espacios.
+function normalizeSearch(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9ñ\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+// Palabras vacías del español + genéricas de negocio, para que la detección no
+// se dispare con "de", "para", "negocio", "vendo"…
+const STOPWORDS = new Set(
+  "de la el los las un una unos unas y o u en para por con del al se su sus mi tu que a e como mas muy sin lo le les nos me te ya son est esta este estos estas hay tengo tenemos hago hacemos vendo vendemos ofrezco ofrecemos negocio negocios servicio servicios producto productos venta ventas tienda local marca empresa mejor calidad precio precios".split(
+    " ",
+  ),
+)
+
+// Divide un texto en tokens significativos (>=3 letras, sin stopwords).
+function tokenize(s: string): string[] {
+  return normalizeSearch(s)
+    .split(" ")
+    .filter((t) => t.length >= 3 && !STOPWORDS.has(t))
+}
+
+type GiroIndexEntry = {
+  catId: string
+  catName: string
+  catIcon?: string
+  sub: { id: string; name: string; meta?: GiroMeta | null }
+  name: string // nombre del giro normalizado
+  haystack: string // nombre + categoría + keywords + sinónimos (para el buscador)
+  kwTokens: Set<string> // tokens de nombre/keywords/sinónimos (para la detección)
 }
 
 interface DayHour {
@@ -98,6 +137,7 @@ export function BusinessRegistrationWizard({
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedSubcategory, setSelectedSubcategory] = useState("")
   const [openCat, setOpenCat] = useState("") // categoría expandida en el acordeón
+  const [giroQuery, setGiroQuery] = useState("") // texto del buscador de giro
   const [operationModel, setOperationModel] = useState("")
   const [serviceModes, setServiceModes] = useState<string[]>([])
   const [coverageArea, setCoverageArea] = useState("")
@@ -313,6 +353,80 @@ export function BusinessRegistrationWizard({
 
   const currentCategory = categories.find((c) => c.id === selectedCategory)
   const municipio = municipalities.find((m) => m.id === selectedMunicipio)
+
+  // ── Índice de giros para buscar/detectar (solo del perfil elegido) ───────────
+  const giroIndex = useMemo<GiroIndexEntry[]>(() => {
+    const out: GiroIndexEntry[] = []
+    for (const cat of categories) {
+      for (const sub of cat.subcategories ?? []) {
+        const p = perfilOf(sub.meta)
+        if (p && p !== profileType) continue // giro de otro perfil: se omite
+        const kw = sub.meta?.keywords || ""
+        const sin = sub.meta?.sinonimos || ""
+        out.push({
+          catId: cat.id,
+          catName: cat.name,
+          catIcon: cat.icon,
+          sub,
+          name: normalizeSearch(sub.name),
+          haystack: normalizeSearch([sub.name, cat.name, kw, sin].join(" ")),
+          kwTokens: new Set([...tokenize(sub.name), ...tokenize(kw), ...tokenize(sin)]),
+        })
+      }
+    }
+    return out
+  }, [categories, profileType])
+
+  const isSearching = giroQuery.trim().length >= 2
+
+  // Resultados del buscador: todos los tokens deben aparecer (AND), ordenados por
+  // relevancia (coincidencia en el nombre pesa más que en keywords/categoría).
+  const searchResults = useMemo<GiroIndexEntry[]>(() => {
+    const q = normalizeSearch(giroQuery)
+    if (q.length < 2) return []
+    const qTokens = q.split(" ").filter(Boolean)
+    const scored: { e: GiroIndexEntry; score: number }[] = []
+    for (const e of giroIndex) {
+      if (!qTokens.every((t) => e.haystack.includes(t))) continue
+      let score = 0
+      if (e.name.startsWith(q)) score += 100
+      else if (e.name.includes(q)) score += 60
+      if (e.haystack.includes(q)) score += 20
+      for (const t of qTokens) if (e.name.includes(t)) score += 10
+      scored.push({ e, score })
+    }
+    scored.sort((a, b) => b.score - a.score || a.e.sub.name.length - b.e.sub.name.length)
+    return scored.slice(0, 30).map((x) => x.e)
+  }, [giroQuery, giroIndex])
+
+  // Detección automática: sugiere giros según el nombre + descripción escritos,
+  // por número de palabras clave del giro presentes en el texto.
+  const detectedGiros = useMemo<GiroIndexEntry[]>(() => {
+    const textTokens = new Set(tokenize(`${form.name} ${form.shortDescription}`))
+    if (textTokens.size === 0) return []
+    const scored: { e: GiroIndexEntry; score: number }[] = []
+    for (const e of giroIndex) {
+      let score = 0
+      for (const t of textTokens) if (e.kwTokens.has(t)) score += 1
+      if (score > 0) scored.push({ e, score })
+    }
+    scored.sort((a, b) => b.score - a.score)
+    // Si hay coincidencias fuertes (>=2 palabras), se descartan las de una sola
+    // (suelen ser ruido por un término común como "domicilio"). Si ninguna llega
+    // a 2, se muestran las mejores de una coincidencia.
+    const strong = scored.filter((x) => x.score >= 2)
+    const pool = strong.length > 0 ? strong : scored
+    return pool.slice(0, 4).map((x) => x.e)
+  }, [form.name, form.shortDescription, giroIndex])
+
+  // Selecciona un giro desde el buscador, las sugerencias o el acordeón.
+  const selectGiro = (catId: string, sub: { id: string; meta?: GiroMeta | null }) => {
+    setSelectedCategory(catId)
+    setSelectedSubcategory(sub.id)
+    if (sub.meta?.modelo) setOperationModel(sub.meta.modelo)
+    setGiroQuery("")
+    setOpenCat(catId)
+  }
 
   // ── Clasificación por modelo de operación (Persona/Empresa) ──────────────────
   const Q1_OPTIONS = [
@@ -551,69 +665,130 @@ export function BusinessRegistrationWizard({
                 </p>
               ) : null
             })()}
-            {/* Acordeón: categorías colapsadas; se expanden para ver y elegir el giro. */}
-            <div className="mt-1 max-h-80 divide-y overflow-y-auto rounded-lg border">
-              {catsLoading ? (
-                <div className="space-y-2 p-3">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className="h-9 animate-pulse rounded-md bg-gray-100" />
-                  ))}
-                </div>
-              ) : categories.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500">
-                  No pudimos cargar las categorías. Recarga la página, o usa la opción “Solicítalo” de aquí abajo.
-                </p>
-              ) : (
-                categories.map((cat) => {
-                // Solo los giros del perfil elegido (Emprendedor/Negocio). Los giros
-                // sin perfil marcado se muestran en ambos.
-                const giros = (cat.subcategories ?? []).filter((s) => {
-                  const p = perfilOf(s.meta)
-                  return !p || p === profileType
-                })
-                if (giros.length === 0) return null
-                const open = openCat === cat.id
-                return (
-                  <div key={cat.id}>
+            {/* Buscador de giro: filtra al escribir por nombre, categoría, keywords y sinónimos. */}
+            <div className="relative mt-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                value={giroQuery}
+                onChange={(e) => setGiroQuery(e.target.value)}
+                placeholder="Busca tu giro (ej: tacos, estética, plomería…)"
+                className="pl-9"
+                aria-label="Buscar giro"
+              />
+            </div>
+
+            {isSearching ? (
+              /* Resultados del buscador: lista plana ordenada por relevancia. */
+              <div className="mt-2 max-h-80 divide-y overflow-y-auto rounded-lg border">
+                {searchResults.length === 0 ? (
+                  <p className="p-4 text-sm text-gray-500">
+                    No encontramos giros con “{giroQuery}”. Prueba otra palabra, o usa “Solicítalo” abajo.
+                  </p>
+                ) : (
+                  searchResults.map((e) => (
                     <button
+                      key={e.sub.id}
                       type="button"
-                      onClick={() => setOpenCat(open ? "" : cat.id)}
+                      onClick={() => selectGiro(e.catId, e.sub)}
                       className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
-                        selectedCategory === cat.id ? "font-semibold text-[#006c49]" : "text-gray-700"
+                        selectedSubcategory === e.sub.id ? "bg-[#006c49]/10 font-medium text-[#006c49]" : "text-gray-700"
                       }`}
                     >
-                      <span className="flex items-center gap-2">
-                        {cat.icon && <span>{cat.icon}</span>}
-                        {cat.name}
-                        <span className="text-xs font-normal text-gray-400">({giros.length})</span>
+                      <span>{e.sub.name}</span>
+                      <span className="ml-2 shrink-0 text-xs text-gray-400">
+                        {e.catIcon ? `${e.catIcon} ` : ""}
+                        {e.catName}
                       </span>
-                      <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
                     </button>
-                    {open && (
-                      <div className="grid gap-1 bg-gray-50/50 p-2 sm:grid-cols-2">
-                        {giros.map((sub) => (
+                  ))
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Detección automática: sugerencias según el nombre/descripción escritos. */}
+                {!selectedSubcategory && detectedGiros.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-[#006c49]/20 bg-[#006c49]/5 p-3">
+                    <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-[#006c49]">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      ¿Es alguno de estos? Según lo que escribiste
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {detectedGiros.map((e) => (
+                        <button
+                          key={e.sub.id}
+                          type="button"
+                          onClick={() => selectGiro(e.catId, e.sub)}
+                          className="rounded-full border border-[#006c49]/30 bg-white px-3 py-1.5 text-xs text-gray-700 transition-colors hover:bg-[#006c49] hover:text-white"
+                        >
+                          {e.sub.name}
+                          <span className="ml-1 opacity-60">· {e.catName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Acordeón: categorías colapsadas; se expanden para ver y elegir el giro. */}
+                <div className="mt-2 max-h-80 divide-y overflow-y-auto rounded-lg border">
+                  {catsLoading ? (
+                    <div className="space-y-2 p-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="h-9 animate-pulse rounded-md bg-gray-100" />
+                      ))}
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500">
+                      No pudimos cargar las categorías. Recarga la página, o usa la opción “Solicítalo” de aquí abajo.
+                    </p>
+                  ) : (
+                    categories.map((cat) => {
+                      // Solo los giros del perfil elegido (Emprendedor/Negocio). Los giros
+                      // sin perfil marcado se muestran en ambos.
+                      const giros = (cat.subcategories ?? []).filter((s) => {
+                        const p = perfilOf(s.meta)
+                        return !p || p === profileType
+                      })
+                      if (giros.length === 0) return null
+                      const open = openCat === cat.id
+                      return (
+                        <div key={cat.id}>
                           <button
-                            key={sub.id}
                             type="button"
-                            onClick={() => {
-                              setSelectedCategory(cat.id)
-                              setSelectedSubcategory(sub.id)
-                              if (sub.meta?.modelo) setOperationModel(sub.meta.modelo)
-                            }}
-                            className={`rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
-                              selectedSubcategory === sub.id ? "bg-[#006c49] text-white" : "text-gray-700 hover:bg-white"
+                            onClick={() => setOpenCat(open ? "" : cat.id)}
+                            className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
+                              selectedCategory === cat.id ? "font-semibold text-[#006c49]" : "text-gray-700"
                             }`}
                           >
-                            {sub.name}
+                            <span className="flex items-center gap-2">
+                              {cat.icon && <span>{cat.icon}</span>}
+                              {cat.name}
+                              <span className="text-xs font-normal text-gray-400">({giros.length})</span>
+                            </span>
+                            <ChevronDown className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })
-              )}
-            </div>
+                          {open && (
+                            <div className="grid gap-1 bg-gray-50/50 p-2 sm:grid-cols-2">
+                              {giros.map((sub) => (
+                                <button
+                                  key={sub.id}
+                                  type="button"
+                                  onClick={() => selectGiro(cat.id, sub)}
+                                  className={`rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
+                                    selectedSubcategory === sub.id ? "bg-[#006c49] text-white" : "text-gray-700 hover:bg-white"
+                                  }`}
+                                >
+                                  {sub.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </>
+            )}
             <SuggestGiro />
 
             {/* Modelo de operación + aviso de perfil sugerido (del catálogo). */}
