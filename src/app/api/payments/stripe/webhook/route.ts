@@ -29,6 +29,31 @@ async function notifyOwnerActivated(userId: string, businessId: string, planSlug
   }
 }
 
+// Stripe movió `current_period_start/end` del objeto Subscription a cada item de
+// la suscripción en versiones recientes de la API (ya no vienen en el nivel
+// superior). Se leen de ambos lugares y se validan. Devuelve null si no hay una
+// fecha válida, para que el llamador use su respaldo (+30 días) en vez de romper.
+function subscriptionPeriod(sub: unknown): { start: Date | null; end: Date | null } {
+  const s = sub as {
+    current_period_start?: number
+    current_period_end?: number
+    items?: { data?: { current_period_start?: number; current_period_end?: number }[] }
+  }
+  const item = s?.items?.data?.[0]
+  const toDate = (u?: number) => {
+    if (typeof u !== "number" || !isFinite(u)) return null
+    const d = new Date(u * 1000)
+    return isNaN(d.getTime()) ? null : d
+  }
+  return {
+    start: toDate(s?.current_period_start ?? item?.current_period_start),
+    end: toDate(s?.current_period_end ?? item?.current_period_end),
+  }
+}
+function subscriptionPeriodEnd(sub: unknown): Date | null {
+  return subscriptionPeriod(sub).end
+}
+
 export const dynamic = "force-dynamic"
 
 // Webhook de Stripe: verifica la firma con stripe_webhook_secret y, en
@@ -107,7 +132,7 @@ export async function POST(request: Request) {
       if (subscriptionId) {
         try {
           const sub = await stripe.subscriptions.retrieve(subscriptionId)
-          subPeriodEnd = new Date((sub as unknown as { current_period_end: number }).current_period_end * 1000)
+          subPeriodEnd = subscriptionPeriodEnd(sub)
         } catch {
           /* si falla, fulfillMembership usa +30 días de respaldo */
         }
@@ -292,18 +317,17 @@ export async function POST(request: Request) {
       const subId = typeof inv.subscription === "string" ? inv.subscription : null
       if (subId) {
         try {
-          const sub = (await stripe.subscriptions.retrieve(subId)) as unknown as {
-            current_period_start: number
-            current_period_end: number
-            cancel_at_period_end: boolean
-          }
+          const sub = await stripe.subscriptions.retrieve(subId)
+          const { start, end } = subscriptionPeriod(sub)
+          const cancelAtPeriodEnd =
+            (sub as unknown as { cancel_at_period_end?: boolean }).cancel_at_period_end ?? false
           await prisma.profileMembership.updateMany({
             where: { providerSubscriptionId: subId },
             data: {
               status: "ACTIVE",
-              currentPeriodStart: new Date(sub.current_period_start * 1000),
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
-              cancelAtPeriodEnd: sub.cancel_at_period_end,
+              ...(start ? { currentPeriodStart: start } : {}),
+              ...(end ? { currentPeriodEnd: end } : {}),
+              cancelAtPeriodEnd,
               renewalNotifiedAt: null,
             },
           })
@@ -320,15 +344,15 @@ export async function POST(request: Request) {
       const sub = event.data.object as {
         id: string
         status: string
-        current_period_end: number
         cancel_at_period_end: boolean
       }
+      const { end } = subscriptionPeriod(event.data.object)
       await prisma.profileMembership
         .updateMany({
           where: { providerSubscriptionId: sub.id },
           data: {
             cancelAtPeriodEnd: sub.cancel_at_period_end,
-            currentPeriodEnd: new Date(sub.current_period_end * 1000),
+            ...(end ? { currentPeriodEnd: end } : {}),
             ...(sub.status === "active" || sub.status === "trialing" ? { status: "ACTIVE" } : {}),
           },
         })

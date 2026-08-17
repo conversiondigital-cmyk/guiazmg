@@ -26,7 +26,11 @@ export async function fulfillMembership(opts: {
   if (!plan) return { ok: false, reason: "plan-not-found" }
 
   const now = new Date()
-  const periodEnd = opts.periodEnd ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  // Guarda contra una fecha inválida (p. ej. si Stripe no envió el período en el
+  // formato esperado): si no es una fecha válida, se usa el respaldo de +30 días
+  // en vez de romper el upsert (que dejaría al cliente cobrado pero sin activar).
+  const validEnd = opts.periodEnd && !isNaN(opts.periodEnd.getTime()) ? opts.periodEnd : null
+  const periodEnd = validEnd ?? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
   const subId = opts.subscriptionId ?? opts.providerPaymentId
   const db = prisma as any
 
