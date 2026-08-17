@@ -35,6 +35,14 @@ type GiroMeta = {
   modelo?: string // modelo de operación sugerido
 }
 
+// El catálogo guarda el perfil CAPITALIZADO ("Emprendedor"/"Negocio"), pero
+// profileType es "EMPRENDEDOR"/"NEGOCIO". Se normaliza a mayúsculas para comparar
+// (sin esto, ninguna comparación hacía match y solo se veían los giros sin perfil).
+function perfilOf(meta?: GiroMeta | null): "EMPRENDEDOR" | "NEGOCIO" | "" {
+  const p = meta?.perfil?.toUpperCase()
+  return p === "EMPRENDEDOR" || p === "NEGOCIO" ? p : ""
+}
+
 interface DayHour {
   isClosed: boolean
   openTime: string
@@ -557,10 +565,12 @@ export function BusinessRegistrationWizard({
                 </p>
               ) : (
                 categories.map((cat) => {
-                // Solo los giros del perfil elegido (Emprendedor/Negocio).
-                const giros = (cat.subcategories ?? []).filter(
-                  (s) => !s.meta?.perfil || s.meta.perfil === profileType,
-                )
+                // Solo los giros del perfil elegido (Emprendedor/Negocio). Los giros
+                // sin perfil marcado se muestran en ambos.
+                const giros = (cat.subcategories ?? []).filter((s) => {
+                  const p = perfilOf(s.meta)
+                  return !p || p === profileType
+                })
                 if (giros.length === 0) return null
                 const open = openCat === cat.id
                 return (
@@ -609,7 +619,7 @@ export function BusinessRegistrationWizard({
             {/* Modelo de operación + aviso de perfil sugerido (del catálogo). */}
             {selectedSubcategory && (() => {
               const sub = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory)
-              const suggested = sub?.meta?.perfil // "EMPRENDEDOR" | "NEGOCIO"
+              const suggested = perfilOf(sub?.meta) // "EMPRENDEDOR" | "NEGOCIO" | ""
               const label = suggested === "EMPRENDEDOR" ? "Emprendedor" : "Negocio"
               return (
                 <div className="mt-3 space-y-2">
