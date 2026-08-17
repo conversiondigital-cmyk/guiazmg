@@ -5,8 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { businessSchema } from "@/lib/validations"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
-import { sendEmail, getAdminNotifyEmail, sendBusinessActivatedEmail } from "@/lib/email"
-import { getPublicAppUrl } from "@/lib/env"
+import { sendBusinessActivatedEmail } from "@/lib/email"
 import { redeemMembershipCoupon } from "@/lib/coupons/redeem-membership"
 import { z } from "zod"
 
@@ -151,8 +150,10 @@ export async function POST(request: NextRequest) {
         neighborhoodId: data.neighborhoodId,
         slug,
         ownerId: session.user.id,
-        // Entra a la cola de aprobación del admin.
-        status: "PENDING_REVIEW",
+        // Se crea OCULTO (INACTIVE) y se vuelve ACTIVE solo cuando hay membresía: al
+        // canjear el cupón (abajo) o al pagar (webhook). NO hay aprobación manual del
+        // admin: lo activa el pago/cupón, no una persona.
+        status: "INACTIVE",
         hours: data.hours
           ? {
               createMany: {
@@ -180,35 +181,9 @@ export async function POST(request: NextRequest) {
       console.error("[BUSINESS_ROLE_PROMOTE]", e instanceof Error ? e.message : e)
     }
 
-    // Avisa a los administradores (notificación in-app + correo) que hay un
-    // negocio nuevo por aprobar. Nunca rompe el registro si algo falla.
-    try {
-      const reviewUrl = `${getPublicAppUrl()}/admin/negocios/${business.id}`
-      const admins = await prisma.user.findMany({
-        where: { role: "ADMIN", isActive: true },
-        select: { id: true, email: true },
-      })
-      await Promise.all(
-        admins.map((a) =>
-          createNotification({
-            userId: a.id,
-            type: "SYSTEM",
-            title: "Nuevo negocio por aprobar",
-            message: `${data.name} se registró y espera aprobación.`,
-            link: `/admin/negocios/${business.id}`,
-          })
-        )
-      )
-      // Correo: UNA sola vez al buzón de contacto (contacto@), no al login de cada admin.
-      const notifyEmail = await getAdminNotifyEmail()
-      await sendEmail(notifyEmail, "business_registered", {
-        businessName: data.name,
-        ownerName: session.user?.name || "",
-        reviewUrl,
-      })
-    } catch (e) {
-      console.error("[BUSINESS_REGISTER_NOTIFY]", e instanceof Error ? e.message : e)
-    }
+    // Sin aprobación manual del admin: el negocio se activa solo al canjear el cupón
+    // (abajo) o al pagar (webhook). Por eso ya no se notifica a los admins "por
+    // aprobar" ni se deja en cola de revisión.
 
     // Código de invitación (cupón de días gratis): si vino uno, se canjea aquí
     // para activar la membresía de prueba SIN pago. Si el código es inválido no se
