@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { reloadOnChunkError } from "@/lib/chunk-reload"
 
 export default function DashboardError({
   error,
@@ -9,7 +10,10 @@ export default function DashboardError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => { console.error("Dashboard error:", error) }, [error])
+  useEffect(() => {
+    if (reloadOnChunkError(error)) return
+    console.error("Dashboard error:", error)
+  }, [error])
 
   return (
     <div className="flex flex-col items-center justify-center py-24">

@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { AlertTriangle, Home, RefreshCw } from "@/lib/icons"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { reloadOnChunkError } from "@/lib/chunk-reload"
 import Link from "next/link"
 
 export default function ErrorPage({
@@ -14,6 +15,9 @@ export default function ErrorPage({
   reset: () => void
 }) {
   useEffect(() => {
+    // Si es un ChunkLoadError (build viejo tras un deploy), recarga para tomar el
+    // nuevo build en vez de mostrar el error.
+    if (reloadOnChunkError(error)) return
     console.error("Page error:", error)
   }, [error])
 

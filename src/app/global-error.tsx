@@ -1,16 +1,23 @@
 "use client"
 
+import { useEffect } from "react"
 import { Geist, Geist_Mono } from "next/font/google"
+import { reloadOnChunkError } from "@/lib/chunk-reload"
 
 const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] })
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
 
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    reloadOnChunkError(error)
+  }, [error])
+
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen flex items-center justify-center bg-gray-50">
