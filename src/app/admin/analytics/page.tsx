@@ -7,6 +7,7 @@ import {
 } from "@/lib/icons"
 import { CHANNEL_LABELS, type TrafficChannel } from "@/lib/analytics/traffic"
 import { getTopSearchKeywords } from "@/lib/seo/search-console"
+import { getGa4Summary } from "@/lib/analytics/ga4"
 
 export const dynamic = "force-dynamic"
 
@@ -174,6 +175,24 @@ export default async function AdminAnalyticsPage() {
 
   // Palabras clave reales de Google (null si Search Console no está conectado).
   const googleKeywords = await getTopSearchKeywords()
+
+  // Resumen de Google Analytics 4 (null si no está conectado). Reutiliza la cuenta
+  // de servicio de Search Console + el ID de propiedad GA4.
+  const ga4 = await getGa4Summary(28)
+  const fmtDuration = (sec: number) => {
+    const s = Math.round(sec)
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+  }
+  const ga4HasData = !!ga4 && (ga4.totals.sessions > 0 || ga4.totals.pageViews > 0 || ga4.topPages.length > 0)
+  const ga4Kpis = ga4
+    ? [
+        { label: "Usuarios activos", value: ga4.totals.activeUsers.toLocaleString() },
+        { label: "Sesiones", value: ga4.totals.sessions.toLocaleString() },
+        { label: "Vistas de página", value: ga4.totals.pageViews.toLocaleString() },
+        { label: "Interacción", value: `${(ga4.totals.engagementRate * 100).toFixed(0)}%` },
+        { label: "Duración media", value: fmtDuration(ga4.totals.avgSessionSec) },
+      ]
+    : []
 
   const monthlyRevenue = Number(approvedPaymentsAgg._sum.amount ?? 0)
   const visitsCount = totalViews._sum.views ?? 0
@@ -507,6 +526,85 @@ export default async function AdminAnalyticsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      {/* Google Analytics 4 — tráfico real de Google (credential-ready) */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-heading text-sm font-medium">Google Analytics 4 — tráfico ({ga4?.days ?? 28} días)</h3>
+        </div>
+        {ga4 === null ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No conectado. Agrega el <strong>ID de propiedad GA4</strong> en Admin → Configuración → SEO,
+            da acceso de Lector a la cuenta de servicio en GA y habilita la Analytics Data API.
+          </p>
+        ) : !ga4HasData ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Conectado, pero GA4 aún no reporta datos (puede tardar 24-48 h en acumularse tras instalar la etiqueta).
+          </p>
+        ) : (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {ga4Kpis.map((k) => (
+                <div key={k.label} className="rounded-lg bg-muted/40 p-3 text-center ring-1 ring-foreground/5">
+                  <p className="text-lg font-bold tracking-tight">{k.value}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">{k.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <h4 className="text-xs font-medium text-muted-foreground">Páginas más vistas</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-muted-foreground">
+                        <th className="pb-2 pr-4">Página</th>
+                        <th className="pb-2 text-right">Vistas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ga4.topPages.map((p) => (
+                        <tr key={p.path} className="border-b last:border-0">
+                          <td className="py-2 pr-4 font-medium">{p.path}</td>
+                          <td className="py-2 text-right font-mono">{p.views.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <h4 className="text-xs font-medium text-muted-foreground">Canales de adquisición</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-muted-foreground">
+                        <th className="pb-2 pr-4">Canal</th>
+                        <th className="pb-2 text-right">Sesiones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ga4.channels.map((c) => (
+                        <tr key={c.channel} className="border-b last:border-0">
+                          <td className="py-2 pr-4 font-medium">{c.channel}</td>
+                          <td className="py-2 text-right font-mono">{c.sessions.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

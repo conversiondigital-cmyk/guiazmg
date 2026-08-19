@@ -201,6 +201,7 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
       },
       { key: "gsc_site_url", label: "Search Console: URL de la propiedad", type: "url", placeholder: "https://guiazmg.vercel.app/" },
       { key: "gsc_service_account", label: "Search Console: cuenta de servicio (JSON)", type: "textarea", description: "Pega el JSON de la cuenta de servicio con acceso a la propiedad. Activa las palabras clave reales de Google en /admin/analytics." },
+      { key: "ga4_property_id", label: "Google Analytics 4: ID de propiedad", type: "text", placeholder: "123456789", description: "ID numérico de la propiedad GA4 (NO el G-XXXX). En GA → Administrar → Configuración de la propiedad. Reutiliza la cuenta de servicio de arriba; dale acceso de Lector a la propiedad y habilita la Analytics Data API." },
     ],
   },
   seguridad: {
