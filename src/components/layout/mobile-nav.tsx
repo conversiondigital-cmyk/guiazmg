@@ -5,7 +5,13 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Menu, X, MapPin, User, LogOut } from "lucide-react"
 import { getInitials } from "@/lib/utils"
-import { NAV_LINKS } from "@/lib/nav-links"
+import { NAV_LINKS, EXPLORE_VIEWS, AGENDA_VIEWS, type NavSubLink } from "@/lib/nav-links"
+
+// Sub-secciones de los hubs fusionados, indentadas bajo su enlace padre en el menú móvil.
+const SUBVIEWS: Record<string, NavSubLink[]> = {
+  "/search": EXPLORE_VIEWS,
+  "/agenda": AGENDA_VIEWS,
+}
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
@@ -90,16 +96,34 @@ export function MobileNav() {
 
             {/* Nav links */}
             <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label + link.href}
-                  href={link.href}
-                  onClick={close}
-                  className="block rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-green-50 hover:text-green-800"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {NAV_LINKS.map((link) => {
+                const subs = SUBVIEWS[link.href]
+                return (
+                  <div key={link.label + link.href}>
+                    <Link
+                      href={link.href}
+                      onClick={close}
+                      className="block rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-green-50 hover:text-green-800"
+                    >
+                      {link.label}
+                    </Link>
+                    {subs && (
+                      <div className="ml-3 border-l border-gray-100 pl-2">
+                        {subs.map((s) => (
+                          <Link
+                            key={s.href}
+                            href={s.href}
+                            onClick={close}
+                            className="block rounded-lg px-4 py-2 text-sm text-gray-500 transition-colors hover:bg-green-50 hover:text-green-800"
+                          >
+                            {s.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
 
               <div className="mt-2 space-y-1 border-t border-gray-100 pt-2">
                 {user ? (

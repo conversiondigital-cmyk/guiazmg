@@ -73,8 +73,9 @@ const DEFAULT_WHATSAPP = "523348843477"
 
 const NAV = [
   { label: "Inicio", href: "/" },
-  { label: "Categorías", href: "/search" },
-  { label: "Promociones", href: "/promociones" },
+  { label: "Explorar", href: "/search" },
+  { label: "Marketplace", href: "/marketplace" },
+  { label: "Agenda", href: "/agenda" },
   { label: "Blog", href: "/blog" },
   { label: "Contacto", href: "/contacto" },
 ]

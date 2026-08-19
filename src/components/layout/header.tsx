@@ -8,7 +8,7 @@ import { NotificationDropdown } from "@/components/notifications/notification-dr
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { ChevronDown, User } from "lucide-react"
 import { useState, useEffect } from "react"
-import { NAV_LINKS } from "@/lib/nav-links"
+import { NAV_LINKS, EXPLORE_VIEWS, type NavLink as NavLinkT } from "@/lib/nav-links"
 
 // El header se remonta en cada navegación (cada página lo renderiza), así que su
 // fetch de categorías salía en cada carga. Las categorías cambian rara vez → se
@@ -41,7 +41,11 @@ export function Header() {
   // Resalta el enlace de la página actual. Antes se seguía por click (setActiveNav),
   // así que entrar directo a /mapa marcaba "Inicio"; usePathname es la fuente real
   // (mismo patrón que los 6 sidebars). "/" activo solo exacto; el resto por prefijo.
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href))
+  // matchPaths cubre las fusiones (Explorar → /search, /mapa, /zonas; Agenda → …).
+  const isActive = (link: NavLinkT) => {
+    const paths = link.matchPaths ?? [link.href]
+    return paths.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)))
+  }
   const navLinkClass = (active: boolean) =>
     `flex items-center gap-0.5 px-3 py-1.5 text-sm font-medium transition-colors relative ${
       active ? "text-green-800" : "text-gray-600 hover:text-green-800"
@@ -78,23 +82,43 @@ export function Header() {
                 onMouseEnter={() => setShowCategories(true)}
                 onMouseLeave={() => setShowCategories(false)}
               >
-                <Link href={link.href} className={navLinkClass(isActive(link.href))}>
+                <Link href={link.href} className={navLinkClass(isActive(link))}>
                   {link.label}
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCategories ? "rotate-180" : ""}`} />
                 </Link>
-                {showCategories && categories.length > 0 && (
-                  <div className="absolute left-0 top-full z-50 w-72 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
-                    <div className="grid grid-cols-2 gap-0.5">
-                      {categories.slice(0, 12).map((cat) => (
+                {showCategories && (
+                  <div className="absolute left-0 top-full z-50 w-80 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
+                    {/* Las 3 vistas del mismo directorio: lista, mapa y por zona. */}
+                    <div className="grid grid-cols-3 gap-1">
+                      {EXPLORE_VIEWS.map((v) => (
                         <Link
-                          key={cat.id}
-                          href={`/categoria/${cat.slug}`}
-                          className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-green-50 hover:text-green-800 transition-colors"
+                          key={v.href}
+                          href={v.href}
+                          className="flex flex-col rounded-lg border border-gray-100 px-3 py-2 hover:border-green-200 hover:bg-green-50 transition-colors"
                         >
-                          {cat.name}
+                          <span className="text-sm font-semibold text-green-800">{v.label}</span>
+                          <span className="mt-0.5 text-[11px] leading-tight text-gray-500">{v.description}</span>
                         </Link>
                       ))}
                     </div>
+                    {categories.length > 0 && (
+                      <>
+                        <p className="mt-2 px-2 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                          Categorías
+                        </p>
+                        <div className="grid grid-cols-2 gap-0.5">
+                          {categories.slice(0, 12).map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={`/categoria/${cat.slug}`}
+                              className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-green-50 hover:text-green-800 transition-colors"
+                            >
+                              {cat.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
                     <Link
                       href="/search"
                       className="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold text-green-800 hover:bg-green-50 transition-colors"
@@ -105,9 +129,9 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <Link key={link.label} href={link.href} className={navLinkClass(isActive(link.href))}>
+              <Link key={link.label} href={link.href} className={navLinkClass(isActive(link))}>
                 {link.label}
-                {isActive(link.href) && (
+                {isActive(link) && (
                   <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-500" />
                 )}
               </Link>
