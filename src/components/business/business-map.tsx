@@ -16,7 +16,7 @@ function loadGoogleMaps(key: string): Promise<void> {
   if (gmapsPromise) return gmapsPromise
   gmapsPromise = new Promise<void>((resolve, reject) => {
     const s = document.createElement("script")
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX&loading=async`
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX`
     s.async = true
     s.defer = true
     s.onload = () => resolve()

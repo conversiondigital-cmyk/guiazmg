@@ -13,7 +13,7 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
   if (!mapsPromise) {
     mapsPromise = new Promise<void>((resolve, reject) => {
       const s = document.createElement("script")
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async`
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}`
       s.async = true
       s.defer = true
       s.onload = () => resolve()
