@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 // El editor enriquecido es pesado y solo-cliente: se carga diferido para aligerar
@@ -9,7 +9,7 @@ const RichEditor = dynamic(() => import("./rich-editor").then((m) => m.RichEdito
   ssr: false,
   loading: () => <div className="min-h-[300px] animate-pulse rounded-lg bg-gray-100" />,
 })
-import { Save, Eye, Globe, Archive, Loader2, Trash2, Send, ImageUp, X } from "lucide-react"
+import { Save, Eye, Globe, Archive, Loader2, Trash2, Send, ImageUp, X, ChevronDown, Plus, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { confirmDialog } from "@/components/ui/system-dialog"
@@ -19,6 +19,103 @@ const CATEGORIES = [
   "Marketing", "Diseño", "Emprendimiento", "Finanzas", "Tecnología",
   "Turismo", "Salud", "Educación", "Eventos",
 ]
+
+// Combobox de categoría: menú propio que se abre al clic mostrando todas las
+// sugerencias, y permite ESCRIBIR una nueva (opción "Crear …"). Reemplaza al
+// datalist nativo, cuyo menú no se desplegaba de forma consistente.
+function CategoryCombobox({
+  value,
+  onChange,
+  options,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onDoc)
+    return () => document.removeEventListener("mousedown", onDoc)
+  }, [])
+
+  const q = value.trim().toLowerCase()
+  const filtered = q ? options.filter((o) => o.toLowerCase().includes(q)) : options
+  const exact = options.some((o) => o.toLowerCase() === q)
+  const pick = (v: string) => {
+    onChange(v)
+    setOpen(false)
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="flex items-center rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-green-600">
+        <input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value)
+            setOpen(true)
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Elige una o escribe una nueva…"
+          className="w-full rounded-lg bg-transparent px-3 py-2 text-sm focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Ver categorías"
+          className="px-2 text-gray-400 hover:text-gray-600"
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      </div>
+
+      {open && (
+        <div className="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          {value && !exact && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => pick(value.trim())}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-green-700 hover:bg-green-50"
+            >
+              <Plus className="h-3.5 w-3.5 shrink-0" /> Crear “{value.trim()}”
+            </button>
+          )}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => pick("")}
+            className="w-full px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-50"
+          >
+            Sin categoría
+          </button>
+          {filtered.map((o) => (
+            <button
+              key={o}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => pick(o)}
+              className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+                o.toLowerCase() === q ? "font-medium text-green-700" : "text-gray-700"
+              }`}
+            >
+              {o}
+              {o.toLowerCase() === q && <Check className="h-3.5 w-3.5 shrink-0" />}
+            </button>
+          ))}
+          {filtered.length === 0 && !value && (
+            <p className="px-3 py-2 text-sm text-gray-400">No hay categorías aún</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function slugify(text: string) {
   return text
@@ -374,23 +471,9 @@ export function PostForm({ initialData, isAdmin = false, categoryOptions = [] }:
         {/* Category */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
           <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Categoría</p>
-          {/* Input con datalist: sugiere las categorías existentes y permite
-              escribir una NUEVA ahí mismo (se guarda como la categoría del post). */}
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            list="blog-categories"
-            placeholder="Elige una o escribe una nueva…"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-          />
-          <datalist id="blog-categories">
-            {categorySuggestions.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
+          <CategoryCombobox value={category} onChange={setCategory} options={categorySuggestions} />
           <p className="mt-1 text-[11px] text-gray-400">
-            Elige una existente o escribe una nueva para crearla.
+            Elige una del menú o escribe una nueva para crearla.
           </p>
         </div>
 
