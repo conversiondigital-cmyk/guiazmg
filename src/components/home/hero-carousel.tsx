@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import Image from "next/image"
-import { Search, MapPin } from "lucide-react"
+import { Search, MapPin, Map } from "lucide-react"
 import type { HeroConfig } from "@/lib/hero-config"
 import { NearMeButton } from "@/components/search/near-me-button"
 
@@ -139,12 +140,19 @@ export function HeroCarousel({ images = [], config }: { images?: string[]; confi
           </button>
         </div>
 
-        {/* Cerca de mí */}
-        <div className="mt-3 flex justify-center">
+        {/* Accesos rápidos: cerca de mí + explorar por zona */}
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           <NearMeButton
             query={query}
             className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
           />
+          <Link
+            href="/zonas"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+          >
+            <Map className="h-4 w-4" />
+            Explorar por zona
+          </Link>
         </div>
 
         {/* Populares */}

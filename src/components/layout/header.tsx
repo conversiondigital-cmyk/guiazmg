@@ -72,8 +72,8 @@ export function Header() {
           <img src="/logo.svg" alt="Guía ZMG" className="h-9 w-auto" />
         </Link>
 
-        {/* Nav desktop */}
-        <nav className="hidden lg:flex items-center gap-1 flex-1">
+        {/* Nav desktop (centrado entre el logo y las acciones) */}
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
           {NAV_LINKS.map((link) =>
             link.hasDropdown ? (
               <div

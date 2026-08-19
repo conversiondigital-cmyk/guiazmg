@@ -35,21 +35,20 @@ export function MobileNav() {
     <div className="lg:hidden">
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-700 transition-colors hover:bg-gray-50"
         aria-label="Abrir menú"
       >
-        {user ? (
+        {/* Siempre la hamburguesa: es el único gesto que se lee como "menú". Antes,
+            con sesión iniciada, se mostraba el avatar y nadie lo reconocía como menú. */}
+        <Menu className="h-5 w-5" />
+        {/* Punto para indicar que hay sesión activa (la cuenta vive dentro del cajón). */}
+        {user && (
           <span
-            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white ${
-              isAdmin ? "bg-red-700" : "bg-blue-600"
+            className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white ${
+              isAdmin ? "bg-red-600" : "bg-blue-600"
             }`}
-          >
-            {user.name ? getInitials(user.name) : "U"}
-          </span>
-        ) : (
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600">
-            <Menu className="h-5 w-5" />
-          </span>
+            aria-hidden
+          />
         )}
       </button>
 
