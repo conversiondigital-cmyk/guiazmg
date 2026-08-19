@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   DollarSign,
   TrendingUp,
@@ -10,11 +11,40 @@ import {
   BarChart3,
   Repeat,
   TrendingDown,
+  Info,
+  type LucideIcon,
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
+
+// Etiqueta con tooltip: muestra el significado de la sigla al pasar el mouse
+// (hover) y al tocar (móvil, con el botón ⓘ que alterna el estado).
+function InfoLabel({ label, tip }: { label: string; tip?: string }) {
+  const [open, setOpen] = useState(false)
+  if (!tip) return <>{label}</>
+  return (
+    <span className="group relative inline-flex items-center gap-1">
+      {label}
+      <button
+        type="button"
+        aria-label={`Qué significa ${label}`}
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setOpen(false)}
+        className="text-muted-foreground/50 transition-colors hover:text-muted-foreground focus:outline-none"
+      >
+        <Info className="size-3" />
+      </button>
+      <span
+        role="tooltip"
+        className={`pointer-events-none absolute left-0 top-full z-30 mt-1 w-44 max-w-[75vw] rounded-md bg-gray-900 px-2.5 py-1.5 text-[11px] font-normal leading-snug text-white shadow-lg transition-opacity duration-150 ${open ? "opacity-100" : "opacity-0"} group-hover:opacity-100`}
+      >
+        {tip}
+      </span>
+    </span>
+  )
+}
 
 type RecentPayment = {
   id: string
@@ -105,17 +135,17 @@ export function FinancialClient(props: Props) {
   }
   if (!conicStr) conicStr = "#E5E7EB 0deg 360deg"
 
-  const kpiCards = [
-    { label: "MRR", value: formatCurrency(mrr), icon: DollarSign, color: "text-blue-600", sub: "Ingresos mensuales recurrentes" },
-    { label: "ARR", value: formatCurrency(arr), icon: TrendingUp, color: "text-indigo-600", sub: "MRR × 12" },
+  const kpiCards: { label: string; value: string; icon: LucideIcon; color: string; sub: string; tip?: string }[] = [
+    { label: "MRR", value: formatCurrency(mrr), icon: DollarSign, color: "text-blue-600", sub: "Ingresos mensuales recurrentes", tip: "MRR (Ingreso Mensual Recurrente): lo que entra cada mes de forma predecible por las membresías activas." },
+    { label: "ARR", value: formatCurrency(arr), icon: TrendingUp, color: "text-indigo-600", sub: "MRR × 12", tip: "ARR (Ingreso Anual Recurrente): el MRR proyectado a 12 meses." },
     { label: "Ingresos del mes", value: formatCurrency(monthlyRevenue), icon: CreditCard, color: "text-green-600", sub: "Todos los tipos" },
     { label: "Ingresos anuales", value: formatCurrency(annualRevenue), icon: BarChart3, color: "text-emerald-600", sub: "Este año" },
       { label: "Boosts creados", value: boostsSold.toLocaleString(), icon: Rocket, color: "text-purple-600", sub: "Este mes" },
     { label: "Negocios activos", value: activeBusinesses.toLocaleString(), icon: Store, color: "text-cyan-600", sub: "Status ACTIVE" },
     { label: "Renovaciones", value: renewals.toLocaleString(), icon: Repeat, color: "text-orange-600", sub: "Membresías no-primeras" },
-    { label: "Churn Rate", value: `${churnRate}%`, icon: TrendingDown, color: churnRate > 5 ? "text-red-600" : "text-green-600", sub: "Cancelaciones este mes" },
-    { label: "ARPU", value: formatCurrency(arpu), icon: Users, color: "text-sky-600", sub: "Ingreso mensual / negocios activos" },
-    { label: "CLV", value: formatCurrency(clv), icon: DollarSign, color: "text-violet-600", sub: "ARPU × 12 meses" },
+    { label: "Churn Rate", value: `${churnRate}%`, icon: TrendingDown, color: churnRate > 5 ? "text-red-600" : "text-green-600", sub: "Cancelaciones este mes", tip: "Churn (Tasa de cancelación): porcentaje de membresías que se dieron de baja este mes." },
+    { label: "ARPU", value: formatCurrency(arpu), icon: Users, color: "text-sky-600", sub: "Ingreso mensual / negocios activos", tip: "ARPU (Ingreso Promedio por Negocio): ingreso mensual dividido entre los negocios activos." },
+    { label: "CLV", value: formatCurrency(clv), icon: DollarSign, color: "text-violet-600", sub: "ARPU × 12 meses", tip: "CLV (Valor de Vida del Cliente): cuánto deja un negocio en promedio durante su relación (aprox. ARPU × 12)." },
   ]
 
   return (
@@ -133,7 +163,9 @@ export function FinancialClient(props: Props) {
           return (
             <Card key={card.label}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground">{card.label}</CardTitle>
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  <InfoLabel label={card.label} tip={card.tip} />
+                </CardTitle>
                 <Icon className={`size-4 ${card.color}`} />
               </CardHeader>
               <CardContent>
