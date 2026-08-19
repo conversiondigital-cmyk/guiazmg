@@ -503,6 +503,38 @@ export function BusinessRegistrationWizard({
           </div>
         </div>
 
+        {/* Guía de ejemplos: ayuda a ubicarse antes de responder las preguntas. */}
+        <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+          <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            ¿Con cuál te identificas?
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg bg-white p-3 ring-1 ring-gray-100">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-[#006c49]">
+                <Sparkles className="h-4 w-4 shrink-0" /> Emprendedor
+              </p>
+              <p className="mt-1 text-xs font-medium text-gray-600">Vendes por tu cuenta, sin local fijo.</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+                Ej: comida por encargo, repostería, uñas o estética a domicilio, productos hechos a mano,
+                venta por catálogo, plomero o técnico a domicilio.
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-3 ring-1 ring-gray-100">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-[#006c49]">
+                <Store className="h-4 w-4 shrink-0" /> Negocio
+              </p>
+              <p className="mt-1 text-xs font-medium text-gray-600">Atiendes en un local o establecimiento fijo.</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+                Ej: restaurante, taller mecánico, consultorio o clínica, tienda, estética o barbería con local,
+                gimnasio, farmacia, ferretería.
+              </p>
+            </div>
+          </div>
+          <p className="mt-2.5 text-[11px] text-gray-400">
+            ¿No estás seguro? Responde las 3 preguntas y te sugerimos el correcto.
+          </p>
+        </div>
+
         <div className="space-y-7">
           <div>
             <QLabel n={1}>¿Cómo ofreces tus productos o servicios?</QLabel>
