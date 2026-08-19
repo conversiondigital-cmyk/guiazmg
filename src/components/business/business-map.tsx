@@ -16,7 +16,7 @@ function loadGoogleMaps(key: string): Promise<void> {
   if (gmapsPromise) return gmapsPromise
   gmapsPromise = new Promise<void>((resolve, reject) => {
     const s = document.createElement("script")
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX`
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX&loading=async`
     s.async = true
     s.defer = true
     s.onload = () => resolve()
@@ -66,6 +66,9 @@ export function BusinessMap({
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          // "greedy": el zoom/desplazamiento es directo, sin pedir la tecla Ctrl
+          // (en móvil no existe). Consistente con el mapa general y el selector.
+          gestureHandling: "greedy",
         })
         new g.maps.Marker({ position: { lat, lng }, map, title: name })
         mapRef.current = map

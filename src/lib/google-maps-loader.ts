@@ -13,7 +13,7 @@ export function loadGoogleMaps(apiKey: string): Promise<void> {
       const s = document.createElement("script")
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
         apiKey
-      )}&libraries=places&language=es&region=MX`
+      )}&libraries=places&language=es&region=MX&loading=async`
       s.async = true
       s.defer = true
       s.onload = () => resolve()
