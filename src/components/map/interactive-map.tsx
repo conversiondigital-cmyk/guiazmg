@@ -202,7 +202,7 @@ export function InteractiveMap({
     }`
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] min-h-[560px] w-full overflow-hidden bg-gray-100">
+    <div className="relative h-[65vh] min-h-[400px] w-full overflow-hidden bg-gray-100 md:h-[calc(100vh-4rem)] md:min-h-[560px]">
       <div ref={ref} className="absolute inset-0" />
 
       {error && (

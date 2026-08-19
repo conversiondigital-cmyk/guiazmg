@@ -42,13 +42,13 @@ export async function ZonesSection() {
             <Link
               key={`${z.municipality.slug}-${z.slug}`}
               href={`/${z.municipality.slug}/${z.slug}`}
-              className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-green-200 hover:shadow-md"
+              className="group flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:border-green-200 hover:shadow-md sm:gap-3 sm:p-4"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600 sm:h-9 sm:w-9">
                 <MapPin className="h-4 w-4" />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-gray-900 group-hover:text-green-700">
+                <span className="block text-sm font-semibold leading-tight text-gray-900 line-clamp-2 group-hover:text-green-700">
                   {z.name}
                 </span>
                 <span className="block truncate text-xs text-gray-400">{z.municipality.name}</span>
