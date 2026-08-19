@@ -370,14 +370,24 @@ export function PostForm({ initialData, isAdmin = false }: PostFormProps) {
         {/* Category */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
           <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Categoría</p>
-          <select
+          {/* Input con datalist: sugiere las categorías existentes y permite
+              escribir una NUEVA ahí mismo (se guarda como la categoría del post). */}
+          <input
+            type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            list="blog-categories"
+            placeholder="Elige una o escribe una nueva…"
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-          >
-            <option value="">Sin categoría</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          />
+          <datalist id="blog-categories">
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <p className="mt-1 text-[11px] text-gray-400">
+            Elige una existente o escribe una nueva para crearla.
+          </p>
         </div>
 
         {/* Tags */}
