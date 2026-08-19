@@ -28,7 +28,7 @@ function Card({ item, onOpen }: { item: CatalogItem; onOpen: () => void }) {
       onClick={onOpen}
       className="group overflow-hidden rounded-lg border border-gray-200 text-left transition-all hover:border-[#006c49]/40 hover:shadow-md"
     >
-      <div className="relative aspect-square bg-gray-50">
+      <div className="relative aspect-[4/3] bg-gray-50 sm:aspect-square">
         {item.isBoosted && (
           <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-amber-950 shadow">
             Destacado
