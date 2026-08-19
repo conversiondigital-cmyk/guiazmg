@@ -2,8 +2,9 @@
 
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
+import { adminPageTitle } from "@/lib/admin-page-title"
 import {
   Menu,
   Search,
@@ -31,9 +32,11 @@ interface AdminHeaderProps {
   onMenuClick?: () => void
 }
 
-export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
+export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const { data: session } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
+  const pageTitle = adminPageTitle(pathname)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -67,23 +70,25 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo */}
-          <Link href="/admin" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600">
-              <MapPin className="h-4 w-4 fill-current text-white" />
-            </div>
-            <div className="hidden sm:block">
-              <span className="text-sm font-bold">Guía ZMG</span>
-              <div className="text-[10px] text-slate-500">Panel Admin</div>
-            </div>
+          {/* Botón inicio + página actual. Antes repetía la marca "Guía ZMG / Panel
+              Admin", que YA está en el sidebar → se veía descuadrado. Ahora muestra
+              dónde estás, con el mismo patrón (eyebrow + título) que el encabezado
+              lateral, para que el top se lea como una sola barra alineada. */}
+          <Link
+            href="/admin"
+            aria-label="Ir al resumen"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 transition-opacity hover:opacity-90"
+          >
+            <MapPin className="h-4 w-4 fill-current text-white" />
           </Link>
-
-          {/* Title/Breadcrumb */}
-          {title && (
-            <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500 ml-4 pl-4 border-l border-slate-200">
-              <span>{title}</span>
-            </div>
-          )}
+          <div className="min-w-0">
+            <p className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 sm:block">
+              Panel Admin
+            </p>
+            <h1 className="truncate text-sm font-bold leading-tight text-slate-900 sm:text-base">
+              {pageTitle}
+            </h1>
+          </div>
         </div>
 
         {/* Middle Section: Search */}
