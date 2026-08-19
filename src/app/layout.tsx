@@ -8,6 +8,7 @@ import { SystemDialogHost } from "@/components/ui/system-dialog"
 import { CookieConsent } from "@/components/legal/cookie-consent"
 import { Analytics } from "@vercel/analytics/next"
 import { TrafficBeacon } from "@/components/analytics/traffic-beacon"
+import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 import { validateEnv, getPublicAppUrl } from "@/lib/env"
 import { getSeoSettings } from "@/lib/seo/settings"
 
@@ -93,6 +94,7 @@ export default function RootLayout({
         </SessionProvider>
         <Analytics />
         <TrafficBeacon />
+        <GoogleAnalytics />
       </body>
     </html>
   )
