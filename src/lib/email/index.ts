@@ -28,9 +28,10 @@ const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial
 const esc = (s = "") =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
-// Botón principal (table-based para que Outlook respete el fondo y el radio).
+// Botón principal, CENTRADO (tabla externa full-width + celda centrada, para que
+// Outlook/Gmail lo centren de forma fiable; la interna respeta fondo y radio).
 function emailButton(url: string, label: string): string {
-  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 4px"><tr><td align="center" bgcolor="${BRAND.greenBtn}" style="border-radius:10px"><a href="${url || "#"}" target="_blank" style="display:inline-block;padding:14px 32px;font:700 15px ${FONT};color:#ffffff;text-decoration:none;border-radius:10px">${label}</a></td></tr></table>`
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:16px 0 4px"><tr><td align="center"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" bgcolor="${BRAND.greenBtn}" style="border-radius:10px"><a href="${url || "#"}" target="_blank" style="display:inline-block;padding:14px 34px;font:700 15px ${FONT};color:#ffffff;text-decoration:none;border-radius:10px">${label}</a></td></tr></table></td></tr></table>`
 }
 
 interface EmailContent {
@@ -63,8 +64,8 @@ function emailLayout(c: EmailContent): string {
       ${c.cta ? emailButton(c.cta.url, c.cta.label) : ""}
       ${c.note ? `<p style="margin:14px 0 0;font:400 13px/1.55 ${FONT};color:${BRAND.muted}">${c.note}</p>` : ""}
     </td></tr>
-    <!-- Footer -->
-    <tr><td style="padding:22px 32px 26px;border-top:1px solid ${BRAND.page}">
+    <!-- Footer (centrado) -->
+    <tr><td align="center" style="padding:22px 32px 26px;border-top:1px solid ${BRAND.page};text-align:center">
       <p style="margin:0 0 10px;font:400 14px/1.6 ${FONT};color:${BRAND.text}">
         <strong style="color:${BRAND.ink}">Guía ZMG</strong> — el directorio de negocios, servicios y emprendedores de la Zona Metropolitana de Guadalajara.
       </p>
