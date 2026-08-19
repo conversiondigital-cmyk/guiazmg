@@ -7,6 +7,7 @@ import { SearchFilters } from "@/components/search/search-filters"
 import { SearchBarSection } from "@/components/search/search-bar-section"
 import { search, type SearchParams } from "@/lib/search/search-engine"
 import { getCategories, getMunicipalities } from "@/lib/queries"
+import { logSearchQuery } from "@/lib/analytics/search-log"
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -54,6 +55,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     getCategories(),
     getMunicipalities(),
   ])
+
+  // Registra la búsqueda para el panel de analítica. Antes solo lo hacía /api/search
+  // (que la UI no usa), por eso "Top búsquedas" salía vacío. Solo 1ª página + término.
+  if (params.q?.trim() && (searchOpts.page ?? 1) === 1) {
+    await logSearchQuery({
+      query: params.q,
+      municipality: params.municipio,
+      neighborhood: params.colonia,
+      resultsCount: results.total,
+    })
+  }
 
   return (
     <>
