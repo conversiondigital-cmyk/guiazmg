@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import { auth } from "@/lib/auth"
+import { getSetting } from "@/lib/settings"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -32,10 +33,16 @@ export default async function AdminEstadoPage() {
     dbDetail = "No se pudo conectar a la base de datos"
   }
 
-  // Nota: los nombres de las variables deben coincidir con los que usa el
-  // código real (payments usa MERCADO_PAGO_*, el storage usa S3_*), o el
-  // estado marcaría "Atención" en falso aunque esté bien configurado.
-  const mpToken = process.env.MERCADO_PAGO_ACCESS_TOKEN
+  // Las llaves de pago viven en SystemSetting (Admin → Config → Pagos), NO en env.
+  // Se leen del MISMO lugar que el código real (getStripe / checkout), o el estado
+  // marcaría "Atención" en falso aunque esté bien configurado.
+  const stripeKey = (await getSetting("stripe_api_key", "STRIPE_SECRET_KEY")).trim()
+  const mpToken = (await getSetting("mercado_pago_access_token", "MERCADO_PAGO_ACCESS_TOKEN")).trim()
+  const stripeMode = stripeKey.startsWith("sk_live")
+    ? "modo LIVE (cobros reales)"
+    : stripeKey.startsWith("sk_test")
+      ? "modo prueba"
+      : "configurada"
   const storageBucket = process.env.S3_BUCKET
   const maintenanceOn = process.env.MAINTENANCE_MODE === "true"
 
@@ -52,20 +59,20 @@ export default async function AdminEstadoPage() {
       detail: "Sesión activa y válida",
     },
     {
-      label: "Mercado Pago",
-      status: mpToken ? "ok" : "warn",
-      detail: mpToken
-        ? "Access token configurado"
-        : "Access token no configurado — los pagos no funcionarán",
+      label: "Stripe",
+      status: stripeKey ? "ok" : "warn",
+      detail: stripeKey
+        ? `Secret key configurada — ${stripeMode}`
+        : "No configurado — necesario para cobrar (Admin → Config → Pagos)",
       href: "/admin/configuracion/pagos",
       actionLabel: "Configurar pagos",
     },
     {
-      label: "Stripe",
-      status: process.env.STRIPE_SECRET_KEY ? "ok" : "warn",
-      detail: process.env.STRIPE_SECRET_KEY
-        ? "Secret key configurada"
-        : "No configurado (opcional)",
+      label: "Mercado Pago",
+      status: mpToken ? "ok" : "warn",
+      detail: mpToken
+        ? "Access token configurado"
+        : "No configurado — el cobro activo es Stripe (Mercado Pago está deshabilitado)",
       href: "/admin/configuracion/pagos",
       actionLabel: "Configurar pagos",
     },

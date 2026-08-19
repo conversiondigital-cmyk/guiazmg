@@ -183,16 +183,49 @@ export default async function AdminAnalyticsPage() {
     const s = Math.round(sec)
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
   }
-  const ga4HasData = !!ga4 && (ga4.totals.sessions > 0 || ga4.totals.pageViews > 0 || ga4.topPages.length > 0)
-  const ga4Kpis = ga4
+  const ga4HasData = !!ga4 && (ga4.totals.sessions > 0 || ga4.totals.activeUsers > 0 || ga4.countries.length > 0)
+  const ga4Kpis: { label: string; value: string; trend?: number | null }[] = ga4
     ? [
-        { label: "Usuarios activos", value: ga4.totals.activeUsers.toLocaleString() },
+        { label: "Usuarios activos", value: ga4.totals.activeUsers.toLocaleString(), trend: ga4.usersTrendPct },
         { label: "Sesiones", value: ga4.totals.sessions.toLocaleString() },
         { label: "Vistas de página", value: ga4.totals.pageViews.toLocaleString() },
         { label: "Interacción", value: `${(ga4.totals.engagementRate * 100).toFixed(0)}%` },
         { label: "Duración media", value: fmtDuration(ga4.totals.avgSessionSec) },
       ]
     : []
+  const ga4Breakdowns = ga4
+    ? [
+        { title: "Países", items: ga4.countries },
+        { title: "Dispositivos", items: ga4.devices },
+        { title: "Sistemas operativos", items: ga4.os },
+        { title: "Navegadores", items: ga4.browsers },
+      ]
+    : []
+
+  // ── Resumen de tráfico estilo panel (datos propios: page_visits) ─────────────
+  const sixtyDaysAgo = new Date(thirtyDaysAgo)
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30)
+  const [pageViews30, pageViewsPrev30, dailyPvRows] = await Promise.all([
+    prisma.pageVisit.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.pageVisit.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
+    prisma.$queryRaw<{ date: Date; count: number }[]>`
+      SELECT DATE("createdAt") as date, COUNT(*)::int as count
+      FROM page_visits WHERE "createdAt" >= ${thirtyDaysAgo}
+      GROUP BY DATE("createdAt") ORDER BY date
+    `,
+  ])
+  const pvTrend = pageViewsPrev30 > 0 ? Math.round(((pageViews30 - pageViewsPrev30) / pageViewsPrev30) * 100) : null
+  const pvSeries = fillDailyData(dailyPvRows as { date: Date; count: number }[], 30)
+  const pvMax = Math.max(...pvSeries.map((d) => d.count), 1)
+  // Geometría de la gráfica de área (SVG con viewBox; escala responsiva).
+  const CW = 720, CH = 130, CP = 6
+  const pvStepX = (CW - CP * 2) / Math.max(pvSeries.length - 1, 1)
+  const pvPts = pvSeries.map((d, i) => [CP + i * pvStepX, CH - CP - (d.count / pvMax) * (CH - CP * 2)] as const)
+  const pvLine = pvPts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")
+  const pvArea = `${pvLine} L${pvPts[pvPts.length - 1][0].toFixed(1)} ${CH - CP} L${pvPts[0][0].toFixed(1)} ${CH - CP} Z`
+  const chOrganic = channelCounts.get("ORGANIC") || 0
+  const chDirect = channelCounts.get("DIRECT") || 0
+  const chSocial = channelCounts.get("SOCIAL") || 0
 
   const monthlyRevenue = Number(approvedPaymentsAgg._sum.amount ?? 0)
   const visitsCount = totalViews._sum.views ?? 0
@@ -227,6 +260,92 @@ export default async function AdminAnalyticsPage() {
   return (
     <div className="space-y-8 p-6 lg:p-8">
       <h1 className="text-2xl font-bold tracking-tight">Executive Analytics</h1>
+
+      {/* Resumen de tráfico (estilo panel) — métricas grandes + área + páginas/referencias */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Resumen de tráfico (30 días)</h3>
+          </div>
+          <span className="text-[10px] text-muted-foreground">Datos propios del sitio · GA4 amplía esto al conectarlo</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight">{pageViews30.toLocaleString()}</p>
+              {pvTrend !== null && (
+                <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${pvTrend >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                  {pvTrend >= 0 ? "+" : ""}{pvTrend}%
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">Vistas de página</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold tracking-tight">{chOrganic.toLocaleString()}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Desde buscadores</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold tracking-tight">{chSocial.toLocaleString()}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Desde redes</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold tracking-tight">{chDirect.toLocaleString()}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Directo</p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none" className="h-32 w-full" role="img" aria-label="Vistas de página por día">
+            <defs>
+              <linearGradient id="pvGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d={pvArea} fill="url(#pvGrad)" />
+            <path d={pvLine} fill="none" stroke="#2563EB" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+            <span>{pvSeries[0]?.date.slice(5)}</span>
+            <span>Total: {pageViews30.toLocaleString()} vistas</span>
+            <span>{pvSeries[pvSeries.length - 1]?.date.slice(5)}</span>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-6 lg:grid-cols-2">
+          <div>
+            <h4 className="mb-2 text-xs font-medium text-muted-foreground">Páginas</h4>
+            <div className="space-y-0.5">
+              {(topLandings as { path: string; _count: { _all: number } }[]).slice(0, 6).map((p) => (
+                <div key={p.path} className="flex items-center justify-between rounded px-2 py-1.5 text-sm odd:bg-muted/30">
+                  <span className="truncate font-medium">{p.path}</span>
+                  <span className="ml-2 shrink-0 font-mono text-xs text-muted-foreground">{p._count._all}</span>
+                </div>
+              ))}
+              {(topLandings as unknown[]).length === 0 && (
+                <p className="py-4 text-center text-xs text-muted-foreground">Sin datos aún</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <h4 className="mb-2 text-xs font-medium text-muted-foreground">Referencias / Fuentes</h4>
+            <div className="space-y-0.5">
+              {(topSources as { source: string | null; _count: { _all: number } }[]).slice(0, 6).map((s) => (
+                <div key={s.source} className="flex items-center justify-between rounded px-2 py-1.5 text-sm odd:bg-muted/30">
+                  <span className="truncate font-medium">{s.source}</span>
+                  <span className="ml-2 shrink-0 font-mono text-xs text-muted-foreground">{s._count._all}</span>
+                </div>
+              ))}
+              {(topSources as unknown[]).length === 0 && (
+                <p className="py-4 text-center text-xs text-muted-foreground">Directo (sin referencias aún)</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Funnel */}
       <div className="rounded-xl border bg-card p-5">
@@ -550,60 +669,38 @@ export default async function AdminAnalyticsPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {ga4Kpis.map((k) => (
                 <div key={k.label} className="rounded-lg bg-muted/40 p-3 text-center ring-1 ring-foreground/5">
-                  <p className="text-lg font-bold tracking-tight">{k.value}</p>
+                  <p className="flex items-center justify-center gap-1.5 text-lg font-bold tracking-tight">
+                    {k.value}
+                    {typeof k.trend === "number" && (
+                      <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${k.trend >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                        {k.trend >= 0 ? "+" : ""}{k.trend}%
+                      </span>
+                    )}
+                  </p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground">{k.label}</p>
                 </div>
               ))}
             </div>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <h4 className="text-xs font-medium text-muted-foreground">Páginas más vistas</h4>
+            {/* Desgloses estilo panel: barra clara detrás del texto (sin fondo negro). */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {ga4Breakdowns.map((b) => (
+                <div key={b.title}>
+                  <h4 className="mb-2 text-xs font-medium text-muted-foreground">{b.title}</h4>
+                  <div className="space-y-0.5">
+                    {b.items.length === 0 ? (
+                      <p className="py-3 text-center text-xs text-muted-foreground">Sin datos</p>
+                    ) : (
+                      b.items.map((it) => (
+                        <div key={it.label} className="relative flex items-center justify-between overflow-hidden rounded px-2 py-1.5 text-sm">
+                          <div className="absolute inset-y-0 left-0 rounded bg-primary/10" style={{ width: `${Math.max(it.pct, 3)}%` }} />
+                          <span className="relative z-10 truncate font-medium">{it.label}</span>
+                          <span className="relative z-10 ml-2 shrink-0 text-xs text-muted-foreground">{it.pct}%</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-xs text-muted-foreground">
-                        <th className="pb-2 pr-4">Página</th>
-                        <th className="pb-2 text-right">Vistas</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ga4.topPages.map((p) => (
-                        <tr key={p.path} className="border-b last:border-0">
-                          <td className="py-2 pr-4 font-medium">{p.path}</td>
-                          <td className="py-2 text-right font-mono">{p.views.toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                  <h4 className="text-xs font-medium text-muted-foreground">Canales de adquisición</h4>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-xs text-muted-foreground">
-                        <th className="pb-2 pr-4">Canal</th>
-                        <th className="pb-2 text-right">Sesiones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ga4.channels.map((c) => (
-                        <tr key={c.channel} className="border-b last:border-0">
-                          <td className="py-2 pr-4 font-medium">{c.channel}</td>
-                          <td className="py-2 text-right font-mono">{c.sessions.toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
