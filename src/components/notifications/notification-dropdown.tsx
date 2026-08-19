@@ -15,26 +15,27 @@ import {
 } from "@/lib/icons"
 import { timeAgo } from "@/lib/utils"
 
-// El header monta el timbre en dos slots (escritorio y móvil): ambos disparaban el
-// mismo fetch de conteo al montar. Se comparte la petición en vuelo (y se cachea 5s)
-// para que solo salga una. Se invalida al marcar como leído.
-let unreadInflight: Promise<number> | null = null
-let unreadCache: { at: number; count: number } | null = null
-function fetchUnreadCount(): Promise<number> {
-  if (unreadInflight) return unreadInflight
-  if (unreadCache && Date.now() - unreadCache.at < 5000) return Promise.resolve(unreadCache.count)
-  unreadInflight = fetch("/api/notifications?unread=true&limit=1")
+// El header monta el timbre en dos slots (escritorio y móvil). Se comparte la
+// petición en vuelo y se cachea 5s para que ambos instancien una sola. Se precarga
+// la LISTA (no solo el conteo) al montar → el menú abre al instante, sin esperar el
+// fetch. Se invalida al marcar como leído.
+let listInflight: Promise<{ list: Notification[]; count: number }> | null = null
+let listCache: { at: number; list: Notification[]; count: number } | null = null
+function fetchNotifications(): Promise<{ list: Notification[]; count: number }> {
+  if (listInflight) return listInflight
+  if (listCache && Date.now() - listCache.at < 5000) return Promise.resolve(listCache)
+  listInflight = fetch("/api/notifications?unread=true&limit=5")
     .then((r) => r.json())
     .then((d) => {
-      const c = d.unreadCount || 0
-      unreadCache = { at: Date.now(), count: c }
-      return c
+      const res = { list: (d.data || []) as Notification[], count: d.unreadCount || 0 }
+      listCache = { at: Date.now(), ...res }
+      return res
     })
-    .catch(() => 0)
+    .catch(() => ({ list: [] as Notification[], count: 0 }))
     .finally(() => {
-      unreadInflight = null
+      listInflight = null
     })
-  return unreadInflight
+  return listInflight
 }
 
 const typeIcons: Record<string, typeof Bell> = {
@@ -99,12 +100,10 @@ export function NotificationDropdown() {
 
   useEffect(() => {
     if (open) {
-      fetch("/api/notifications?unread=true&limit=5")
-        .then((r) => r.json())
-        .then((data) => {
-          setNotifications(data.data || [])
-          setUnreadCount(data.unreadCount || 0)
-        })
+      fetchNotifications().then(({ list, count }) => {
+        setNotifications(list)
+        setUnreadCount(count)
+      })
     }
   }, [open])
 
@@ -128,7 +127,7 @@ export function NotificationDropdown() {
     })
     setNotifications([])
     setUnreadCount(0)
-    unreadCache = null // el conteo compartido quedó obsoleto
+    listCache = null // la lista/conteo compartidos quedaron obsoletos
     router.refresh()
   }
 
@@ -140,7 +139,7 @@ export function NotificationDropdown() {
     })
     setNotifications((prev) => prev.filter((n) => n.id !== id))
     setUnreadCount((prev) => Math.max(0, prev - 1))
-    unreadCache = null // el conteo compartido quedó obsoleto
+    listCache = null // la lista/conteo compartidos quedaron obsoletos
     router.refresh()
   }
 
@@ -155,7 +154,11 @@ export function NotificationDropdown() {
 
   useEffect(() => {
     injectBellCss()
-    fetchUnreadCount().then(setUnreadCount)
+    // Precarga la lista al montar → el menú abre instantáneo (ya trae los datos).
+    fetchNotifications().then(({ list, count }) => {
+      setNotifications(list)
+      setUnreadCount(count)
+    })
   }, [])
 
   return (

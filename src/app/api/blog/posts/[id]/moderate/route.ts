@@ -9,10 +9,10 @@ import { auth } from "@/lib/auth"
 import { z } from "zod"
 
 /** Fire-and-forget notification helper */
-async function sendNotification(userId: string, title: string, message?: string) {
+async function sendNotification(userId: string, title: string, message?: string, link?: string) {
   try {
     await (prisma as any).notification.create({
-      data: { userId, title, message: message ?? null, type: "SYSTEM", isRead: false },
+      data: { userId, title, message: message ?? null, link: link ?? null, type: "SYSTEM", isRead: false },
     })
   } catch { /* non-critical */ }
 }
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const post = await prisma.post.findUnique({
     where: { id },
-    select: { status: true, authorId: true, title: true },
+    select: { status: true, authorId: true, title: true, slug: true },
   })
   if (!post) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
@@ -117,7 +117,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     void sendNotification(
       post.authorId,
       "Artículo aprobado y publicado",
-      `Tu artículo "${post.title}" fue aprobado y ya está visible en el blog.`
+      `Tu artículo "${post.title}" fue aprobado y ya está visible en el blog.`,
+      `/blog/${post.slug}`,
     )
   } else if (action === "reject") {
     void sendNotification(
