@@ -1,17 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" fill="none" role="img" aria-label="Deja tu reseña">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ecfdf5"/>
-      <stop offset="1" stop-color="#d1fae5"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="380" rx="28" fill="url(#bg)"/>
-  <circle cx="720" cy="40" r="140" fill="#10b981" opacity="0.10"/>
-  <circle cx="90" cy="360" r="110" fill="#006c49" opacity="0.07"/>
-  <text x="64" y="96" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="26" font-weight="800" fill="#006c49" opacity="0.55">Paso 5</text>
-  <rect x="64" y="126" width="128" height="128" rx="30" fill="#ffffff"/>
-  <g transform="translate(94,156) scale(2.833)" stroke="#006c49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></g>
-  <text x="228" y="196" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="44" font-weight="800" fill="#0f172a">Deja tu reseña</text>
-  <text x="230" y="238" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="21" font-weight="500" fill="#475569">Califica y opina para la comunidad</text>
-  <text x="640" y="352" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="700" fill="#006c49" opacity="0.5">Guía ZMG</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 340" fill="none" role="img" aria-label="Deja tu reseña">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4fdf8"/><stop offset="1" stop-color="#c9efdd"/></linearGradient>
+<linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#effaf3"/></linearGradient>
+<linearGradient id="ico" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12a66b"/><stop offset="1" stop-color="#006c49"/></linearGradient>
+<linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#12a66b"/><stop offset="1" stop-color="#5eddad"/></linearGradient>
+<filter id="sh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#065f46" flood-opacity="0.16"/></filter>
+<radialGradient id="glow" cx="0.82" cy="0.1" r="0.7"><stop offset="0" stop-color="#5eddad" stop-opacity="0.45"/><stop offset="1" stop-color="#5eddad" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="820" height="340" rx="26" fill="url(#bg)"/>
+<rect width="820" height="340" rx="26" fill="url(#glow)"/>
+<circle cx="748" cy="44" r="150" fill="#12a66b" opacity="0.10"/>
+<circle cx="78" cy="322" r="120" fill="#006c49" opacity="0.06"/>
+<g fill="#12a66b" opacity="0.14"><circle cx="632" cy="232" r="3.4"/><circle cx="658" cy="232" r="3.4"/><circle cx="684" cy="232" r="3.4"/><circle cx="710" cy="232" r="3.4"/><circle cx="632" cy="258" r="3.4"/><circle cx="658" cy="258" r="3.4"/><circle cx="684" cy="258" r="3.4"/><circle cx="710" cy="258" r="3.4"/><circle cx="632" cy="284" r="3.4"/><circle cx="658" cy="284" r="3.4"/><circle cx="684" cy="284" r="3.4"/><circle cx="710" cy="284" r="3.4"/></g>
+<rect x="60" y="100" width="140" height="140" rx="36" fill="url(#tile)" filter="url(#sh)"/>
+<rect x="60" y="100" width="140" height="140" rx="36" fill="none" stroke="#12a66b" stroke-opacity="0.12" stroke-width="1.5"/>
+<g transform="translate(94,134) scale(3)" stroke="url(#ico)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></g>
+<rect x="246" y="104" width="128" height="40" rx="20" fill="#006c49"/>
+<text x="310" y="130" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="19" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">PASO 5</text>
+<text x="246" y="196" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="46" font-weight="800" fill="#0b3b2b">Deja tu reseña</text>
+<rect x="248" y="214" width="76" height="7" rx="3.5" fill="url(#accent)"/>
+<text x="246" y="256" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="22" font-weight="500" fill="#3f6b58">Califica y opina para la comunidad</text>
+<text x="758" y="316" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="19" font-weight="800" fill="#006c49" opacity="0.45" text-anchor="end">Guía ZMG</text>
 </svg>
