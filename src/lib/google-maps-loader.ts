@@ -6,17 +6,29 @@ let mapsPromise: Promise<void> | null = null
 
 export function loadGoogleMaps(apiKey: string): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"))
-  const w = window as unknown as { google?: { maps?: unknown } }
-  if (w.google?.maps) return Promise.resolve()
+  const w = window as unknown as {
+    google?: { maps?: { Map?: unknown; importLibrary?: (n: string) => Promise<unknown> } }
+  }
+  if (w.google?.maps?.Map) return Promise.resolve()
   if (!mapsPromise) {
     mapsPromise = new Promise<void>((resolve, reject) => {
       const s = document.createElement("script")
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
         apiKey
-      )}&libraries=places&language=es&region=MX`
+      )}&libraries=places&language=es&region=MX&loading=async`
       s.async = true
-      s.defer = true
-      s.onload = () => resolve()
+      s.onload = () => {
+        // loading=async: esperar a que "maps" y "places" estén listas (este loader
+        // lo comparten el selector de pin y el autocompletado de direcciones).
+        const g = w.google
+        if (g?.maps?.importLibrary) {
+          Promise.all([g.maps.importLibrary("maps"), g.maps.importLibrary("places")])
+            .then(() => resolve())
+            .catch(() => resolve())
+        } else {
+          resolve()
+        }
+      }
       s.onerror = () => reject(new Error("No se pudo cargar Google Maps. Revisa la API key."))
       document.head.appendChild(s)
     })

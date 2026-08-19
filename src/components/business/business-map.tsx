@@ -11,15 +11,26 @@ import { trackEvent } from "@/lib/analytics/track"
 let gmapsPromise: Promise<void> | null = null
 function loadGoogleMaps(key: string): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"))
-  const w = window as unknown as { google?: { maps?: unknown } }
-  if (w.google?.maps) return Promise.resolve()
+  const w = window as unknown as {
+    google?: { maps?: { Map?: unknown; importLibrary?: (n: string) => Promise<unknown> } }
+  }
+  if (w.google?.maps?.Map) return Promise.resolve()
   if (gmapsPromise) return gmapsPromise
   gmapsPromise = new Promise<void>((resolve, reject) => {
     const s = document.createElement("script")
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX`
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX&loading=async`
     s.async = true
-    s.defer = true
-    s.onload = () => resolve()
+    s.onload = () => {
+      // Con loading=async la clase Map carga bajo demanda: se espera a que la
+      // librería "maps" esté lista ANTES de resolver, para que `new google.maps.Map`
+      // funcione (resolver en onload directo daría "Map is not a constructor").
+      const g = w.google
+      if (g?.maps?.importLibrary) {
+        g.maps.importLibrary("maps").then(() => resolve()).catch(() => resolve())
+      } else {
+        resolve()
+      }
+    }
     s.onerror = () => {
       gmapsPromise = null
       reject(new Error("No se pudo cargar Google Maps"))
