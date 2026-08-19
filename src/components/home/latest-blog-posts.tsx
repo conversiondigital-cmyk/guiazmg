@@ -10,7 +10,7 @@ interface Post {
   category: string | null
   readTimeMinutes: number
   publishedAt: Date | null
-  author: { name: string | null }
+  author: { name: string | null; role?: string | null }
 }
 
 interface LatestBlogPostsProps {
@@ -79,7 +79,7 @@ export function LatestBlogPosts({ posts }: LatestBlogPostsProps) {
                     <div className="flex items-center gap-2">
                       {post.author.name && (
                         <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />{post.author.name}
+                          <User className="h-3 w-3" />{post.author.role === "ADMIN" ? "Equipo Guía ZMG" : post.author.name}
                         </span>
                       )}
                     </div>

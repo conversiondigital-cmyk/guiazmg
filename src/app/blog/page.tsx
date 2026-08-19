@@ -56,7 +56,7 @@ export default async function BlogPage({ searchParams }: Props) {
           id: true, title: true, slug: true, excerpt: true,
           coverImageUrl: true, category: true, tags: true,
           readTimeMinutes: true, publishedAt: true, isFeatured: true,
-          author: { select: { name: true, image: true } },
+          author: { select: { name: true, image: true, role: true } },
         },
       }),
       prisma.post.count({ where }),
@@ -218,8 +218,8 @@ export default async function BlogPage({ searchParams }: Props) {
                       )}
                       <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
                         <div className="flex items-center gap-3">
-                          {post.author?.name && (
-                            <span className="flex items-center gap-1"><User className="h-3 w-3" />{post.author.name}</span>
+                          {post.author && (
+                            <span className="flex items-center gap-1"><User className="h-3 w-3" />{post.author.role === "ADMIN" ? "Equipo Guía ZMG" : post.author.name}</span>
                           )}
                           {post.publishedAt && (
                             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(new Date(post.publishedAt))}</span>

@@ -48,10 +48,14 @@ export default async function BlogPostPage({ params }: Props) {
 
   const post = await prisma.post.findUnique({
     where: { slug, status: "PUBLISHED" },
-    include: { author: { select: { id: true, name: true, image: true } } },
+    include: { author: { select: { id: true, name: true, image: true, role: true } } },
   })
 
   if (!post) notFound()
+
+  // Los artículos publicados por un admin salen firmados como "Equipo Guía ZMG",
+  // no con el nombre personal de la cuenta.
+  const authorName = post.author.role === "ADMIN" ? "Equipo Guía ZMG" : post.author.name
 
   const related = await prisma.post.findMany({
     where: { status: "PUBLISHED", category: post.category ?? undefined, id: { not: post.id } },
@@ -68,7 +72,10 @@ export default async function BlogPostPage({ params }: Props) {
     image: post.coverImageUrl,
     datePublished: post.publishedAt?.toISOString(),
     dateModified: post.updatedAt.toISOString(),
-    author: { "@type": "Person", name: post.author.name },
+    author:
+      post.author.role === "ADMIN"
+        ? { "@type": "Organization", name: "Equipo Guía ZMG" }
+        : { "@type": "Person", name: post.author.name },
     publisher: { "@type": "Organization", name: "Guía ZMG", logo: { "@type": "ImageObject", url: "/favicon.svg" } },
   })
 
@@ -96,10 +103,10 @@ export default async function BlogPostPage({ params }: Props) {
               <p className="mt-3 text-lg text-green-200 leading-relaxed max-w-3xl">{post.excerpt}</p>
             )}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-green-300">
-              {post.author.name && (
+              {authorName && (
                 <span className="flex items-center gap-1.5">
                   <User className="h-4 w-4" />
-                  {post.author.name}
+                  {authorName}
                 </span>
               )}
               {post.publishedAt && (
