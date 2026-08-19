@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { User } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Mi cuenta | Editor — Guía ZMG" }
+export const metadata: Metadata = { title: "Mi cuenta · Editor" }
 
 export default async function EditorCuentaPage() {
   const session = await auth()

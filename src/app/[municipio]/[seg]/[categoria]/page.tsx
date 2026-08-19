@@ -57,11 +57,11 @@ export async function generateMetadata({ params }: Props) {
       ...(ctx.isZone ? { zoneId: ctx.placeId } : { neighborhoodId: ctx.placeId }),
     })
     const noindex = !ctx.isSeoIndexable || count < MIN_INDEXABLE_PROFILES
-    const title = `${ctx.category.name} en ${ctx.placeName}, ${ctx.municipality.name} | Guía ZMG`
+    const title = `${ctx.category.name} en ${ctx.placeName}, ${ctx.municipality.name}`
     const description = `Encuentra ${ctx.category.name.toLowerCase()} cerca de ${ctx.placeName}, ${ctx.municipality.name}. Compara opciones, servicios, promociones y contacto por WhatsApp.`
     return generateMeta({ title, description, canonical: `${BASE_URL}/${municipio}/${seg}/${categoria}`, noindex })
   } catch {
-    return { title: "Guía ZMG" }
+    return {}
   }
 }
 

@@ -10,7 +10,7 @@ import { NotificationPreferencesForm } from "@/components/dashboard/notification
 import { PersonalInfoForm } from "@/components/dashboard/personal-info-form"
 import { DeleteAccountSection } from "@/components/dashboard/delete-account-section"
 
-export const metadata: Metadata = { title: "Configuración | Guía ZMG" }
+export const metadata: Metadata = { title: "Configuración" }
 
 export default async function ConfiguracionPage() {
   const session = await auth()

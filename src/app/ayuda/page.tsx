@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight, Search, MessageSquare } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Ayuda | Guía ZMG",
+  title: "Ayuda",
   description: "Centro de ayuda y soporte para Guía ZMG. Resuelve tus dudas aquí.",
 }
 

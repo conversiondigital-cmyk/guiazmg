@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Tag, Clock, Gift, ArrowRight } from "@/lib/icons"
 
 export const metadata: Metadata = {
-  title: "Promociones | Guía ZMG",
+  title: "Promociones",
   description: "Descubre las promociones y ofertas especiales de negocios registrados en Guía ZMG.",
 }
 

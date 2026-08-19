@@ -3,7 +3,7 @@ import { LegalPageShell } from "@/components/legal/legal-page-shell"
 import { LegalMarkdown } from "@/components/legal/legal-markdown"
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones | Guía ZMG",
+  title: "Términos y Condiciones",
   description: "Términos y condiciones de uso de Guía ZMG.",
 }
 

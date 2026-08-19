@@ -20,12 +20,12 @@ export async function generateMetadata({ params }: Props) {
   try {
     const municipio = await prisma.municipality.findUnique({ where: { slug: munSlug } })
     if (!municipio) return { title: "No encontrado" }
-    const title = `Perfiles en ${municipio.name} | Guía ZMG`
+    const title = `Perfiles en ${municipio.name}`
     const description = `Encuentra los mejores perfiles y servicios en ${municipio.name}, Jalisco. Directorio completo con teléfonos, direcciones y reseñas.`
     return { title, description, openGraph: { title, description } }
   } catch {
     // BD no disponible (p. ej. durante el build): no rompas, usa título genérico.
-    return { title: "Guía ZMG" }
+    return {}
   }
 }
 

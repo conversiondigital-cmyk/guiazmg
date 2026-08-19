@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/footer"
 import { Sparkles, Building2, Check, ChevronLeft } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Emprendedor o Negocio | Guía ZMG",
+  title: "Emprendedor o Negocio",
   description: "Elige el tipo de perfil comercial: Emprendedor o Negocio.",
 }
 

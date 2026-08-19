@@ -6,7 +6,7 @@ import Link from "next/link"
 import { MessageCircle, Plus } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Mis solicitudes | Guía ZMG" }
+export const metadata: Metadata = { title: "Mis solicitudes" }
 
 export default async function SolicitudesPage() {
   const session = await auth()

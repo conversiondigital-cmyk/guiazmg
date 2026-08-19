@@ -8,7 +8,7 @@ import { SearchResults } from "@/components/search/search-results"
 import { getProfilesByType } from "@/lib/queries"
 
 export const metadata: Metadata = {
-  title: "Negocios en Guadalajara | Guía ZMG",
+  title: "Negocios en Guadalajara",
   description:
     "Directorio de negocios y servicios profesionales de la Zona Metropolitana de Guadalajara: talleres, clínicas, restaurantes, cerrajeros y más.",
 }

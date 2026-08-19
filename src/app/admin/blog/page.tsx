@@ -12,7 +12,7 @@ import {
 import { BlogModerationClient } from "./blog-moderation-client"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Gestión de Blog | Admin Guía ZMG" }
+export const metadata: Metadata = { title: "Gestión de Blog · Admin" }
 
 export default async function AdminBlogPage({
   searchParams,

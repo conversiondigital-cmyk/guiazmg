@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       where: { slug, status: "PUBLISHED" },
       select: { title: true, metaTitle: true, excerpt: true, metaDescription: true, coverImageUrl: true },
     })
-    if (!post) return { title: "Artículo no encontrado | Blog Guía ZMG" }
+    if (!post) return { title: "Artículo no encontrado · Blog" }
 
     return {
-      title: `${post.metaTitle ?? post.title} | Blog Guía ZMG`,
+      title: `${post.metaTitle ?? post.title} · Blog`,
       description: post.metaDescription ?? post.excerpt ?? undefined,
       openGraph: {
         title: post.metaTitle ?? post.title,
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     }
   } catch {
-    return { title: "Blog Guía ZMG" }
+    return { title: "Blog" }
   }
 }
 

@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { LegalPageShell } from "@/components/legal/legal-page-shell"
 
 export const metadata: Metadata = {
-  title: "Política de Cookies | Guía ZMG",
+  title: "Política de Cookies",
   description: "Información sobre el uso de cookies en Guía ZMG.",
 }
 

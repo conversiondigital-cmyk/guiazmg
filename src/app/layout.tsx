@@ -33,7 +33,8 @@ const manrope = Manrope({
 
 // Los metadatos base leen la configuración SEO editable en /admin/configuracion/seo
 // (con defaults fuertes en @/lib/seo/settings). El template "%s | Guía ZMG" se
-// mantiene para que las subpáginas antepongan su propio título.
+// mantiene para que las subpáginas antepongan su propio título y el sufijo de
+// marca se agregue UNA sola vez (las páginas ya no lo escriben a mano).
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoSettings()
   return {

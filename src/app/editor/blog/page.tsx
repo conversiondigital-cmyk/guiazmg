@@ -14,7 +14,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     PUBLISHED: "Publicados", DRAFT: "Borradores",
     PENDING_REVIEW: "En revisión", REJECTED: "Rechazados", ARCHIVED: "Archivados",
   }
-  return { title: `${status && labels[status] ? labels[status] + " | " : ""}Mis artículos | Editor — Guía ZMG` }
+  return { title: `${status && labels[status] ? labels[status] + " | " : ""}Mis artículos · Editor` }
 }
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {

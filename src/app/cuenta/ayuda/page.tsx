@@ -2,7 +2,7 @@ import { HelpCircle, MessageCircle, BookOpen, Phone } from "lucide-react"
 import Link from "next/link"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Ayuda | Guía ZMG" }
+export const metadata: Metadata = { title: "Ayuda" }
 
 const FAQ = [
   { q: "¿Cómo guardo un negocio como favorito?", a: "En la página de cualquier negocio, haz clic en el ícono de corazón para guardarlo en tus favoritos." },

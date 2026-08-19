@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Search, Edit2 } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "SEO Editorial | Guía ZMG" }
+export const metadata: Metadata = { title: "SEO Editorial" }
 
 export default async function SeoEditorialPage() {
   const session = await auth()

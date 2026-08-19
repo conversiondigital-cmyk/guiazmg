@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones | Guía ZMG",
+  title: "Términos y Condiciones",
   description: "Términos y condiciones de uso de Guía ZMG.",
 }
 

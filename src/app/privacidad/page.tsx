@@ -3,7 +3,7 @@ import { LegalPageShell } from "@/components/legal/legal-page-shell"
 import { LegalMarkdown } from "@/components/legal/legal-markdown"
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | Guía ZMG",
+  title: "Política de Privacidad",
   description: "Política de privacidad y tratamiento de datos personales de Guía ZMG.",
 }
 

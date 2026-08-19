@@ -3,7 +3,7 @@ import { LegalPageShell } from "@/components/legal/legal-page-shell"
 import { LegalMarkdown } from "@/components/legal/legal-markdown"
 
 export const metadata: Metadata = {
-  title: "Normas de Comunidad | Guía ZMG",
+  title: "Normas de Comunidad",
   description: "Normas de comunidad para publicar y participar en Guía ZMG.",
 }
 

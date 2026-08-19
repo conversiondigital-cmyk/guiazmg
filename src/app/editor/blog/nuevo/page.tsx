@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Nuevo artículo | Blog Guía ZMG" }
+export const metadata: Metadata = { title: "Nuevo artículo · Blog" }
 
 export default async function NuevoPostPage() {
   const session = await auth()

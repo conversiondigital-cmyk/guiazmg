@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Star } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Mis reseñas | Guía ZMG" }
+export const metadata: Metadata = { title: "Mis reseñas" }
 
 export default async function MisResenasPage() {
   const session = await auth()

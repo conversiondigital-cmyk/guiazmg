@@ -43,8 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const catName = category?.name || titleize(categorySlug)
     const munName = municipality?.name || neighborhood?.municipality?.name || ""
 
-    const title = category ? `Mejores ${catName} en ${locationName}${munName ? `, ${munName}` : ""} | Guía ZMG`
-      : `${titleize(slug)} en Guadalajara | Guía ZMG`
+    const title = category ? `Mejores ${catName} en ${locationName}${munName ? `, ${munName}` : ""}`
+      : `${titleize(slug)} en Guadalajara`
     const desc = category
       ? `Encuentra los mejores ${catName.toLowerCase()} en ${locationName}${munName ? `, ${munName}` : ""}. Teléfonos, direcciones, reseñas y más.`
       : `Encuentra ${titleize(slug)} en la Zona Metropolitana de Guadalajara. Directorio completo.`
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title, description: desc, openGraph: { title, description: desc } }
   } catch {
     // BD no disponible (p. ej. durante el build): no rompas.
-    return { title: "Guía ZMG" }
+    return {}
   }
 }
 

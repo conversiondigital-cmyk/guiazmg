@@ -7,7 +7,7 @@ import { BookOpen, Clock, Users } from "lucide-react"
 import { Metadata } from "next"
 import { EditoresClient } from "./editores-client"
 
-export const metadata: Metadata = { title: "Gestión de Editores | Admin Guía ZMG" }
+export const metadata: Metadata = { title: "Gestión de Editores · Admin" }
 
 export default async function AdminEditoresPage() {
   const session = await auth()

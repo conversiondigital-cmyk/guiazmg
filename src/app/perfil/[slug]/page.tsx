@@ -38,13 +38,14 @@ export async function generateMetadata({ params }: BusinessPageProps) {
   if (!business) return { title: "No encontrado" }
   const baseUrl = getPublicAppUrl()
 
-  const title = `${business.name} | Guía ZMG`
   const description = business.shortDescription || `Encuentra ${business.name} en Guía ZMG. Teléfono, WhatsApp, horarios, ubicación y reseñas.`
 
   return {
-    title,
+    // Solo el nombre: el template del layout agrega " | Guía ZMG" una vez.
+    title: business.name,
     description,
-    openGraph: { title, description },
+    // OpenGraph sí lleva la marca completa (para compartir en redes).
+    openGraph: { title: `${business.name} | Guía ZMG`, description },
     alternates: { canonical: `${baseUrl}/perfil/${slug}` },
   }
 }

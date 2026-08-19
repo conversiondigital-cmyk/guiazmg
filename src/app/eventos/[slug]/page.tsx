@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: EventDetailProps) {
   const ev = await getEventBySlug(slug)
   if (!ev) return { title: "Evento no encontrado" }
   return {
-    title: `${ev.title} | Eventos Guía ZMG`,
+    title: `${ev.title} · Eventos`,
     description: ev.description?.slice(0, 160) || `Evento en la Zona Metropolitana de Guadalajara.`,
   }
 }

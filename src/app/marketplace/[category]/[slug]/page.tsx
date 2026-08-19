@@ -39,12 +39,12 @@ export async function generateMetadata({ params }: ListingDetailProps) {
       }
     }
     return {
-      title: `${listing.title} | Guía ZMG Marketplace`,
+      title: `${listing.title} · Marketplace`,
       description: listing.description?.slice(0, 160) || `${listing.title} en Guadalajara. Precio: ${listing.price ? formatCurrency(Number(listing.price)) : "Contactar"}`,
       alternates: { canonical: `${getPublicAppUrl()}/marketplace/${listing.category.slug}/${listing.slug}` },
     }
   } catch {
-    return { title: "Guía ZMG Marketplace" }
+    return { title: "Marketplace" }
   }
 }
 

@@ -8,7 +8,7 @@ import { getSetting } from "@/lib/settings"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "¿Qué quieres hacer? | Guía ZMG",
+  title: "¿Qué quieres hacer?",
   description: "Elige cómo quieres usar Guía ZMG: buscar, vender de forma recurrente o publicar algo temporal.",
 }
 

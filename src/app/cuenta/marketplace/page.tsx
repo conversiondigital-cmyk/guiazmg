@@ -8,7 +8,7 @@ import { Package, Plus, Tag } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Marketplace | Guía ZMG" }
+export const metadata: Metadata = { title: "Marketplace" }
 
 export default async function CuentaMarketplacePage() {
   const session = await auth()

@@ -4,7 +4,7 @@ import { Metadata } from "next"
 import { Card } from "@/components/ui/card"
 
 export const metadata: Metadata = {
-  title: "Aviso de Privacidad | Guía ZMG",
+  title: "Aviso de Privacidad",
   description:
     "Aviso de Privacidad conforme a la LFPDPPP. Información sobre el tratamiento de datos personales en Guía ZMG.",
 }

@@ -8,7 +8,7 @@ import { SearchResults } from "@/components/search/search-results"
 import { getProfilesByType } from "@/lib/queries"
 
 export const metadata: Metadata = {
-  title: "Emprendedores en Guadalajara | Guía ZMG",
+  title: "Emprendedores en Guadalajara",
   description:
     "Descubre emprendedores locales de la Zona Metropolitana de Guadalajara: comida casera, catálogo, servicios a domicilio y más. Contáctalos por WhatsApp.",
 }

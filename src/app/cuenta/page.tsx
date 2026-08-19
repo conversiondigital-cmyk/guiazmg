@@ -10,7 +10,7 @@ import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
 import { CategoryGrid } from "@/components/home/category-grid"
 import { FeaturedBusinesses } from "@/components/home/featured-businesses"
 
-export const metadata: Metadata = { title: "Mi cuenta | Guía ZMG" }
+export const metadata: Metadata = { title: "Mi cuenta" }
 
 export default async function CuentaPage() {
   const session = await auth()

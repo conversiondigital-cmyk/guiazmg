@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { Bell } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Notificaciones | Guía ZMG" }
+export const metadata: Metadata = { title: "Notificaciones" }
 
 export default async function NotificacionesPage() {
   const session = await auth()

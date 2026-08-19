@@ -17,7 +17,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { categoria, q } = await searchParams
   const prefix = q ? `"${q}"` : categoria ? categoria : null
   return {
-    title: prefix ? `${prefix} | Blog Guía ZMG` : "Blog | Guía ZMG",
+    title: prefix ? `${prefix} · Blog` : "Blog",
     description: "Consejos, tendencias y estrategias para el éxito de tu negocio en Guadalajara.",
   }
 }

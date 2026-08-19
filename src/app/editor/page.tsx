@@ -7,7 +7,7 @@ import Link from "next/link"
 import { BookOpen, FilePlus, Clock, Eye, Globe, FileText, ArrowRight } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Dashboard Editorial | Guía ZMG" }
+export const metadata: Metadata = { title: "Dashboard Editorial" }
 
 export default async function EditorDashboard() {
   const session = await auth()

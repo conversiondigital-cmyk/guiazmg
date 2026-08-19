@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Heart, MapPin, Star } from "lucide-react"
 import { Metadata } from "next"
 
-export const metadata: Metadata = { title: "Favoritos | Guía ZMG" }
+export const metadata: Metadata = { title: "Favoritos" }
 
 export default async function FavoritosPage() {
   const session = await auth()

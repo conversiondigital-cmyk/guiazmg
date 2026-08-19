@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props) {
     if (r.kind === "category") {
       const slug = `${municipio}/${seg}`
       const seoPage = await prisma.seoLandingPage.findUnique({ where: { slug } })
-      const title = seoPage?.title || `${r.category.name} en ${r.municipality.name} | Guía ZMG`
+      const title = seoPage?.title || `${r.category.name} en ${r.municipality.name}`
       const description =
         seoPage?.metaDescription ||
         `Encuentra los mejores ${r.category.name.toLowerCase()} en ${r.municipality.name}. Consulta teléfonos, WhatsApp, horarios, ubicación y reseñas.`
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Props) {
     if (r.kind === "zone") {
       const count = await countLocalProfiles({ municipalityId: r.municipality.id, zoneId: r.zone.id })
       const noindex = !r.zone.isSeoIndexable || count < MIN_INDEXABLE_PROFILES
-      const title = r.zone.seoTitle || `Negocios y servicios en ${r.zone.name}, ${r.municipality.name} | Guía ZMG`
+      const title = r.zone.seoTitle || `Negocios y servicios en ${r.zone.name}, ${r.municipality.name}`
       const description =
         r.zone.seoDescription ||
         `Encuentra negocios, emprendedores, servicios, productos y promociones en ${r.zone.name}, ${r.municipality.name} y colonias cercanas.`
@@ -61,13 +61,13 @@ export async function generateMetadata({ params }: Props) {
     // neighborhood
     const count = await countLocalProfiles({ municipalityId: r.municipality.id, neighborhoodId: r.neighborhood.id })
     const noindex = !r.neighborhood.isSeoIndexable || count < MIN_INDEXABLE_PROFILES
-    const title = r.neighborhood.seoTitle || `Negocios y servicios en ${r.neighborhood.name}, ${r.municipality.name} | Guía ZMG`
+    const title = r.neighborhood.seoTitle || `Negocios y servicios en ${r.neighborhood.name}, ${r.municipality.name}`
     const description =
       r.neighborhood.seoDescription ||
       `Busca negocios, servicios, productos y promociones cerca de ${r.neighborhood.name}, ${r.municipality.name}. Contacta por WhatsApp.`
     return generateMeta({ title, description, canonical: `${BASE_URL}/${municipio}/${seg}`, noindex })
   } catch {
-    return { title: "Guía ZMG" }
+    return {}
   }
 }
 

@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | Guía ZMG",
+  title: "Política de Privacidad",
   description: "Política de privacidad de Guía ZMG. Conoce cómo protegemos tus datos personales.",
 }
 

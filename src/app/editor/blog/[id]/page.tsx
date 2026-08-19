@@ -11,7 +11,7 @@ interface Props { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const post = await prisma.post.findUnique({ where: { id }, select: { title: true } })
-  return { title: `Editar: ${post?.title ?? "Post"} | Blog Guía ZMG` }
+  return { title: `Editar: ${post?.title ?? "Post"} · Blog` }
 }
 
 export default async function EditPostPage({ params }: Props) {
