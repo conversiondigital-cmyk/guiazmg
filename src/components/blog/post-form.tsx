@@ -57,9 +57,13 @@ export interface PostFormInitialData {
 interface PostFormProps {
   initialData?: PostFormInitialData
   isAdmin?: boolean
+  // Categorías ya usadas en otros posts, para sugerirlas (además de las fijas).
+  categoryOptions?: string[]
 }
 
-export function PostForm({ initialData, isAdmin = false }: PostFormProps) {
+export function PostForm({ initialData, isAdmin = false, categoryOptions = [] }: PostFormProps) {
+  // Sugerencias del datalist: las categorías ya usadas primero, luego las fijas, sin duplicar.
+  const categorySuggestions = Array.from(new Set([...categoryOptions, ...CATEGORIES]))
   const router = useRouter()
   const isEdit = !!initialData
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -381,7 +385,7 @@ export function PostForm({ initialData, isAdmin = false }: PostFormProps) {
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
           <datalist id="blog-categories">
-            {CATEGORIES.map((c) => (
+            {categorySuggestions.map((c) => (
               <option key={c} value={c} />
             ))}
           </datalist>

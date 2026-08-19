@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
 import { PostForm } from "@/components/blog/post-form"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -14,6 +15,15 @@ export default async function NuevoPostPage() {
 
   const isAdmin = role === "ADMIN"
 
+  // Categorías ya usadas en otros posts, para sugerirlas en el editor.
+  const cats = await prisma.post.findMany({
+    where: { category: { not: null } },
+    select: { category: true },
+    distinct: ["category"],
+    orderBy: { category: "asc" },
+  })
+  const categoryOptions = cats.map((c) => c.category).filter((c): c is string => !!c)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -25,7 +35,7 @@ export default async function NuevoPostPage() {
           <span className="text-sm font-semibold text-gray-900">Nuevo artículo</span>
         </div>
 
-        <PostForm isAdmin={isAdmin} />
+        <PostForm isAdmin={isAdmin} categoryOptions={categoryOptions} />
       </div>
     </div>
   )

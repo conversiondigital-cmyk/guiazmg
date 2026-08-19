@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Tipografía para el contenido del blog (clases `prose`). Sin esto, los <h2>/<p>
+   del artículo se renderizan sin estilo ni espaciado. */
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

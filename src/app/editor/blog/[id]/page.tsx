@@ -43,6 +43,15 @@ export default async function EditPostPage({ params }: Props) {
     rejectionReason: post.rejectionReason,
   }
 
+  // Categorías ya usadas en otros posts, para sugerirlas en el editor.
+  const cats = await prisma.post.findMany({
+    where: { category: { not: null } },
+    select: { category: true },
+    distinct: ["category"],
+    orderBy: { category: "asc" },
+  })
+  const categoryOptions = cats.map((c) => c.category).filter((c): c is string => !!c)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -54,7 +63,7 @@ export default async function EditPostPage({ params }: Props) {
           <span className="text-sm font-semibold text-gray-900 line-clamp-1">{post.title}</span>
         </div>
 
-        <PostForm initialData={initialData} isAdmin={isAdmin} />
+        <PostForm initialData={initialData} isAdmin={isAdmin} categoryOptions={categoryOptions} />
       </div>
     </div>
   )
