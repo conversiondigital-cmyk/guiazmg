@@ -1,69 +1,80 @@
 // Loader ÚNICO de Google Maps para todo el sitio (mapa general, mapa de ficha,
-// selector de pin y autocompletado). Antes cada componente tenía su propio loader:
-// se inyectaba el script por duplicado y, con loading=async, un `.catch(()=>resolve())`
-// resolvía aunque `importLibrary` fallara → `new google.maps.Map` daba
-// "Map is not a constructor" (sobre todo en móvil, por red más lenta) y el promise
-// quedaba cacheado como resuelto, dejando el mapa roto hasta recargar.
+// selector de pin y autocompletado de dirección).
 //
-// Este loader: (1) dedupe GLOBAL por atributo del <script> (no solo por el promise
-// del módulo); (2) resuelve SOLO cuando `google.maps.Map` existe; (3) ante cualquier
-// fallo, rechaza y limpia el cache para permitir reintento. No-op en SSR.
+// Usa el BOOTSTRAP OFICIAL de Google (inline loader), que define
+// `google.maps.importLibrary` de forma SÍNCRONA e idempotente. Antes inyectábamos
+// el <script> a mano con loading=async y esperábamos al onload; en algunos móviles
+// `importLibrary` no quedaba expuesto a tiempo → "Google Maps no expuso
+// importLibrary" / "Map is not a constructor". El bootstrap oficial evita esa
+// carrera (no depende del onload) y también dedupe (si importLibrary ya existe,
+// no vuelve a inyectar el script). No-op en SSR.
+// Ref: https://developers.google.com/maps/documentation/javascript/load-maps-js-api
 let mapsPromise: Promise<void> | null = null
 
 type GWin = {
   google?: { maps?: { Map?: unknown; importLibrary?: (n: string) => Promise<unknown> } }
 }
 
+function bootstrap(apiKey: string): void {
+  /* eslint-disable */
+  // @ts-nocheck-block: bootstrap oficial de Google, transcrito con tipos `any`.
+  ;((g: any) => {
+    var h: any,
+      a: any,
+      k: any,
+      p = "The Google Maps JavaScript API",
+      c = "google",
+      l = "importLibrary",
+      q = "__ib__",
+      m = document,
+      b: any = window
+    b = b[c] || (b[c] = {})
+    var d = b.maps || (b.maps = {}),
+      r = new Set<string>(),
+      e = new URLSearchParams(),
+      u = () =>
+        h ||
+        (h = new Promise<void>(async (f: any, n: any) => {
+          await (a = m.createElement("script"))
+          e.set("libraries", [...r] + "")
+          for (k in g) e.set(k.replace(/[A-Z]/g, (t: string) => "_" + t[0].toLowerCase()), g[k])
+          e.set("callback", c + ".maps." + q)
+          a.src = `https://maps.${c}apis.com/maps/api/js?` + e
+          d[q] = f
+          a.onerror = () => (h = n(Error(p + " could not load.")))
+          a.nonce = (m.querySelector("script[nonce]") as any)?.nonce || ""
+          m.head.append(a)
+        }))
+    d[l]
+      ? 0
+      : (d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n)))
+  })({ key: apiKey, v: "weekly", language: "es", region: "MX" })
+  /* eslint-enable */
+}
+
 export function loadGoogleMaps(apiKey: string): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"))
   const w = window as unknown as GWin
 
-  // Ya cargado y listo: camino rápido.
+  // Ya listo: camino rápido.
   if (w.google?.maps?.Map) return Promise.resolve()
   if (mapsPromise) return mapsPromise
 
-  mapsPromise = new Promise<void>((resolve, reject) => {
-    const fail = (msg: string) => {
-      mapsPromise = null // permite reintentar en el siguiente montaje
-      reject(new Error(msg))
-    }
-
-    // Importa las librerías necesarias y resuelve SOLO si la clase Map quedó lista.
-    const finish = () => {
+  mapsPromise = (async () => {
+    try {
+      // El bootstrap define importLibrary de inmediato (idempotente: si ya existe,
+      // no reinyecta nada).
+      if (typeof w.google?.maps?.importLibrary !== "function") bootstrap(apiKey)
       const imp = w.google?.maps?.importLibrary
-      if (typeof imp !== "function") {
-        // API cargada sin importLibrary (versión clásica): si Map ya existe, ok.
-        return w.google?.maps?.Map ? resolve() : fail("Google Maps no expuso importLibrary")
-      }
-      Promise.all([imp("maps"), imp("places")])
-        .then(() => {
-          if (w.google?.maps?.Map) resolve()
-          else fail("La librería de mapas no cargó")
-        })
-        .catch(() => fail("No se pudo inicializar Google Maps"))
-    }
+      if (typeof imp !== "function") throw new Error("No se pudo iniciar Google Maps")
 
-    // Dedupe GLOBAL: si algún componente ya inyectó el script, no metemos otro
-    // (dos bootstraps con loading=async se pisan). Esperamos a que cargue.
-    const existing = document.querySelector<HTMLScriptElement>('script[data-gmaps="1"]')
-    if (existing) {
-      if (w.google?.maps?.importLibrary || w.google?.maps?.Map) finish()
-      else {
-        existing.addEventListener("load", finish, { once: true })
-        existing.addEventListener("error", () => fail("No se pudo cargar Google Maps"), { once: true })
-      }
-      return
+      // La primera llamada dispara la carga real del API; resuelve cuando está lista.
+      await Promise.all([imp("maps"), imp("places")])
+      if (!w.google?.maps?.Map) throw new Error("La librería de mapas no cargó")
+    } catch (err) {
+      mapsPromise = null // limpia el cache para permitir reintento en el próximo montaje
+      throw err instanceof Error ? err : new Error("No se pudo cargar Google Maps")
     }
-
-    const s = document.createElement("script")
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
-      apiKey,
-    )}&libraries=places&language=es&region=MX&loading=async`
-    s.async = true
-    s.dataset.gmaps = "1"
-    s.onload = finish
-    s.onerror = () => fail("No se pudo cargar Google Maps. Revisa la API key.")
-    document.head.appendChild(s)
-  })
+  })()
   return mapsPromise
 }
