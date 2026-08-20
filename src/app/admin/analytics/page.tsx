@@ -74,6 +74,9 @@ export default async function AdminAnalyticsPage() {
     visitsByChannel,
     topSources,
     topLandings,
+    topProfiles,
+    topContacted,
+    noResultSearches,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.profile.count({ where: { status: "ACTIVE", deletedAt: null } }),
@@ -161,6 +164,30 @@ export default async function AdminAnalyticsPage() {
       orderBy: { _count: { path: "desc" } },
       take: 10,
     }),
+    // Perfiles con más vistas (acumulado) y negocios más contactados (leads).
+    prisma.$queryRaw<{ name: string; slug: string; views: number }[]>`
+      SELECT b.name, b.slug, COALESCE(SUM(bad.views), 0)::int AS views
+      FROM business_analytics_daily bad
+      JOIN businesses b ON b.id = bad."businessId" AND b."deletedAt" IS NULL
+      GROUP BY b.id, b.name, b.slug
+      HAVING COALESCE(SUM(bad.views), 0) > 0
+      ORDER BY views DESC LIMIT 10
+    `,
+    prisma.$queryRaw<{ name: string; slug: string; leads: number }[]>`
+      SELECT b.name, b.slug, COUNT(l.id)::int AS leads
+      FROM leads l
+      JOIN businesses b ON b.id = l."businessId" AND b."deletedAt" IS NULL
+      GROUP BY b.id, b.name, b.slug
+      ORDER BY leads DESC LIMIT 10
+    `,
+    // Búsquedas que NO devolvieron resultados (qué busca la gente y no encuentra).
+    prisma.$queryRaw<{ query: string; count: number }[]>`
+      SELECT query, COUNT(*)::int AS count
+      FROM search_logs
+      WHERE "resultsCount" = 0
+      GROUP BY query
+      ORDER BY count DESC LIMIT 10
+    `,
   ])
 
   // Tráfico: canales de entrada (últimos 30 días)
@@ -539,6 +566,96 @@ export default async function AdminAnalyticsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Engagement de negocios: perfiles más vistos + más contactados */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Top perfiles más vistos</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4">Perfil</th>
+                  <th className="pb-2 text-right">Vistas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(topProfiles as { name: string; slug: string; views: number }[]).map((p) => (
+                  <tr key={p.slug} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{p.name}</td>
+                    <td className="py-2 text-right font-mono">{p.views.toLocaleString()}</td>
+                  </tr>
+                ))}
+                {(topProfiles as unknown[]).length === 0 && (
+                  <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Sin datos aún</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Target className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Top negocios más contactados</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4">Negocio</th>
+                  <th className="pb-2 text-right">Contactos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(topContacted as { name: string; slug: string; leads: number }[]).map((b) => (
+                  <tr key={b.slug} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{b.name}</td>
+                    <td className="py-2 text-right font-mono">{b.leads.toLocaleString()}</td>
+                  </tr>
+                ))}
+                {(topContacted as unknown[]).length === 0 && (
+                  <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Aún sin contactos registrados</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Búsquedas sin resultados: qué busca la gente y no encuentra */}
+      <div className="rounded-xl border bg-card p-5">
+        <div className="mb-1 flex items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-heading text-sm font-medium">Búsquedas sin resultados</h3>
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Lo que la gente busca y no encuentra — ideas de giros o negocios que faltan por sumar.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-xs text-muted-foreground">
+                <th className="pb-2 pr-4">Término</th>
+                <th className="pb-2 text-right">Veces</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(noResultSearches as { query: string; count: number }[]).map((s) => (
+                <tr key={s.query} className="border-b last:border-0">
+                  <td className="py-2 pr-4 font-medium">{s.query}</td>
+                  <td className="py-2 text-right font-mono">{s.count}</td>
+                </tr>
+              ))}
+              {(noResultSearches as unknown[]).length === 0 && (
+                <tr><td colSpan={2} className="py-8 text-center text-muted-foreground">Sin datos aún</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
