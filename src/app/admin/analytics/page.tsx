@@ -8,6 +8,7 @@ import {
 import { CHANNEL_LABELS, type TrafficChannel } from "@/lib/analytics/traffic"
 import { getTopSearchKeywords } from "@/lib/seo/search-console"
 import { getGa4Summary, getGa4Realtime } from "@/lib/analytics/ga4"
+import { AnalyticsRangePicker } from "@/components/admin/analytics-range-picker"
 
 export const dynamic = "force-dynamic"
 
@@ -43,16 +44,26 @@ function fillMonthlyData(rows: { date: Date; amount: number }[], months: number)
   return result
 }
 
-export default async function AdminAnalyticsPage() {
+export default async function AdminAnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>
+}) {
   const session = await auth()
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/auth/login")
   }
 
+  // Rango de fechas configurable (?range=7|30|90; por defecto 30). Afecta a todas
+  // las series de tráfico/diarias; los ingresos siguen a 12 meses.
+  const RANGE_OPTIONS = [7, 30, 90]
+  const params = await searchParams
+  const rangeDays = RANGE_OPTIONS.includes(Number(params.range)) ? Number(params.range) : 30
+
   const now = new Date()
-  const thirtyDaysAgo = new Date(now)
-  thirtyDaysAgo.setDate(now.getDate() - 29)
-  thirtyDaysAgo.setHours(0, 0, 0, 0)
+  const fromDate = new Date(now)
+  fromDate.setDate(now.getDate() - (rangeDays - 1))
+  fromDate.setHours(0, 0, 0, 0)
 
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1)
 
@@ -88,13 +99,13 @@ export default async function AdminAnalyticsPage() {
     prisma.$queryRaw<{ date: Date; count: number }[]>`
       SELECT date, SUM(views)::int as count
       FROM business_analytics_daily
-      WHERE date >= ${thirtyDaysAgo}
+      WHERE date >= ${fromDate}
       GROUP BY date ORDER BY date
     `,
     prisma.$queryRaw<{ date: Date; count: number }[]>`
       SELECT DATE("createdAt") as date, COUNT(*)::int as count
       FROM leads
-      WHERE "createdAt" >= ${thirtyDaysAgo}
+      WHERE "createdAt" >= ${fromDate}
       GROUP BY DATE("createdAt") ORDER BY date
     `,
     prisma.$queryRaw<{ date: Date; amount: number }[]>`
@@ -148,19 +159,19 @@ export default async function AdminAnalyticsPage() {
     prisma.pageVisit.groupBy({
       by: ["channel"],
       _count: { _all: true },
-      where: { createdAt: { gte: thirtyDaysAgo } },
+      where: { createdAt: { gte: fromDate } },
     }),
     prisma.pageVisit.groupBy({
       by: ["source"],
       _count: { _all: true },
-      where: { createdAt: { gte: thirtyDaysAgo }, source: { not: null } },
+      where: { createdAt: { gte: fromDate }, source: { not: null } },
       orderBy: { _count: { source: "desc" } },
       take: 10,
     }),
     prisma.pageVisit.groupBy({
       by: ["path"],
       _count: { _all: true },
-      where: { createdAt: { gte: thirtyDaysAgo } },
+      where: { createdAt: { gte: fromDate } },
       orderBy: { _count: { path: "desc" } },
       take: 10,
     }),
@@ -205,7 +216,7 @@ export default async function AdminAnalyticsPage() {
 
   // Resumen de Google Analytics 4 (null si no está conectado). Reutiliza la cuenta
   // de servicio de Search Console + el ID de propiedad GA4.
-  const ga4 = await getGa4Summary(28)
+  const ga4 = await getGa4Summary(rangeDays)
   const ga4Realtime = await getGa4Realtime()
   const fmtDuration = (sec: number) => {
     const s = Math.round(sec)
@@ -231,31 +242,31 @@ export default async function AdminAnalyticsPage() {
     : []
 
   // ── Resumen de tráfico estilo panel (datos propios: page_visits) ─────────────
-  const sixtyDaysAgo = new Date(thirtyDaysAgo)
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30)
+  const prevFrom = new Date(fromDate)
+  prevFrom.setDate(prevFrom.getDate() - rangeDays)
   const [pageViews30, pageViewsPrev30, dailyPvRows, totalSiteVisitsAll, dailyUserRows, dailyMarketplaceRows] =
     await Promise.all([
-      prisma.pageVisit.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-      prisma.pageVisit.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
+      prisma.pageVisit.count({ where: { createdAt: { gte: fromDate } } }),
+      prisma.pageVisit.count({ where: { createdAt: { gte: prevFrom, lt: fromDate } } }),
       prisma.$queryRaw<{ date: Date; count: number }[]>`
         SELECT DATE("createdAt") as date, COUNT(*)::int as count
-        FROM page_visits WHERE "createdAt" >= ${thirtyDaysAgo}
+        FROM page_visits WHERE "createdAt" >= ${fromDate}
         GROUP BY DATE("createdAt") ORDER BY date
       `,
       prisma.pageVisit.count(), // total histórico de visitas al sitio
       prisma.$queryRaw<{ date: Date; count: number }[]>`
         SELECT DATE("createdAt") as date, COUNT(*)::int as count
-        FROM users WHERE "createdAt" >= ${thirtyDaysAgo} AND "deletedAt" IS NULL
+        FROM users WHERE "createdAt" >= ${fromDate} AND "deletedAt" IS NULL
         GROUP BY DATE("createdAt") ORDER BY date
       `,
       prisma.$queryRaw<{ date: Date; count: number }[]>`
         SELECT DATE("createdAt") as date, COUNT(*)::int as count
-        FROM marketplace_listings WHERE "createdAt" >= ${thirtyDaysAgo} AND "deletedAt" IS NULL
+        FROM marketplace_listings WHERE "createdAt" >= ${fromDate} AND "deletedAt" IS NULL
         GROUP BY DATE("createdAt") ORDER BY date
       `,
     ])
   const pvTrend = pageViewsPrev30 > 0 ? Math.round(((pageViews30 - pageViewsPrev30) / pageViewsPrev30) * 100) : null
-  const pvSeries = fillDailyData(dailyPvRows as { date: Date; count: number }[], 30)
+  const pvSeries = fillDailyData(dailyPvRows as { date: Date; count: number }[], rangeDays)
   const pvMax = Math.max(...pvSeries.map((d) => d.count), 1)
   // Geometría de la gráfica de área (SVG con viewBox; escala responsiva).
   const CW = 720, CH = 130, CP = 6
@@ -271,8 +282,8 @@ export default async function AdminAnalyticsPage() {
   const visitsCount = totalViews._sum.views ?? 0
   const conversionRate = visitsCount > 0 ? ((totalLeads / visitsCount) * 100).toFixed(2) : "0.00"
 
-  const chartVisits = fillDailyData(dailyVisitRows as { date: Date; count: number }[], 30)
-  const chartLeads = fillDailyData(dailyLeadRows as { date: Date; count: number }[], 30)
+  const chartVisits = fillDailyData(dailyVisitRows as { date: Date; count: number }[], rangeDays)
+  const chartLeads = fillDailyData(dailyLeadRows as { date: Date; count: number }[], rangeDays)
   const revenueBars = fillMonthlyData(monthlyRevenueRows as { date: Date; amount: number }[], 12)
 
   const maxVisit = Math.max(...chartVisits.map((d) => d.count), 1)
@@ -283,8 +294,8 @@ export default async function AdminAnalyticsPage() {
   const visitFrom = chartVisits[0]?.date.slice(5) ?? ""
   const visitTo = chartVisits[chartVisits.length - 1]?.date.slice(5) ?? ""
 
-  const chartUsers = fillDailyData(dailyUserRows as { date: Date; count: number }[], 30)
-  const chartMarketplace = fillDailyData(dailyMarketplaceRows as { date: Date; count: number }[], 30)
+  const chartUsers = fillDailyData(dailyUserRows as { date: Date; count: number }[], rangeDays)
+  const chartMarketplace = fillDailyData(dailyMarketplaceRows as { date: Date; count: number }[], rangeDays)
   const maxUser = Math.max(...chartUsers.map((d) => d.count), 1)
   const maxMkt = Math.max(...chartMarketplace.map((d) => d.count), 1)
   // Rango de fechas legible en español (para "total de visitas al sitio por rango").
@@ -312,7 +323,10 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8 p-6 lg:p-8">
-      <h1 className="text-2xl font-bold tracking-tight">Executive Analytics</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Executive Analytics</h1>
+        <AnalyticsRangePicker current={rangeDays} />
+      </div>
 
       {/* Resumen de tráfico (estilo panel) — métricas grandes + área + páginas/referencias */}
       <div className="rounded-xl border bg-card p-5">
@@ -339,7 +353,7 @@ export default async function AdminAnalyticsPage() {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-muted-foreground">Vistas / visitas al sitio (30 días)</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Vistas / visitas al sitio ({rangeDays} días)</p>
           </div>
           <div>
             <p className="text-3xl font-bold tracking-tight">{chOrganic.toLocaleString()}</p>
@@ -454,7 +468,7 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
             <Eye className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-heading text-sm font-medium">Visitas diarias (30 días)</h3>
+            <h3 className="font-heading text-sm font-medium">Visitas diarias ({rangeDays} días)</h3>
           </div>
           <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
             {chartVisits.map((d) => (
@@ -478,7 +492,7 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
             <Target className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-heading text-sm font-medium">Leads diarios (30 días)</h3>
+            <h3 className="font-heading text-sm font-medium">Leads diarios ({rangeDays} días)</h3>
           </div>
           <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
             {chartLeads.map((d) => (
@@ -506,7 +520,7 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-heading text-sm font-medium">Registros de usuarios (30 días)</h3>
+            <h3 className="font-heading text-sm font-medium">Registros de usuarios ({rangeDays} días)</h3>
           </div>
           <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
             {chartUsers.map((d) => (
@@ -530,7 +544,7 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-heading text-sm font-medium">Publicaciones de Marketplace (30 días)</h3>
+            <h3 className="font-heading text-sm font-medium">Publicaciones de Marketplace ({rangeDays} días)</h3>
           </div>
           <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
             {chartMarketplace.map((d) => (
@@ -742,7 +756,7 @@ export default async function AdminAnalyticsPage() {
       <div className="rounded-xl border bg-card p-5">
         <div className="mb-4 flex items-center gap-2">
           <Activity className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-heading text-sm font-medium">Cómo llegan al sitio (30 días)</h3>
+          <h3 className="font-heading text-sm font-medium">Cómo llegan al sitio ({rangeDays} días)</h3>
         </div>
         {channels.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
