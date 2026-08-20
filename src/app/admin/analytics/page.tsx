@@ -7,7 +7,7 @@ import {
 } from "@/lib/icons"
 import { CHANNEL_LABELS, type TrafficChannel } from "@/lib/analytics/traffic"
 import { getTopSearchKeywords } from "@/lib/seo/search-console"
-import { getGa4Summary } from "@/lib/analytics/ga4"
+import { getGa4Summary, getGa4Realtime } from "@/lib/analytics/ga4"
 
 export const dynamic = "force-dynamic"
 
@@ -206,6 +206,7 @@ export default async function AdminAnalyticsPage() {
   // Resumen de Google Analytics 4 (null si no está conectado). Reutiliza la cuenta
   // de servicio de Search Console + el ID de propiedad GA4.
   const ga4 = await getGa4Summary(28)
+  const ga4Realtime = await getGa4Realtime()
   const fmtDuration = (sec: number) => {
     const s = Math.round(sec)
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
@@ -232,15 +233,27 @@ export default async function AdminAnalyticsPage() {
   // ── Resumen de tráfico estilo panel (datos propios: page_visits) ─────────────
   const sixtyDaysAgo = new Date(thirtyDaysAgo)
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30)
-  const [pageViews30, pageViewsPrev30, dailyPvRows] = await Promise.all([
-    prisma.pageVisit.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-    prisma.pageVisit.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
-    prisma.$queryRaw<{ date: Date; count: number }[]>`
-      SELECT DATE("createdAt") as date, COUNT(*)::int as count
-      FROM page_visits WHERE "createdAt" >= ${thirtyDaysAgo}
-      GROUP BY DATE("createdAt") ORDER BY date
-    `,
-  ])
+  const [pageViews30, pageViewsPrev30, dailyPvRows, totalSiteVisitsAll, dailyUserRows, dailyMarketplaceRows] =
+    await Promise.all([
+      prisma.pageVisit.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+      prisma.pageVisit.count({ where: { createdAt: { gte: sixtyDaysAgo, lt: thirtyDaysAgo } } }),
+      prisma.$queryRaw<{ date: Date; count: number }[]>`
+        SELECT DATE("createdAt") as date, COUNT(*)::int as count
+        FROM page_visits WHERE "createdAt" >= ${thirtyDaysAgo}
+        GROUP BY DATE("createdAt") ORDER BY date
+      `,
+      prisma.pageVisit.count(), // total histórico de visitas al sitio
+      prisma.$queryRaw<{ date: Date; count: number }[]>`
+        SELECT DATE("createdAt") as date, COUNT(*)::int as count
+        FROM users WHERE "createdAt" >= ${thirtyDaysAgo} AND "deletedAt" IS NULL
+        GROUP BY DATE("createdAt") ORDER BY date
+      `,
+      prisma.$queryRaw<{ date: Date; count: number }[]>`
+        SELECT DATE("createdAt") as date, COUNT(*)::int as count
+        FROM marketplace_listings WHERE "createdAt" >= ${thirtyDaysAgo} AND "deletedAt" IS NULL
+        GROUP BY DATE("createdAt") ORDER BY date
+      `,
+    ])
   const pvTrend = pageViewsPrev30 > 0 ? Math.round(((pageViews30 - pageViewsPrev30) / pageViewsPrev30) * 100) : null
   const pvSeries = fillDailyData(dailyPvRows as { date: Date; count: number }[], 30)
   const pvMax = Math.max(...pvSeries.map((d) => d.count), 1)
@@ -270,6 +283,15 @@ export default async function AdminAnalyticsPage() {
   const visitFrom = chartVisits[0]?.date.slice(5) ?? ""
   const visitTo = chartVisits[chartVisits.length - 1]?.date.slice(5) ?? ""
 
+  const chartUsers = fillDailyData(dailyUserRows as { date: Date; count: number }[], 30)
+  const chartMarketplace = fillDailyData(dailyMarketplaceRows as { date: Date; count: number }[], 30)
+  const maxUser = Math.max(...chartUsers.map((d) => d.count), 1)
+  const maxMkt = Math.max(...chartMarketplace.map((d) => d.count), 1)
+  // Rango de fechas legible en español (para "total de visitas al sitio por rango").
+  const fmtDay = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+  const rangeFrom = pvSeries[0] ? fmtDay(pvSeries[0].date) : ""
+  const rangeTo = pvSeries[pvSeries.length - 1] ? fmtDay(pvSeries[pvSeries.length - 1].date) : ""
+
   const funnel = [
     { label: "Visitantes", value: visitsCount, pct: 100 },
     { label: "Búsquedas", value: totalSearches, pct: visitsCount > 0 ? Math.round((totalSearches / visitsCount) * 100) : 0 },
@@ -294,12 +316,17 @@ export default async function AdminAnalyticsPage() {
 
       {/* Resumen de tráfico (estilo panel) — métricas grandes + área + páginas/referencias */}
       <div className="rounded-xl border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-heading text-sm font-medium">Resumen de tráfico (30 días)</h3>
+            <h3 className="font-heading text-sm font-medium">
+              Resumen de tráfico{" "}
+              <span className="font-normal text-muted-foreground">· {rangeFrom} – {rangeTo}</span>
+            </h3>
           </div>
-          <span className="text-[10px] text-muted-foreground">Datos propios del sitio · GA4 amplía esto al conectarlo</span>
+          <span className="text-[10px] text-muted-foreground">
+            Total histórico del sitio: <strong className="text-slate-900">{totalSiteVisitsAll.toLocaleString()}</strong> visitas
+          </span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -312,7 +339,7 @@ export default async function AdminAnalyticsPage() {
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs text-muted-foreground">Vistas de página</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Vistas / visitas al sitio (30 días)</p>
           </div>
           <div>
             <p className="text-3xl font-bold tracking-tight">{chOrganic.toLocaleString()}</p>
@@ -469,6 +496,58 @@ export default async function AdminAnalyticsPage() {
           <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
             <span>{visitFrom}</span>
             <span>Total: {chartLeads.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
+            <span>{visitTo}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts: Registros de usuarios & Publicaciones de Marketplace */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Registros de usuarios (30 días)</h3>
+          </div>
+          <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
+            {chartUsers.map((d) => (
+              <div
+                key={d.date}
+                title={`${d.date}: ${d.count}`}
+                className="flex-1 rounded-sm transition-all"
+                style={{
+                  height: `${Math.max((d.count / maxUser) * 100, 2)}%`,
+                  background: "linear-gradient(to top, #C4B5FD, #7C3AED)",
+                }}
+              />
+            ))}
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>{visitFrom}</span>
+            <span>Total: {chartUsers.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
+            <span>{visitTo}</span>
+          </div>
+        </div>
+        <div className="rounded-xl border bg-card p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Publicaciones de Marketplace (30 días)</h3>
+          </div>
+          <div className="flex items-end gap-[3px]" style={{ height: 80 }}>
+            {chartMarketplace.map((d) => (
+              <div
+                key={d.date}
+                title={`${d.date}: ${d.count}`}
+                className="flex-1 rounded-sm transition-all"
+                style={{
+                  height: `${Math.max((d.count / maxMkt) * 100, 2)}%`,
+                  background: "linear-gradient(to top, #F9A8D4, #DB2777)",
+                }}
+              />
+            ))}
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>{visitFrom}</span>
+            <span>Total: {chartMarketplace.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
             <span>{visitTo}</span>
           </div>
         </div>
@@ -791,9 +870,20 @@ export default async function AdminAnalyticsPage() {
 
       {/* Google Analytics 4 — tráfico real de Google (credential-ready) */}
       <div className="rounded-xl border bg-card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-heading text-sm font-medium">Google Analytics 4 — tráfico ({ga4?.days ?? 28} días)</h3>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Google Analytics 4 — tráfico ({ga4?.days ?? 28} días)</h3>
+          </div>
+          {ga4Realtime && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
+              </span>
+              {ga4Realtime.activeUsers} {ga4Realtime.activeUsers === 1 ? "usuario activo ahora" : "usuarios activos ahora"}
+            </span>
+          )}
         </div>
         {ga4 === null ? (
           <p className="py-6 text-center text-sm text-muted-foreground">

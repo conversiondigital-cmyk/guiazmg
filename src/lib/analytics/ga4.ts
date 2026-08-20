@@ -140,3 +140,61 @@ export async function getGa4Summary(days = 28): Promise<Ga4Summary | null> {
     browsers: toBreakdown(batchB?.[0]),
   }
 }
+
+export interface Ga4Realtime {
+  activeUsers: number // usuarios en los últimos 30 min
+  topPages: { label: string; users: number }[]
+}
+
+// Reporte en tiempo real de GA4 (usuarios activos en los últimos 30 min). Mismo
+// patrón de credencial/propiedad que getGa4Summary; null si no está conectado.
+export async function getGa4Realtime(): Promise<Ga4Realtime | null> {
+  const raw = await getSetting("gsc_service_account", "GSC_SERVICE_ACCOUNT")
+  const propertyId = (await getSetting("ga4_property_id", "GA4_PROPERTY_ID"))
+    .trim()
+    .replace(/^properties\//, "")
+  if (!raw || !propertyId) return null
+
+  let creds: { client_email?: string; private_key?: string }
+  try {
+    creds = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  if (!creds.client_email || !creds.private_key) return null
+
+  const token = await getGoogleAccessToken(
+    "https://www.googleapis.com/auth/analytics.readonly",
+    creds.client_email,
+    creds.private_key.replace(/\\n/g, "\n"),
+  )
+  if (!token) return null
+
+  const url = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runRealtimeReport`
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        dimensions: [{ name: "unifiedScreenName" }],
+        metrics: [{ name: "activeUsers" }],
+        metricAggregations: ["TOTAL"],
+        limit: 5,
+      }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return null
+    const j = (await res.json()) as { rows?: GaRow[]; totals?: GaRow[] }
+    const rows = j.rows ?? []
+    const topPages = rows.map((r) => ({
+      label: r.dimensionValues?.[0]?.value ?? "(desconocido)",
+      users: Number(r.metricValues?.[0]?.value ?? 0),
+    }))
+    const totalVal = j.totals?.[0]?.metricValues?.[0]?.value
+    const activeUsers =
+      totalVal != null ? Number(totalVal) : topPages.reduce((s, p) => s + p.users, 0)
+    return { activeUsers, topPages }
+  } catch {
+    return null
+  }
+}
