@@ -11,9 +11,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { getPublicAppUrl } from "@/lib/env"
-import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Mail } from "@/lib/icons"
+import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Mail, Edit3 } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
+import { ListingGallery } from "@/components/marketplace/listing-gallery"
 
 const TYPE_LABELS: Record<string, string> = {
   SALE: "Venta", PURCHASE: "Compra", TRADE: "Intercambio", SERVICE: "Servicio",
@@ -63,13 +64,14 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
   })
   if (!listing || listing.deletedAt) notFound()
 
+  const session = await auth()
+  const isOwner = session?.user?.id === listing.userId
+  const isAdmin = session?.user?.role === "ADMIN"
+  const canEdit = isOwner || isAdmin
+
   // Solo se muestran públicamente los anuncios ACTIVOS. El dueño y el admin sí
   // pueden previsualizar los suyos aunque estén en revisión (PENDING/HIDDEN).
-  if (listing.status !== "ACTIVE") {
-    const session = await auth()
-    const privileged = session?.user?.id === listing.userId || session?.user?.role === "ADMIN"
-    if (!privileged) notFound()
-  }
+  if (listing.status !== "ACTIVE" && !canEdit) notFound()
 
   if (listing.category.slug !== category) {
     redirect(`/marketplace/${listing.category.slug}/${listing.slug}`)
@@ -104,67 +106,24 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             {/* Images & Info */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Image Gallery */}
+              {/* Image Gallery (navegable) */}
               <Card className="overflow-hidden">
-                <div className="relative h-64 bg-gray-50 sm:h-80">
-                  {listing.images.length > 0 ? (
-                    <Image
-                      src={listing.images[0].url}
-                      alt={listing.title}
-                      fill
-                      sizes="(max-width:1024px) 100vw, 640px"
-                      className="object-contain"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-gray-300 text-6xl">📸</div>
-                  )}
-                </div>
-                {listing.images.length > 1 && (
-                  <div className="flex gap-2 p-3 overflow-x-auto">
-                    {listing.images.slice(1).map((img) => (
-                      <div key={img.id} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
-                        <Image src={img.url} alt="" fill className="object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ListingGallery images={listing.images} title={listing.title} />
               </Card>
 
-              {/* Details */}
+              {/* Descripción + ubicación (el título/precio van en la columna derecha) */}
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
+                <CardContent className="space-y-4 p-6">
+                  {listing.description ? (
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">{listing.title}</h1>
-                      <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
-                        <Badge variant="outline">{TYPE_LABELS[listing.type] ?? listing.type}</Badge>
-                        {listing.condition && (
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${conditionBadge(listing.condition)}`}>
-                            {conditionLabel(listing.condition)}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(listing.createdAt).toLocaleDateString("es-MX")}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
-                          {listing.views}
-                        </span>
-                      </div>
+                      <h2 className="mb-2 text-sm font-semibold text-gray-900">Descripción</h2>
+                      <p className="whitespace-pre-wrap text-sm text-gray-600">{listing.description}</p>
                     </div>
-                    {listing.price && (
-                      <div className="text-2xl font-bold text-blue-600">{formatCurrency(Number(listing.price))}</div>
-                    )}
-                  </div>
-                  {listing.description && (
-                    <div className="mt-6">
-                      <h2 className="text-sm font-semibold text-gray-900 mb-2">Descripción</h2>
-                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{listing.description}</p>
-                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">Sin descripción.</p>
                   )}
-                  <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-                    <MapPin className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin className="h-4 w-4 shrink-0" />
                     {[listing.neighborhood, listing.municipality?.name].filter(Boolean).join(", ") || "Zona Metropolitana de Guadalajara"}
                   </div>
                 </CardContent>
@@ -201,6 +160,47 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
 
             {/* Sidebar */}
             <div className="mt-6 lg:mt-0 space-y-4">
+              {/* Título, precio y condición (estilo Marketplace) */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <h1 className="text-xl font-bold leading-tight text-gray-900">{listing.title}</h1>
+                    {canEdit && (
+                      <Link
+                        href={`/marketplace/${listing.category.slug}/${listing.slug}/editar`}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" /> Editar
+                      </Link>
+                    )}
+                  </div>
+                  {listing.price && (
+                    <p className="mt-2 text-2xl font-bold text-blue-600">{formatCurrency(Number(listing.price))}</p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                    <Badge variant="outline">{TYPE_LABELS[listing.type] ?? listing.type}</Badge>
+                    {listing.condition && (
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${conditionBadge(listing.condition)}`}>
+                        {conditionLabel(listing.condition)}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(listing.createdAt).toLocaleDateString("es-MX")}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      {listing.views}
+                    </span>
+                  </div>
+                  {listing.status !== "ACTIVE" && canEdit && (
+                    <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+                      Vista previa — esta publicación está en estado {listing.status}. Solo tú (y el equipo) la ven así.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Seller Card */}
               <Card>
                 <CardContent className="p-5">
