@@ -4,41 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { MapPin, Navigation } from "@/lib/icons"
 import { useUserLocation } from "@/components/location/user-location"
 import { trackEvent } from "@/lib/analytics/track"
-
-// Carga la API JS de Google Maps una sola vez (compartida entre instancias). La
-// key es de cliente y va restringida por dominio en Google Cloud (la CSP ya
-// permite maps.googleapis.com). Sin key el componente cae a un fallback sin mapa.
-let gmapsPromise: Promise<void> | null = null
-function loadGoogleMaps(key: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"))
-  const w = window as unknown as {
-    google?: { maps?: { Map?: unknown; importLibrary?: (n: string) => Promise<unknown> } }
-  }
-  if (w.google?.maps?.Map) return Promise.resolve()
-  if (gmapsPromise) return gmapsPromise
-  gmapsPromise = new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script")
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&language=es&region=MX&loading=async`
-    s.async = true
-    s.onload = () => {
-      // Con loading=async la clase Map carga bajo demanda: se espera a que la
-      // librería "maps" esté lista ANTES de resolver, para que `new google.maps.Map`
-      // funcione (resolver en onload directo daría "Map is not a constructor").
-      const g = w.google
-      if (g?.maps?.importLibrary) {
-        g.maps.importLibrary("maps").then(() => resolve()).catch(() => resolve())
-      } else {
-        resolve()
-      }
-    }
-    s.onerror = () => {
-      gmapsPromise = null
-      reject(new Error("No se pudo cargar Google Maps"))
-    }
-    document.head.appendChild(s)
-  })
-  return gmapsPromise
-}
+import { loadGoogleMaps } from "@/lib/google-maps-loader"
 
 // Mapa embebido en la ficha del negocio con Google Maps. Muestra el negocio y,
 // si el usuario ya concedió su ubicación (hook compartido useUserLocation), su
@@ -71,6 +37,7 @@ export function BusinessMap({
       .then(() => {
         if (cancelled || !containerRef.current || mapRef.current) return
         const g = (window as any).google
+        if (!g?.maps?.Map) { setFailed(true); return } // guarda: nunca `new` sobre undefined
         const map = new g.maps.Map(containerRef.current, {
           center: { lat, lng },
           zoom: 15,

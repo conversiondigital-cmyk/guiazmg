@@ -3,35 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Search, SlidersHorizontal, Star, Plus, Minus, LocateFixed, Store, MapPin } from "lucide-react"
-
-// Carga el script de Google Maps una sola vez por página (compartido con el picker).
-let mapsPromise: Promise<void> | null = null
-function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"))
-  const w = window as unknown as {
-    google?: { maps?: { Map?: unknown; importLibrary?: (n: string) => Promise<unknown> } }
-  }
-  if (w.google?.maps?.Map) return Promise.resolve()
-  if (!mapsPromise) {
-    mapsPromise = new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script")
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async`
-      s.async = true
-      s.onload = () => {
-        // loading=async: esperar a que la librería "maps" esté lista antes de resolver.
-        const g = w.google
-        if (g?.maps?.importLibrary) {
-          g.maps.importLibrary("maps").then(() => resolve()).catch(() => resolve())
-        } else {
-          resolve()
-        }
-      }
-      s.onerror = () => reject(new Error("No se pudo cargar Google Maps. Revisa la API key."))
-      document.head.appendChild(s)
-    })
-  }
-  return mapsPromise
-}
+import { loadGoogleMaps } from "@/lib/google-maps-loader"
 
 // Centro por defecto: Guadalajara.
 const GDL = { lat: 20.6597, lng: -103.3496 }
@@ -118,6 +90,7 @@ export function InteractiveMap({
       .then(() => {
         if (cancelled || !ref.current) return
         const g = (window as any).google
+        if (!g?.maps?.Map) { setError("No se pudo cargar el mapa. Intenta recargar."); return }
         const map = new g.maps.Map(ref.current, {
           center: GDL,
           zoom: 12,
