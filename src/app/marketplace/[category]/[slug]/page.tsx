@@ -15,6 +15,7 @@ import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Edit3 } from "@/lib/
 import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 import { ListingGallery } from "@/components/marketplace/listing-gallery"
+import { ListingFavoriteButton } from "@/components/marketplace/listing-favorite-button"
 
 const TYPE_LABELS: Record<string, string> = {
   SALE: "Venta", PURCHASE: "Compra", TRADE: "Intercambio", SERVICE: "Servicio",
@@ -196,6 +197,18 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                   {listing.status !== "ACTIVE" && canEdit && (
                     <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
                       Vista previa — esta publicación está en estado {listing.status}. Solo tú (y el equipo) la ven así.
+                    </p>
+                  )}
+                  {!isOwner && (
+                    <div className="mt-4">
+                      <ListingFavoriteButton listingId={listing.id} />
+                    </div>
+                  )}
+                  {isOwner && (listing._count?.favorites ?? 0) > 0 && (
+                    <p className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      {listing._count.favorites}{" "}
+                      {listing._count.favorites === 1 ? "persona guardó" : "personas guardaron"} esta publicación
                     </p>
                   )}
                 </CardContent>
