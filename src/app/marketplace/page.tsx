@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { Search, Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
-import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
+import { conditionLabel, conditionBadge, LISTING_CONDITIONS } from "@/lib/marketplace-conditions"
 
 const CATEGORY_ICONS: Record<string, string> = {
   PRODUCTOS: "📦",
@@ -35,6 +35,14 @@ export default async function MarketplacePage({
   const category = typeof params.categoria === "string" ? params.categoria : ""
   const subcategoria = typeof params.subcategoria === "string" ? params.subcategoria : ""
   const municipio = typeof params.municipio === "string" ? params.municipio : ""
+  const sort = typeof params.sort === "string" ? params.sort : "recientes"
+  const condicion = typeof params.condicion === "string" ? params.condicion : ""
+  const tipo = typeof params.tipo === "string" ? params.tipo : ""
+  const minStr = typeof params.min === "string" ? params.min : ""
+  const maxStr = typeof params.max === "string" ? params.max : ""
+  const minPrice = minStr !== "" && !Number.isNaN(Number(minStr)) ? Number(minStr) : undefined
+  const maxPrice = maxStr !== "" && !Number.isNaN(Number(maxStr)) ? Number(maxStr) : undefined
+  const hasFilters = Boolean(q || category || subcategoria || municipio || condicion || tipo || minPrice != null || maxPrice != null)
   const page = Math.max(1, parseInt(typeof params.page === "string" ? params.page : "1"))
   const limit = 20
 
@@ -66,6 +74,18 @@ export default async function MarketplacePage({
     where.category = { OR: [{ slug: category }, { parent: { slug: category } }] }
   }
   if (municipio) where.municipalityId = municipio
+  if (condicion) where.condition = condicion
+  if (tipo) where.type = tipo
+  if (minPrice != null) where.price = { ...(where.price || {}), gte: minPrice }
+  if (maxPrice != null) where.price = { ...(where.price || {}), lte: maxPrice }
+
+  // Orden: por precio si se pide; si no, destacados primero y luego lo más reciente.
+  const orderBy: any =
+    sort === "precio_asc"
+      ? { price: "asc" }
+      : sort === "precio_desc"
+        ? { price: "desc" }
+        : [{ isBoosted: "desc" }, { createdAt: "desc" }]
 
   const [listings, total] = await Promise.all([
     prisma.marketplaceListing.findMany({
@@ -77,8 +97,7 @@ export default async function MarketplacePage({
         images: { orderBy: { sortOrder: "asc" }, take: 1 },
         _count: { select: { favorites: true } },
       },
-      // Las publicaciones destacadas (boost vigente) aparecen primero.
-      orderBy: [{ isBoosted: "desc" }, { createdAt: "desc" }],
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -106,8 +125,12 @@ export default async function MarketplacePage({
             </Link>
           </div>
 
-          {/* Search */}
-          <form className="mb-8">
+          {/* Búsqueda + filtros */}
+          <form method="get" className="mb-8 space-y-3">
+            {/* Preserva la categoría/zona seleccionada al filtrar */}
+            {category && <input type="hidden" name="categoria" value={category} />}
+            {subcategoria && <input type="hidden" name="subcategoria" value={subcategoria} />}
+            {municipio && <input type="hidden" name="municipio" value={municipio} />}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <Input
@@ -116,6 +139,49 @@ export default async function MarketplacePage({
                 placeholder="Buscar en marketplace..."
                 className="pl-10 h-12 text-base"
               />
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="text-xs">
+                <span className="mb-1 block font-medium text-gray-600">Ordenar</span>
+                <select name="sort" defaultValue={sort} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700">
+                  <option value="recientes">Más recientes</option>
+                  <option value="precio_asc">Precio: menor a mayor</option>
+                  <option value="precio_desc">Precio: mayor a menor</option>
+                </select>
+              </label>
+              <label className="text-xs">
+                <span className="mb-1 block font-medium text-gray-600">Condición</span>
+                <select name="condicion" defaultValue={condicion} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700">
+                  <option value="">Todas</option>
+                  {LISTING_CONDITIONS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs">
+                <span className="mb-1 block font-medium text-gray-600">Tipo</span>
+                <select name="tipo" defaultValue={tipo} className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm text-gray-700">
+                  <option value="">Todos</option>
+                  <option value="SALE">Venta</option>
+                  <option value="SERVICE">Servicio</option>
+                  <option value="TRADE">Intercambio</option>
+                  <option value="REQUEST">Solicitud</option>
+                </select>
+              </label>
+              <label className="text-xs">
+                <span className="mb-1 block font-medium text-gray-600">Precio (MXN)</span>
+                <div className="flex items-center gap-1">
+                  <input name="min" type="number" min="0" defaultValue={minStr} placeholder="Mín" className="h-9 w-20 rounded-lg border border-gray-200 px-2 text-sm" />
+                  <span className="text-gray-400">–</span>
+                  <input name="max" type="number" min="0" defaultValue={maxStr} placeholder="Máx" className="h-9 w-20 rounded-lg border border-gray-200 px-2 text-sm" />
+                </div>
+              </label>
+              <Button type="submit" className="h-9">Filtrar</Button>
+              {hasFilters && (
+                <Link href="/marketplace" className="inline-flex h-9 items-center px-3 text-sm text-gray-500 hover:text-gray-700">
+                  Limpiar
+                </Link>
+              )}
             </div>
           </form>
 

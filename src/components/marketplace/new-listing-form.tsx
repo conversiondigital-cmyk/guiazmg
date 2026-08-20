@@ -230,7 +230,10 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
       }
 
       toast.success(isEdit ? "Publicación actualizada" : "Publicación creada exitosamente")
-      router.push(isEdit ? "/dashboard/marketplace" : "/marketplace")
+      // Al editar, vuelve a la publicación (no al panel), para ver los cambios.
+      router.push(
+        isEdit && listing ? `/marketplace/${listing.categorySlug}/${listing.slug}` : "/marketplace"
+      )
       router.refresh()
     } catch {
       toast.error("Error al crear la publicación")
@@ -453,16 +456,9 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="contactEmail">Correo de contacto</Label>
-            <Input
-              id="contactEmail"
-              type="email"
-              value={form.contactEmail}
-              onChange={(e) => updateField("contactEmail", e.target.value)}
-              placeholder="correo@ejemplo.com"
-            />
-          </div>
+          <p className="text-xs text-gray-500">
+            Los compradores te contactan por WhatsApp o teléfono. Con WhatsApp reciben más respuestas.
+          </p>
         </CardContent>
       </Card>
 

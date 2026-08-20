@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { getPublicAppUrl } from "@/lib/env"
-import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Mail, Edit3 } from "@/lib/icons"
+import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Edit3 } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 import { ListingGallery } from "@/components/marketplace/listing-gallery"
@@ -252,16 +252,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                       Llamar
                     </a>
                   )}
-                  {listing.contactEmail && (
-                    <a
-                      href={`mailto:${listing.contactEmail}`}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Mail className="h-4 w-4" />
-                      Enviar correo
-                    </a>
-                  )}
-                  {!listing.whatsapp && !listing.phone && !listing.contactEmail && (
+                  {!listing.whatsapp && !listing.phone && (
                     <p className="text-sm text-gray-400 text-center">Sin información de contacto</p>
                   )}
                   <p className="pt-1 text-center text-[11px] leading-snug text-gray-400">
