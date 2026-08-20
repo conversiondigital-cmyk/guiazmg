@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2, X, Camera } from "@/lib/icons"
+import { LISTING_CONDITIONS, conditionAppliesTo } from "@/lib/marketplace-conditions"
 
 interface CategoryChild {
   id: string
@@ -40,6 +41,7 @@ interface EditListing {
   description: string | null
   price: number | null
   type: ListingType
+  condition: string | null
   categoryId: string
   municipalityId: string | null
   neighborhood: string | null
@@ -96,6 +98,7 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
     description: listing?.description ?? "",
     price: listing?.price != null ? String(listing.price) : "",
     type: initialType,
+    condition: listing?.condition ?? "",
     neighborhood: listing?.neighborhood ?? "",
     phone: listing?.phone ?? "",
     whatsapp: listing?.whatsapp ?? "",
@@ -202,6 +205,7 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
         description: form.description,
         price: parseFloat(form.price),
         type: form.type,
+        condition: conditionAppliesTo(form.type) ? form.condition || null : null,
         // Si hay subcategoría, se publica bajo ESA (más específica); si no, bajo
         // la padre. Antes se mandaba subcategoryId, que el API ignoraba → se perdía.
         categoryId: selectedSubcategory || selectedCategory,
@@ -305,6 +309,26 @@ export function NewListingForm({ categories, municipalities, listing }: NewListi
                 <SelectContent>
                   {currentCategory.children.map((sub) => (
                     <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {conditionAppliesTo(form.type) && (
+            <div>
+              <Label htmlFor="condition">Condición</Label>
+              <Select
+                value={form.condition}
+                onValueChange={(v) => updateField("condition", v || "")}
+                items={Object.fromEntries(LISTING_CONDITIONS.map((cnd) => [cnd.value, cnd.label]))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="¿En qué estado está?" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LISTING_CONDITIONS.map((cnd) => (
+                    <SelectItem key={cnd.value} value={cnd.value}>{cnd.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

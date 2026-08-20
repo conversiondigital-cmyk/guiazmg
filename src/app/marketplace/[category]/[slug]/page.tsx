@@ -11,8 +11,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { getPublicAppUrl } from "@/lib/env"
-import { MapPin, Phone, MessageCircle, Calendar, Eye, Star } from "@/lib/icons"
+import { MapPin, Phone, MessageCircle, Calendar, Eye, Star, Mail } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
+import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 
 const TYPE_LABELS: Record<string, string> = {
   SALE: "Venta", PURCHASE: "Compra", TRADE: "Intercambio", SERVICE: "Servicio",
@@ -105,11 +106,15 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
             <div className="lg:col-span-2 space-y-6">
               {/* Image Gallery */}
               <Card className="overflow-hidden">
-                <div className="aspect-[16/10] bg-gray-100">
+                <div className="relative h-64 bg-gray-50 sm:h-80">
                   {listing.images.length > 0 ? (
-                    <div className="relative h-full w-full">
-                      <Image src={listing.images[0].url} alt={listing.title} fill className="object-cover" />
-                    </div>
+                    <Image
+                      src={listing.images[0].url}
+                      alt={listing.title}
+                      fill
+                      sizes="(max-width:1024px) 100vw, 640px"
+                      className="object-contain"
+                    />
                   ) : (
                     <div className="flex h-full items-center justify-center text-gray-300 text-6xl">📸</div>
                   )}
@@ -133,6 +138,11 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                       <h1 className="text-2xl font-bold text-gray-900">{listing.title}</h1>
                       <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
                         <Badge variant="outline">{TYPE_LABELS[listing.type] ?? listing.type}</Badge>
+                        {listing.condition && (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${conditionBadge(listing.condition)}`}>
+                            {conditionLabel(listing.condition)}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           {new Date(listing.createdAt).toLocaleDateString("es-MX")}
@@ -218,7 +228,10 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
               {/* Contact */}
               <Card>
                 <CardContent className="p-5 space-y-3">
-                  <h3 className="font-semibold text-gray-900">Contactar</h3>
+                  <h3 className="font-semibold text-gray-900">Contactar al vendedor</h3>
+                  {/* Privacidad: no se muestra el teléfono ni el correo como texto.
+                      WhatsApp es el canal principal; "Llamar" y "Enviar correo" abren
+                      la app sin exponer el dato en la página. */}
                   {listing.whatsapp && (
                     <a
                       href={`https://wa.me/52${listing.whatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hola, vi tu publicación "${listing.title}" en Guía ZMG`)}`}
@@ -227,7 +240,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                       className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600 transition-colors"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      WhatsApp
+                      Enviar mensaje por WhatsApp
                     </a>
                   )}
                   {listing.phone && (
@@ -236,20 +249,24 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                       className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Phone className="h-4 w-4" />
-                      {listing.phone}
+                      Llamar
                     </a>
                   )}
                   {listing.contactEmail && (
                     <a
                       href={`mailto:${listing.contactEmail}`}
-                      className="block text-center text-sm text-blue-600 hover:underline"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      {listing.contactEmail}
+                      <Mail className="h-4 w-4" />
+                      Enviar correo
                     </a>
                   )}
                   {!listing.whatsapp && !listing.phone && !listing.contactEmail && (
                     <p className="text-sm text-gray-400 text-center">Sin información de contacto</p>
                   )}
+                  <p className="pt-1 text-center text-[11px] leading-snug text-gray-400">
+                    Trata directo con el vendedor. No compartas datos de pago por adelantado.
+                  </p>
                 </CardContent>
               </Card>
 

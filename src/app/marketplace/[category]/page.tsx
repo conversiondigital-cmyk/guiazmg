@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
+import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>
@@ -105,7 +106,12 @@ export default async function MarketplaceCategoryPage({ params }: CategoryPagePr
                 return (
                   <Link key={listing.id} href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
                     <Card className="group h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
-                      <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+                      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                        {listing.condition && (
+                          <span className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
+                            {conditionLabel(listing.condition)}
+                          </span>
+                        )}
                         {thumb ? (
                           <div className="relative h-full w-full">
                             <Image src={thumb.url} alt={listing.title} fill className="object-cover transition-transform group-hover:scale-105" />

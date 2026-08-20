@@ -6,7 +6,8 @@ import { requireConsent } from "@/lib/auth/consent"
 import { prisma } from "@/lib/prisma"
 import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { enforceRateLimits, getClientIp } from "@/lib/security/request-rate-limit"
-import { getSetting, getSettingNumber } from "@/lib/settings"
+import { getSetting, getSettingNumber, getSettingBool } from "@/lib/settings"
+import { CONDITION_VALUES, conditionAppliesTo } from "@/lib/marketplace-conditions"
 import { z } from "zod"
 
 const blankToNull = (value: unknown) => (value === "" || value === undefined ? null : value)
@@ -17,6 +18,7 @@ const listingSchema = z.object({
   // Obligatorio y mínimo $20: bloquea "Gratis" (0) y montos de gancho como 1 peso.
   price: z.coerce.number().min(20, "El precio mínimo es $20").max(9999999),
   type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]),
+  condition: z.preprocess(blankToNull, z.enum(CONDITION_VALUES).optional().nullable()),
   // Las tablas de referencia (categorías, municipios) se sembraron con UUID, no
   // cuid. Se valida solo "no vacío": la existencia real se comprueba abajo con
   // Prisma (where parametrizado), así que aceptar UUID o cuid no baja seguridad.
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
     const MAX_ACTIVE_LISTINGS = await getSettingNumber("marketplace_max_active_listings", 3)
     const userId = session.user.id
 
-    const { title, description, price, type, categoryId, municipalityId, neighborhood, phone, whatsapp, contactEmail, images } = listingSchema.parse(await request.json())
+    const { title, description, price, type, condition, categoryId, municipalityId, neighborhood, phone, whatsapp, contactEmail, images } = listingSchema.parse(await request.json())
 
     const slug = await generateUniqueSlug(slugify(title), async (s) =>
       Boolean(await prisma.marketplaceListing.findUnique({ where: { slug: s }, select: { id: true } }))
@@ -72,6 +74,11 @@ export async function POST(request: NextRequest) {
     const MARKETPLACE_TTL_DAYS = await getSettingNumber("marketplace_listing_ttl_days", 30)
     const expiresAt = new Date(Date.now() + MARKETPLACE_TTL_DAYS * 24 * 60 * 60 * 1000)
 
+    // Auto-aprobar (Admin → Config → Moderación → "Auto-aprobar contenido"): si está
+    // ON, la publicación entra ACTIVE y sale al instante (estilo Facebook). Si está
+    // OFF (default), entra PENDING a la cola de moderación.
+    const autoApprove = await getSettingBool("auto_approve_content")
+
     let listing
     try {
       listing = await prisma.$transaction(async (tx) => {
@@ -90,8 +97,10 @@ export async function POST(request: NextRequest) {
             description,
             price,
             type,
+            // Solo se guarda si aplica al tipo (bienes físicos), no en servicios/eventos.
+            condition: conditionAppliesTo(type) ? condition ?? null : null,
             expiresAt,
-            status: "PENDING", // entra a la cola de moderación; el admin aprueba
+            status: autoApprove ? "ACTIVE" : "PENDING", // ver toggle "Auto-aprobar contenido"
             categoryId,
             municipalityId,
             neighborhood,

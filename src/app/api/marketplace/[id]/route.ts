@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getSettingNumber } from "@/lib/settings"
+import { CONDITION_VALUES } from "@/lib/marketplace-conditions"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -13,6 +14,7 @@ const updateSchema = z.object({
   description: z.preprocess(blankToNull, z.string().trim().max(5000).nullable().optional()),
   price: z.coerce.number().min(20, "El precio mínimo es $20").max(9999999).optional(),
   type: z.enum(["SALE", "PURCHASE", "TRADE", "SERVICE", "REQUEST", "EVENT", "PROMOTION"]).optional(),
+  condition: z.preprocess(blankToNull, z.enum(CONDITION_VALUES).nullable().optional()),
   // Categoría/municipio: tablas de referencia con IDs UUID (no cuid). Se valida
   // "no vacío" y la existencia se resuelve con Prisma más abajo.
   categoryId: z.string().min(1).optional(),

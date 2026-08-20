@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { Search, Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
+import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 
 const CATEGORY_ICONS: Record<string, string> = {
   PRODUCTOS: "📦",
@@ -157,6 +158,11 @@ export default async function MarketplacePage({
                         {listing.isBoosted && (
                           <span className="absolute left-2 top-2 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-amber-950 shadow">
                             Destacado
+                          </span>
+                        )}
+                        {listing.condition && (
+                          <span className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
+                            {conditionLabel(listing.condition)}
                           </span>
                         )}
                         {thumb ? (

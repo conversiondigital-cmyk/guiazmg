@@ -1311,6 +1311,9 @@ model MarketplaceListing {
   description   String?
   price         Decimal?                   @db.Decimal(10, 2)
   type          MarketplaceListingType     @default(SALE)
+  // Estado del artículo (NEW/LIKE_NEW/USED/WITH_DETAILS). String simple (no enum PG)
+  // para migrar con un ADD COLUMN idempotente. Etiquetas en @/lib/marketplace-conditions.
+  condition     String?
   status        MarketplaceListingStatus   @default(PENDING)
   categoryId    String
   category      MarketplaceCategory        @relation(fields: [categoryId], references: [id])

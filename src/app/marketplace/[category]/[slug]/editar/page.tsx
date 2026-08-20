@@ -39,6 +39,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ ca
     description: listing.description,
     price: listing.price != null ? Number(listing.price) : null,
     type: listing.type,
+    condition: listing.condition,
     categoryId: listing.categoryId,
     municipalityId: listing.municipalityId,
     neighborhood: listing.neighborhood,
