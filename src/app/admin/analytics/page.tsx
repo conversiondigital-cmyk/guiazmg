@@ -238,6 +238,10 @@ export default async function AdminAnalyticsPage() {
   const maxVisit = Math.max(...chartVisits.map((d) => d.count), 1)
   const maxLead = Math.max(...chartLeads.map((d) => d.count), 1)
   const maxRevenue = Math.max(...revenueBars.map((d) => d.amount), 1)
+  const totalRevenue12m = revenueBars.reduce((s, d) => s + d.amount, 0)
+  // Rango de fechas de las series diarias (para rotular el eje X: MM-DD).
+  const visitFrom = chartVisits[0]?.date.slice(5) ?? ""
+  const visitTo = chartVisits[chartVisits.length - 1]?.date.slice(5) ?? ""
 
   const funnel = [
     { label: "Visitantes", value: visitsCount, pct: 100 },
@@ -402,6 +406,7 @@ export default async function AdminAnalyticsPage() {
             {chartVisits.map((d) => (
               <div
                 key={d.date}
+                title={`${d.date}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxVisit) * 100, 2)}%`,
@@ -410,8 +415,10 @@ export default async function AdminAnalyticsPage() {
               />
             ))}
           </div>
-          <div className="mt-2 text-right text-[10px] text-muted-foreground">
-            Total: {chartVisits.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>{visitFrom}</span>
+            <span>Total: {chartVisits.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
+            <span>{visitTo}</span>
           </div>
         </div>
         <div className="rounded-xl border bg-card p-5">
@@ -423,6 +430,7 @@ export default async function AdminAnalyticsPage() {
             {chartLeads.map((d) => (
               <div
                 key={d.date}
+                title={`${d.date}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxLead) * 100, 2)}%`,
@@ -431,30 +439,45 @@ export default async function AdminAnalyticsPage() {
               />
             ))}
           </div>
-          <div className="mt-2 text-right text-[10px] text-muted-foreground">
-            Total: {chartLeads.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>{visitFrom}</span>
+            <span>Total: {chartLeads.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
+            <span>{visitTo}</span>
           </div>
         </div>
       </div>
 
       {/* Monthly Revenue */}
       <div className="rounded-xl border bg-card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-heading text-sm font-medium">Ingresos mensuales (12 meses)</h3>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-heading text-sm font-medium">Ingresos mensuales (12 meses)</h3>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            Total 12 meses: <strong className="text-slate-900">${totalRevenue12m.toLocaleString()}</strong>
+          </span>
         </div>
+        {/* Barras: hijas DIRECTAS del contenedor con altura fija (antes iban dentro
+            de un wrapper sin altura, por eso el height:% colapsaba y salía vacío). */}
         <div className="flex items-end gap-1" style={{ height: 100 }}>
           {revenueBars.map((d) => (
-            <div key={d.month} className="flex flex-1 flex-col items-center">
-              <div
-                className="w-full rounded-sm transition-all"
-                style={{
-                  height: `${Math.max((d.amount / maxRevenue) * 100, 2)}%`,
-                  background: "linear-gradient(to top, #A78BFA, #7C3AED)",
-                }}
-              />
-              <span className="mt-1 text-[8px] text-muted-foreground">{d.month.slice(5)}</span>
-            </div>
+            <div
+              key={d.month}
+              title={`${d.month}: $${d.amount.toLocaleString()}`}
+              className="flex-1 rounded-sm transition-all"
+              style={{
+                height: `${Math.max((d.amount / maxRevenue) * 100, d.amount > 0 ? 6 : 2)}%`,
+                background: "linear-gradient(to top, #A78BFA, #7C3AED)",
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-1 flex gap-1">
+          {revenueBars.map((d) => (
+            <span key={d.month} className="flex-1 text-center text-[8px] text-muted-foreground">
+              {d.month.slice(5)}
+            </span>
           ))}
         </div>
       </div>
