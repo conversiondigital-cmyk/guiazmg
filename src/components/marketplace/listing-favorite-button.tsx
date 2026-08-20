@@ -7,12 +7,14 @@ import { toast } from "sonner"
 
 // Botón "Guardar" de una publicación del marketplace. Al guardarla, el API avisa al
 // vendedor ("Guardaron tu publicación"). Optimista; si no hay sesión, manda a login.
-export function ListingFavoriteButton({ listingId }: { listingId: string }) {
+export function ListingFavoriteButton({ listingId, isAuthed }: { listingId: string; isAuthed: boolean }) {
   const router = useRouter()
   const [favorited, setFavorited] = useState(false)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
+    // Sin sesión el proxy bloquea /api (redirige a login), así que ni consultamos.
+    if (!isAuthed) return
     let active = true
     fetch(`/api/marketplace/${listingId}/favorite`)
       .then((r) => r.json())
@@ -23,9 +25,14 @@ export function ListingFavoriteButton({ listingId }: { listingId: string }) {
     return () => {
       active = false
     }
-  }, [listingId])
+  }, [listingId, isAuthed])
 
   const toggle = async () => {
+    if (!isAuthed) {
+      const cb = typeof window !== "undefined" ? window.location.pathname : "/marketplace"
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(cb)}`)
+      return
+    }
     if (busy) return
     setBusy(true)
     const next = !favorited

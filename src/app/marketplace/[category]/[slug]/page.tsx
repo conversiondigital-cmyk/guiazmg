@@ -201,7 +201,7 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
                   )}
                   {!isOwner && (
                     <div className="mt-4">
-                      <ListingFavoriteButton listingId={listing.id} />
+                      <ListingFavoriteButton listingId={listing.id} isAuthed={!!session?.user} />
                     </div>
                   )}
                   {isOwner && (listing._count?.favorites ?? 0) > 0 && (
