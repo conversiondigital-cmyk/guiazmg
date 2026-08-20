@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-// Notifica al vendedor (fire-and-forget; nunca rompe la petición).
+// Guardar/favorito de una publicación: /api/marketplace/{id}/favorite.
+// Va anidado bajo [id] (no como hermano estático) para no colisionar con la ruta
+// dinámica [id]/route.ts.
+
 async function notifySeller(userId: string, title: string, message: string, link: string) {
   try {
     await (prisma as any).notification.create({
@@ -15,43 +18,36 @@ async function notifySeller(userId: string, title: string, message: string, link
   }
 }
 
-// Estado del guardado para el usuario actual.
-export async function GET(req: NextRequest) {
-  const listingId = req.nextUrl.searchParams.get("listingId")
-  if (!listingId) return NextResponse.json({ favorited: false, authed: false })
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ favorited: false, authed: false })
   const fav = await prisma.favorite
     .findUnique({
-      where: { userId_marketplaceListingId: { userId: session.user.id, marketplaceListingId: listingId } },
+      where: { userId_marketplaceListingId: { userId: session.user.id, marketplaceListingId: id } },
       select: { id: true },
     })
     .catch(() => null)
   return NextResponse.json({ favorited: !!fav, authed: true })
 }
 
-// Guarda la publicación. Al guardarla POR PRIMERA VEZ, avisa al vendedor.
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Inicia sesión para guardar publicaciones" }, { status: 401 })
   }
   const userId = session.user.id
-  const { listingId } = await req.json().catch(() => ({}))
-  if (!listingId || typeof listingId !== "string") {
-    return NextResponse.json({ error: "Falta la publicación" }, { status: 400 })
-  }
 
   const existing = await prisma.favorite.findUnique({
-    where: { userId_marketplaceListingId: { userId, marketplaceListingId: listingId } },
+    where: { userId_marketplaceListingId: { userId, marketplaceListingId: id } },
     select: { id: true },
   })
 
   if (!existing) {
-    await prisma.favorite.create({ data: { userId, marketplaceListingId: listingId } })
-    // Aviso al vendedor (solo si no se guarda a sí mismo).
+    await prisma.favorite.create({ data: { userId, marketplaceListingId: id } })
     const listing = await prisma.marketplaceListing.findUnique({
-      where: { id: listingId },
+      where: { id },
       select: { userId: true, title: true, slug: true, category: { select: { slug: true } } },
     })
     if (listing && listing.userId !== userId) {
@@ -66,16 +62,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ favorited: true })
 }
 
-// Quita el guardado.
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  const { listingId } = await req.json().catch(() => ({}))
-  if (!listingId || typeof listingId !== "string") {
-    return NextResponse.json({ error: "Falta la publicación" }, { status: 400 })
-  }
-  await prisma.favorite.deleteMany({
-    where: { userId: session.user.id, marketplaceListingId: listingId },
-  })
+  await prisma.favorite.deleteMany({ where: { userId: session.user.id, marketplaceListingId: id } })
   return NextResponse.json({ favorited: false })
 }

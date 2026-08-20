@@ -14,7 +14,7 @@ export function ListingFavoriteButton({ listingId }: { listingId: string }) {
 
   useEffect(() => {
     let active = true
-    fetch(`/api/marketplace/favorite?listingId=${listingId}`)
+    fetch(`/api/marketplace/${listingId}/favorite`)
       .then((r) => r.json())
       .then((d) => {
         if (active) setFavorited(!!d.favorited)
@@ -31,10 +31,8 @@ export function ListingFavoriteButton({ listingId }: { listingId: string }) {
     const next = !favorited
     setFavorited(next) // optimista
     try {
-      const res = await fetch("/api/marketplace/favorite", {
+      const res = await fetch(`/api/marketplace/${listingId}/favorite`, {
         method: next ? "POST" : "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId }),
       })
       if (res.status === 401) {
         setFavorited(false)
