@@ -4,6 +4,8 @@ import { Metadata } from "next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MEMBERSHIP_PLANS } from "@/lib/constants"
+import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
+import { PromoCode } from "@/components/promociones/promo-code"
 import { Gift, Check, ArrowRight, MapPin, Star, ShoppingBag, Zap, Crown } from "@/lib/icons"
 
 export const metadata: Metadata = {
@@ -12,13 +14,22 @@ export const metadata: Metadata = {
     "Registra tu negocio en Guía ZMG y activa tu plan Emprendedor o Negocio gratis por 60 días con tu código de invitación. Aparece donde la gente de tu zona busca.",
 }
 
-// Contenido estático (promo + descripción). ISR 10 min.
+// Lee los códigos de regalo activos de la BD. ISR 10 min (cambian rara vez).
 export const revalidate = 600
 
 const emp = MEMBERSHIP_PLANS.EMPRENDIMIENTO
 const neg = MEMBERSHIP_PLANS.NEGOCIO
 
-export default function PromoRegistroPage() {
+export default async function PromoRegistroPage() {
+  // Mismo origen que usa el registro para autocompletar el cupón: el de días
+  // gratis vigente (activo, no expirado y con cupos) por plan. Se muestran
+  // explícitos para que el visitante pueda copiarlos y canjearlos.
+  const promo = await getActivePromoCoupons().catch(() => ({ EMPRENDEDOR: null, NEGOCIO: null }))
+  const giftCodes = [
+    promo.EMPRENDEDOR && { ...promo.EMPRENDEDOR, planName: emp.name },
+    promo.NEGOCIO && { ...promo.NEGOCIO, planName: neg.name },
+  ].filter(Boolean) as { code: string; days: number; planName: string }[]
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
@@ -48,9 +59,30 @@ export default function PromoRegistroPage() {
                 <Link href="/dashboard/membresia">Ya tengo cuenta, canjear código</Link>
               </Button>
             </div>
-            <p className="mt-3 text-xs text-gray-400">
-              Válido para los planes Emprendedor y Negocio. Cupos limitados.
-            </p>
+
+            {/* Código de regalo EXPLÍCITO: sin esto, la promo pedía "tu código" sin mostrarlo. */}
+            {giftCodes.length > 0 ? (
+              <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-[#006c49]/15 bg-white/70 p-5 backdrop-blur">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#006c49]">
+                  Tu código de regalo
+                </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-3">
+                  {giftCodes.map((c) => (
+                    <PromoCode key={c.code} code={c.code} planName={c.planName} days={c.days} />
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-gray-500">
+                  Cópialo y actívalo en <strong>Panel → Membresía</strong> al elegir tu plan. Cupos limitados.
+                </p>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-gray-400">
+                Válido para los planes Emprendedor y Negocio. Cupos limitados.{" "}
+                <a href="/contacto" className="font-semibold text-[#006c49] hover:underline">
+                  ¿No tienes código? Escríbenos.
+                </a>
+              </p>
+            )}
           </div>
         </section>
 
