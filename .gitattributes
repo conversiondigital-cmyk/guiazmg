@@ -1,0 +1,32 @@
+# Normalización de fines de línea.
+#
+# El repo se edita desde Windows y desde Linux. Sin esta regla, cada cambio de
+# sistema reescribe los archivos con CRLF o LF y git los ve enteros como
+# modificados: llegamos a tener 61 archivos con 10,858 inserciones contra
+# 10,858 borrados idénticos, es decir, cero cambios reales sepultando cualquier
+# diff legible.
+#
+# text=auto  -> git detecta qué es texto y qué es binario
+# eol=lf     -> en el repositorio SIEMPRE se guarda LF, sin importar el SO
+* text=auto eol=lf
+
+# Binarios: nunca tocar sus bytes.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.pdf  binary
+*.mp4  binary
+*.zip  binary
+*.keystore binary
+*.jks  binary
+
+# Los .bat y .cmd de Windows necesitan CRLF para ejecutarse correctamente.
+*.bat text eol=crlf
+*.cmd text eol=crlf
