@@ -1,4 +1,5 @@
-import { PrismaClient } from "../src/generated/prisma/client"
+import "dotenv/config"
+import { PrismaClient } from "../../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
@@ -34,7 +35,7 @@ async function main() {
       slug: "tacqueria-el-primo",
       description: "Las mejores tortas y tacos de la zona metropolitana",
       phone: "+523312345678",
-      address: "Av. Vallarta 1234",
+      addressText: "Av. Vallarta 1234",
       status: "ACTIVE" as const,
     },
     {
@@ -42,7 +43,7 @@ async function main() {
       slug: "dentalcare-zapopan",
       description: "Consultorio dental con más de 10 años de experiencia",
       phone: "+523398765432",
-      address: "Av. Patria 567",
+      addressText: "Av. Patria 567",
       status: "ACTIVE" as const,
     },
     {
@@ -50,7 +51,7 @@ async function main() {
       slug: "taller-mecanico-el-bueno",
       description: "Taller mecánico especializado en motores europeos",
       phone: "+5233555666777",
-      address: "Periférico Norte 890",
+      addressText: "Periférico Norte 890",
       status: "PENDING_REVIEW" as const,
     },
   ]
@@ -71,7 +72,6 @@ async function main() {
         longitude: -103.3463,
         isVerified: true,
         verificationStatus: "VERIFIED",
-        searchVector: biz.name,
       },
     })
 
