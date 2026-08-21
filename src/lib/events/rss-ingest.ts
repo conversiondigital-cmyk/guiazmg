@@ -35,6 +35,21 @@ function tag(block: string, name: string): string | null {
   return m ? clean(m[1]) : null
 }
 
+// Primera imagen "real" del contenido del item (content:encoded / description).
+// Muchos feeds (WordPress: Guadalajara Secreta, Gaceta UDG…) NO usan
+// enclosure/media:content y ponen la foto como <img> dentro del HTML. Ignora
+// emojis, gravatars, spacers y píxeles de tracking.
+function firstContentImage(block: string): string | null {
+  const imgs = [...block.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((m) => m[1])
+  for (const raw of imgs) {
+    const src = raw.replace(/&amp;/g, "&").trim()
+    if (!/^https?:\/\//i.test(src)) continue
+    if (/s\.w\.org\/images\/core\/emoji|\/emoji\/|gravatar\.com|spacer|blank\.gif|1x1|pixel\./i.test(src)) continue
+    return src
+  }
+  return null
+}
+
 interface RssItem {
   title: string
   link: string | null
@@ -62,6 +77,7 @@ function parseFeed(xml: string): RssItem[] {
       block.match(/<media:content[^>]*url="([^"]+)"/i) ||
       block.match(/<media:thumbnail[^>]*url="([^"]+)"/i)
     if (enc) image = enc[1]
+    if (!image) image = firstContentImage(block)
     items.push({ title, link, description, pubDate, image })
   }
   return items
