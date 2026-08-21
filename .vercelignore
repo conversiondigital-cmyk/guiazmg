@@ -1,12 +1,19 @@
 # Archivos que NO se suben a Vercel al desplegar el sitio.
 #
-# Mantener esta lista MINIMA y explicita. Una regla con comodin puede excluir
-# algo que el sitio necesita sin que nadie lo note: por ejemplo `*.txt` llegaria
-# a excluir el DIRECTORIO src/app/robots.txt/, que es un route handler, y el
-# sitio se quedaria sin robots.txt en produccion.
+# ⚠️ LOS PATRONES SIN BARRA INICIAL COINCIDEN A CUALQUIER PROFUNDIDAD.
+# Esto ya costó un despliegue roto: `mobile/` (sin barra) excluia la app Expo
+# de la raiz, pero TAMBIEN src/app/api/mobile/ — los 20 archivos de la API
+# movil. El sintoma era desconcertante: el proxy dejaba pasar
+# /api/mobile/v1/*, no habia ninguna ruta detras, y el catch-all de SEO
+# respondia la pagina "No encontrado" con HTTP 200. Parecia un fallo del
+# proxy y era un fallo de ESTE archivo.
+#
+# Por la misma razon, `*.txt` llegaria a excluir el DIRECTORIO
+# src/app/robots.txt/, que es un route handler, y el sitio se quedaria sin
+# robots.txt en produccion.
+#
+# REGLA: anclar SIEMPRE con barra inicial y mantener esta lista minima.
 
-# App movil (Expo / React Native). Es un proyecto aparte con su propio
-# package.json y su propio node_modules; se compila con EAS Build en la nube,
-# nunca con el build de Next. Subirla anadiria cientos de megas a cada deploy
-# y Vercel intentaria resolver sus dependencias sin motivo.
-mobile/
+# App movil (Expo / React Native), SOLO la de la raiz. Se compila con EAS
+# Build en la nube, nunca con el build de Next.
+/mobile/
