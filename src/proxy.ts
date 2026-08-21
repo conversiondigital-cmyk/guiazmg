@@ -169,7 +169,14 @@ export async function proxy(req: NextRequest) {
     "/api/payments/webhook",
     "/api/payments/stripe/webhook",
   ])
-  const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
+  // "/api/mobile": la API móvil (namespace /api/mobile/v1/*) se autentica con
+  // Bearer (JWT propio), no con la cookie de sesión de Auth.js que lee
+  // `getToken()` arriba — para un cliente nativo ese header es invisible aquí.
+  // Cada handler llama a su propio guard (`requireMobileAuth`) y responde
+  // 401/403 en JSON con un `code` estable; el proxy NUNCA debe interceptar
+  // este namespace y devolverle un 307 HTML a /auth/login a una app nativa
+  // (no puede seguir un redirect de login pensado para navegador).
+  const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron", "/api/mobile"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
 
   if (publicExactPaths.has(pathname) || publicPrefixPaths.some((p) => pathname === p || pathname.startsWith(p + "/")) || publicMarketplacePaths) {

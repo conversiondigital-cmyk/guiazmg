@@ -2,10 +2,9 @@ import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
-import bcrypt from "bcryptjs"
 import type { JWT } from "next-auth/jwt"
 import { prisma } from "@/lib/prisma"
-import { getSettingBool } from "@/lib/settings"
+import { verifyCredentials } from "@/lib/auth/credentials"
 
 type AuthToken = Omit<JWT, "id" | "role"> & {
   id?: string
@@ -36,40 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const email = String(credentials.email).toLowerCase()
-
-        // El rate-limiting del login lo aplica el proxy (una sola vez por POST) sobre
-        // /api/auth/callback/credentials. Antes se repetía aquí con las MISMAS llaves,
-        // así que cada intento contaba DOBLE y bloqueaba al usuario tras ~2-3 intentos
-        // aunque la contraseña fuera correcta ("No se pudo iniciar sesión"). Se quitó
-        // el duplicado; el proxy sigue protegiendo contra fuerza bruta.
-        const user = await prisma.user.findUnique({
-          where: { email },
-        })
-
-        if (!user || !user.passwordHash) return null
-        if (!user.isActive) return null
-
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
-
-        if (!isValid) return null
-
-        // Verificación de correo (solo si el admin la activó). Google no pasa
-        // por aquí, se auto-verifica. Sin verificar → no se puede entrar.
-        const requireVerification = await getSettingBool("require_email_verification")
-        if (requireVerification && !user.emailVerified) return null
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-          sessionVersion: user.sessionVersion,
-        }
+        return verifyCredentials(credentials.email as string, credentials.password as string)
       },
     }),
     // El proveedor de Google solo se registra cuando las credenciales están

@@ -62,6 +62,25 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
 
+    // Permisos que la plantilla de Expo/React Native añade sola y que esta app
+    // NO usa. Cada permiso de más es una casilla más que declarar en el
+    // formulario de Data Safety de Google Play y un motivo más de rechazo —
+    // y SYSTEM_ALERT_WINDOW ("dibujar sobre otras apps") es de los que Play
+    // revisa con lupa, porque es el que usan las apps que suplantan pantallas.
+    // Aquí solo lo pide el overlay de errores del modo desarrollo, que en un
+    // build de release no existe.
+    // Verificado sobre el APK con `aapt2 dump badging`: sin este bloqueo el
+    // release declaraba SYSTEM_ALERT_WINDOW, READ/WRITE_EXTERNAL_STORAGE,
+    // USE_BIOMETRIC, USE_FINGERPRINT y VIBRATE sin que la app los usara.
+    blockedPermissions: [
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+      'android.permission.USE_BIOMETRIC',
+      'android.permission.USE_FINGERPRINT',
+      'android.permission.VIBRATE',
+    ],
+
     // --- FASE A2/A3: mismos permisos que iOS, del lado Android. Android no
     // exige "usage description" en texto libre (el string va en los
     // recursos del sistema), pero SÍ hay que declarar el permiso.
@@ -92,6 +111,19 @@ const config: ExpoConfig = {
         backgroundColor: '#006c49',
         image: './assets/images/splash-icon.png',
         imageWidth: 120,
+      },
+    ],
+    [
+      'expo-build-properties',
+      {
+        android: {
+          // Reduce el peso del release quitando código y recursos que nadie
+          // referencia. Se configura AQUÍ y no editando android/build.gradle
+          // porque esa carpeta la regenera `expo prebuild` y el cambio se
+          // perdería en silencio en la siguiente compilación.
+          enableProguardInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+        },
       },
     ],
   ],
