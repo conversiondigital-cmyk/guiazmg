@@ -45,7 +45,7 @@ export function PromoPopup({ codes = [] }: { codes?: GiftCode[] }) {
       onClick={close}
     >
       <div
-        className="promo-pop relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5"
+        className="promo-pop relative max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-3xl bg-white shadow-2xl ring-1 ring-black/5"
         onClick={(e) => e.stopPropagation()}
       >
         <button
