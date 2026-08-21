@@ -173,15 +173,15 @@ html {
    → el fondo desaparece (queda transparente) y, como suele haber texto blanco
    encima (cabeceras, hero, popup de promoción), se ve un "hueco en blanco".
    Aquí redefinimos la posición SIN `in oklab` → degradado sRGB, válido en todos
-   los navegadores. Va en @layer utilities y al final del archivo para ganar por
-   orden de fuente a la utilidad original de Tailwind (misma especificidad). */
-@layer utilities {
-  .bg-gradient-to-t,  .bg-linear-to-t  { --tw-gradient-position: to top; }
-  .bg-gradient-to-tr, .bg-linear-to-tr { --tw-gradient-position: to top right; }
-  .bg-gradient-to-r,  .bg-linear-to-r  { --tw-gradient-position: to right; }
-  .bg-gradient-to-br, .bg-linear-to-br { --tw-gradient-position: to bottom right; }
-  .bg-gradient-to-b,  .bg-linear-to-b  { --tw-gradient-position: to bottom; }
-  .bg-gradient-to-bl, .bg-linear-to-bl { --tw-gradient-position: to bottom left; }
-  .bg-gradient-to-l,  .bg-linear-to-l  { --tw-gradient-position: to left; }
-  .bg-gradient-to-tl, .bg-linear-to-tl { --tw-gradient-position: to top left; }
-}
+   los navegadores. IMPORTANTE: va SIN `@layer` (sin capa). Las declaraciones sin
+   capa ganan a TODA regla dentro de `@layer` (así funciona la cascada de capas),
+   así que esto vence a la utilidad de Tailwind sin depender del orden de emisión.
+   La doble clase sube la especificidad como seguro extra. */
+.bg-gradient-to-t.bg-gradient-to-t,   .bg-linear-to-t.bg-linear-to-t   { --tw-gradient-position: to top; }
+.bg-gradient-to-tr.bg-gradient-to-tr, .bg-linear-to-tr.bg-linear-to-tr { --tw-gradient-position: to top right; }
+.bg-gradient-to-r.bg-gradient-to-r,   .bg-linear-to-r.bg-linear-to-r   { --tw-gradient-position: to right; }
+.bg-gradient-to-br.bg-gradient-to-br, .bg-linear-to-br.bg-linear-to-br { --tw-gradient-position: to bottom right; }
+.bg-gradient-to-b.bg-gradient-to-b,   .bg-linear-to-b.bg-linear-to-b   { --tw-gradient-position: to bottom; }
+.bg-gradient-to-bl.bg-gradient-to-bl, .bg-linear-to-bl.bg-linear-to-bl { --tw-gradient-position: to bottom left; }
+.bg-gradient-to-l.bg-gradient-to-l,   .bg-linear-to-l.bg-linear-to-l   { --tw-gradient-position: to left; }
+.bg-gradient-to-tl.bg-gradient-to-tl, .bg-linear-to-tl.bg-linear-to-tl { --tw-gradient-position: to top left; }
