@@ -22,9 +22,12 @@ const WEIGHT_BY_VARIANT: Record<TextVariant, '400' | '500' | '600' | '700' | '80
   h1: '700',
   h2: '700',
   h3: '600',
+  bodyLg: '400',
   body: '400',
-  bodyStrong: '600',
-  caption: '500',
+  // Medium, no Bold: mantiene la UI ligera (decisión del sistema de diseño).
+  bodyStrong: '500',
+  label: '500',
+  caption: '600',
   overline: '700',
 };
 

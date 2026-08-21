@@ -19,7 +19,14 @@ import { Text } from './Text';
 import { useTheme } from '@/theme/theme-provider';
 import type { ThemeColorName } from '@/theme/tokens';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'destructive'
+  /** Fondo blanco / texto primario — para usarse SOBRE superficies verdes u oscuras. */
+  | 'inverse';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export type ButtonProps = {
@@ -84,7 +91,7 @@ export function Button({
           backgroundColor,
           borderColor,
           borderWidth: borderColor ? 1 : 0,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.lg,
           opacity: isDisabled && !loading ? 0.5 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },
@@ -121,11 +128,14 @@ function resolveVariantColors(variant: ButtonVariant, colors: Record<ThemeColorN
         pressedOverlay: colors.primaryPressed,
       };
     case 'secondary':
+      // `secondary` (terracota claro), NO `secondaryDeep`: con texto carbón
+      // (`secondaryForeground`) es el único par que llega a AA — ver la nota
+      // de contraste en `theme/tokens.ts`.
       return {
         backgroundColor: colors.secondary,
         borderColor: undefined,
         textColor: colors.secondaryForeground,
-        pressedOverlay: colors.secondary,
+        pressedOverlay: colors.secondaryDeep,
       };
     case 'destructive':
       return {
@@ -139,6 +149,13 @@ function resolveVariantColors(variant: ButtonVariant, colors: Record<ThemeColorN
         backgroundColor: 'transparent',
         borderColor: colors.border,
         textColor: colors.primary,
+        pressedOverlay: colors.muted,
+      };
+    case 'inverse':
+      return {
+        backgroundColor: colors.card,
+        borderColor: undefined,
+        textColor: colors.primaryDark,
         pressedOverlay: colors.muted,
       };
     case 'ghost':

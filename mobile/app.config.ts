@@ -7,8 +7,25 @@ import type { ExpoConfig } from 'expo/config';
  * posteriores sin tener que buscar documentación externa.
  */
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'https://guiazmg.com';
+// Mismo default que `src/api/config.ts`: el preview de Vercel de la rama
+// `feat/app-movil` (hoy caído por variables de entorno faltantes en el
+// ambiente Preview — el dueño lo está arreglando). Para verificar contra el
+// servidor local: `EXPO_PUBLIC_API_URL=http://localhost:3100`.
+const apiUrl =
+  process.env.EXPO_PUBLIC_API_URL ??
+  'https://guiazmg-git-feat-app-movil-conversiondigital-5489s-projects.vercel.app';
 const siteUrl = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://guiazmg.com';
+
+/**
+ * Clave de Google Maps para Android. Hoy (fase A1) NO existe: el dueño del
+ * producto todavía no tiene cuenta de Google Cloud. `undefined` es
+ * intencional — NUNCA hardcodear una clave aquí. Sin ella, `react-native-maps`
+ * pinta un rectángulo gris en Android; por eso `src/app/mapa.tsx` detecta la
+ * ausencia de esta variable y muestra un `EmptyState` explicando la falta en
+ * vez de dejar que salga el gris roto. Ver README.md → "Mapa y clave de
+ * Google Maps" para cómo generarla cuando exista la cuenta.
+ */
+const googleMapsAndroidApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY;
 
 const config: ExpoConfig = {
   name: 'Guía ZMG',
@@ -23,6 +40,8 @@ const config: ExpoConfig = {
   extra: {
     apiUrl,
     siteUrl,
+    /** Solo para que `src/app/mapa.tsx` pueda detectar en runtime si hay clave (vía expo-constants), sin importar `.env` directo. */
+    hasGoogleMapsAndroidKey: Boolean(googleMapsAndroidApiKey),
   },
   // El splash NO va aquí: en SDK 57 `splash` ya no existe en el tipo
   // `ExpoConfig` (tsc lo rechaza) y lo configura por completo el plugin
@@ -32,18 +51,19 @@ const config: ExpoConfig = {
     icon: './assets/expo.icon',
     supportsTablet: false,
 
-    // --- FASE A2 (auth con Apple / Sign in) o A3 (mapa/ubicación) ---
-    // Descomentar cuando se implemente el picker de ubicación o "negocios
-    // cerca de mí": iOS EXIGE el texto exacto de para qué se usa, o Apple
-    // rechaza el build en revisión.
-    // infoPlist: {
-    //   NSLocationWhenInUseUsageDescription:
-    //     'Guía ZMG usa tu ubicación para mostrarte negocios cerca de ti en la Zona Metropolitana de Guadalajara.',
-    //   NSCameraUsageDescription:
-    //     'Guía ZMG usa la cámara para que subas fotos de tu negocio o de un artículo del marketplace.',
-    //   NSPhotoLibraryUsageDescription:
-    //     'Guía ZMG accede a tus fotos para que elijas una imagen de tu negocio o de tu publicación en el marketplace.',
-    // },
+    // Ubicación en foreground (fase A1: "Cerca de ti" / mapa). iOS EXIGE
+    // este texto exacto o Apple rechaza el build en revisión.
+    infoPlist: {
+      NSLocationWhenInUseUsageDescription:
+        'Guía ZMG usa tu ubicación para mostrarte negocios cerca de ti en la Zona Metropolitana de Guadalajara.',
+    },
+
+    // --- FASE A2 (auth con Apple / Sign in) ---
+    // infoPlist adicional cuando se suba fotos:
+    // NSCameraUsageDescription:
+    //   'Guía ZMG usa la cámara para que subas fotos de tu negocio o de un artículo del marketplace.',
+    // NSPhotoLibraryUsageDescription:
+    //   'Guía ZMG accede a tus fotos para que elijas una imagen de tu negocio o de tu publicación en el marketplace.',
 
     // --- FASE A4 (deep links / Universal Links) ---
     // Requiere el archivo `apple-app-site-association` publicado en
@@ -62,6 +82,14 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
 
+    // Mapa (fase A1): sin esta clave, `react-native-maps` en Android pinta
+    // gris. Se lee de entorno — nunca hardcodeada. Ver README.md.
+    config: {
+      googleMaps: {
+        apiKey: googleMapsAndroidApiKey,
+      },
+    },
+
     // Permisos que la plantilla de Expo/React Native añade sola y que esta app
     // NO usa. Cada permiso de más es una casilla más que declarar en el
     // formulario de Data Safety de Google Play y un motivo más de rechazo —
@@ -79,12 +107,33 @@ const config: ExpoConfig = {
       'android.permission.USE_BIOMETRIC',
       'android.permission.USE_FINGERPRINT',
       'android.permission.VIBRATE',
+
+      // Estos tres los arrastra `androidx.work` (WorkManager), que entra como
+      // dependencia de `expo-location` para tareas de UBICACIÓN EN SEGUNDO
+      // PLANO. Esta app usa ubicación SOLO en primer plano (decisión de
+      // producto: el segundo plano exige justificación en video ante Google y
+      // aquí no aporta nada), así que WorkManager nunca se ejecuta.
+      //
+      // RECEIVE_BOOT_COMPLETED significa "arrancar al encender el teléfono":
+      // en un directorio de negocios no tiene ninguna justificación, y los
+      // tres hay que declararlos en el formulario de Data Safety de Play.
+      //
+      // Rastreado con el manifest-merger-release-report.txt del build, no
+      // adivinado: los tres vienen de work-runtime-2.9.1.
+      //
+      // ⚠️ Si algún día se añade una tarea en segundo plano de verdad
+      // (geofencing, seguimiento de ubicación, notificaciones programadas
+      // locales), hay que QUITAR estas tres líneas o esa tarea fallará en
+      // silencio.
+      'android.permission.WAKE_LOCK',
+      'android.permission.RECEIVE_BOOT_COMPLETED',
+      'android.permission.FOREGROUND_SERVICE',
     ],
 
-    // --- FASE A2/A3: mismos permisos que iOS, del lado Android. Android no
-    // exige "usage description" en texto libre (el string va en los
-    // recursos del sistema), pero SÍ hay que declarar el permiso.
-    // permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION', 'CAMERA'],
+    // Ubicación en foreground (fase A1: "Cerca de ti" / mapa). Solo
+    // foreground — nunca ACCESS_BACKGROUND_LOCATION, que Play revisa con
+    // lupa y esta app no necesita.
+    permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 
     // --- FASE A4: deep links guiazmg.com -> abre la app en vez del navegador.
     // Requiere el archivo `assetlinks.json` publicado en
@@ -105,6 +154,13 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'Guía ZMG usa tu ubicación para mostrarte negocios cerca de ti en la Zona Metropolitana de Guadalajara.',
+      },
+    ],
     [
       'expo-splash-screen',
       {

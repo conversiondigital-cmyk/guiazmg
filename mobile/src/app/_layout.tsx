@@ -17,15 +17,21 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from '@expo-google-fonts/manrope';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { registerAnalyticsAppStateListener } from '@/api/analytics';
+import { AuthProvider } from '@/api/auth-context';
 import { queryClient, queryPersister } from '@/api/query-client';
+import { AppGate } from '@/components/app-gate';
+import { OfflineBanner } from '@/components/offline-banner';
 import { ThemeProvider } from '@/theme/theme-provider';
 import { tokens } from '@/theme/tokens';
 
@@ -54,21 +60,33 @@ export default function RootLayout() {
     }
   }, [isReady]);
 
+  // Vacía la cola de telemetría al volver a primer plano (ver src/api/analytics.ts).
+  useEffect(() => registerAnalyticsAppStateListener(), []);
+
   if (!isReady) {
     // El splash nativo sigue visible encima de esto; no hace falta pintar nada.
     return null;
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider fontsLoaded={Boolean(fontsLoaded)}>
-        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister }}>
-          <StatusBar barStyle="dark-content" backgroundColor={tokens.colors.light.background} />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </PersistQueryClientProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider fontsLoaded={Boolean(fontsLoaded)}>
+          <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister }}>
+            <AuthProvider>
+              <BottomSheetModalProvider>
+                <StatusBar barStyle="dark-content" backgroundColor={tokens.colors.light.background} />
+                <AppGate>
+                  <OfflineBanner />
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                  </Stack>
+                </AppGate>
+              </BottomSheetModalProvider>
+            </AuthProvider>
+          </PersistQueryClientProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

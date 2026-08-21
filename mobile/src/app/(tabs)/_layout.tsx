@@ -1,13 +1,18 @@
 /**
- * Tab bar principal: 5 pestañas de primer nivel del producto. Iconos de
- * `lucide-react-native` (mismo set en toda la app, un solo lenguaje visual).
- * Activo en el verde primario, inactivo en `mutedForeground`, etiqueta
- * Manrope 600 a 11px — igual que la escala `caption`/`overline` del tema
- * pero fijada a 11px porque una tab bar no debe crecer con la escala general.
+ * Tab bar principal: 5 pestañas de primer nivel del producto —
+ * Inicio · Explorar · Mapa · Marketplace · Perfil (el dueño pidió que el
+ * Mapa tenga pestaña propia; Agenda pasó a ser una sección dentro de Inicio
+ * con su propia pantalla de pila en `src/app/agenda.tsx`; "Cuenta" se
+ * renombró a "Perfil" y ahora incluye Favoritos).
+ * Iconos de `lucide-react-native` (mismo set en toda la app, un solo
+ * lenguaje visual). Activo en el verde primario, inactivo en
+ * `mutedForeground`, etiqueta Manrope 600 a 11px — igual que la escala
+ * `caption`/`overline` del tema pero fijada a 11px porque una tab bar no
+ * debe crecer con la escala general.
  */
 import { Tabs } from 'expo-router';
 import type { LucideIcon } from 'lucide-react-native';
-import { Calendar, Compass, Home, ShoppingBag, User } from 'lucide-react-native';
+import { Compass, Home, Map, ShoppingBag, User } from 'lucide-react-native';
 import type { ColorValue } from 'react-native';
 
 import { useTheme } from '@/theme/theme-provider';
@@ -43,8 +48,8 @@ export default function TabsLayout() {
           fontWeight: '600',
           fontSize: 11,
         },
-        // Hit target >= 44 también en la tab bar, no solo en botones sueltos.
-        tabBarItemStyle: { minHeight: 44 },
+        // Hit target >= 48 también en la tab bar, no solo en botones sueltos.
+        tabBarItemStyle: { minHeight: theme.minHitTarget },
       }}>
       <Tabs.Screen
         name="index"
@@ -63,6 +68,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="mapa"
+        options={{
+          title: 'Mapa',
+          tabBarIcon: tabIcon(Map),
+          tabBarAccessibilityLabel: 'Mapa de negocios',
+        }}
+      />
+      <Tabs.Screen
         name="marketplace"
         options={{
           title: 'Marketplace',
@@ -71,19 +84,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="agenda"
+        name="perfil"
         options={{
-          title: 'Agenda',
-          tabBarIcon: tabIcon(Calendar),
-          tabBarAccessibilityLabel: 'Agenda de citas',
-        }}
-      />
-      <Tabs.Screen
-        name="cuenta"
-        options={{
-          title: 'Cuenta',
+          title: 'Perfil',
           tabBarIcon: tabIcon(User),
-          tabBarAccessibilityLabel: 'Tu cuenta',
+          tabBarAccessibilityLabel: 'Tu perfil',
         }}
       />
     </Tabs>

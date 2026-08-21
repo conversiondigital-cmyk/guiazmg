@@ -1,47 +1,126 @@
 # Guía ZMG — app móvil
 
 App híbrida (Expo / React Native) de [guiazmg.com](https://guiazmg.com): pantallas
-nativas para lo que necesita sentirse a app (directorio, marketplace, agenda,
-cuenta) + WebView para el resto del sitio. Este README cubre la **fase A0
-(cimientos)**: sistema de diseño, primitivas de UI, cliente de API con mocks,
-y la navegación de 5 pestañas. Todavía no hay pantallas de negocio completas
-ni autenticación real — eso llega en fases posteriores (A1, A2...).
+nativas para lo que necesita sentirse a app (directorio, marketplace, mapa,
+agenda, cuenta) + WebView para el resto del sitio. Este README cubre hasta la
+**fase A2 (API real + sesión real)**: Inicio, Explorar (lista + mapa +
+filtros), ficha de negocio con acciones fijas, mapa nativo con clusters,
+marketplace completo (listado + ficha), telemetría por lotes, **login/registro/
+recuperar contraseña reales**, refresco de sesión con cola (deduplicado contra
+la rotación del backend) y WebView de sesión compartida con degradación
+explícita si `/auth/handoff` no existe todavía en el sitio.
 
-## Estado del proyecto — IMPORTANTE
+## Estado del proyecto
 
-Este `mobile/` se generó con `create-expo-app` **sin instalar `node_modules`**
-(conflicto de binarios nativos pendiente de resolver por el dueño del
-entorno). Todo el código está escrito y las dependencias están declaradas en
-`package.json`, pero **nadie ha corrido `npm install` todavía** ni se ha
-verificado que compile. Antes de tocar código nuevo:
+`npm install` **ya se corrió** y quedó verificado: `npx tsc --noEmit` en
+verde, `npx expo-doctor` 21/21 (con una excepción documentada — ver abajo), y
+`npx expo export --platform android` empaqueta sin errores (la prueba de que
+Metro resuelve todos los `require()`/assets de verdad). También hay un smoke
+test de integración real (`scripts/smoke-api.mjs`, ver más abajo) que usa el
+mismo `src/api/client.ts` de la app contra un servidor corriendo de verdad.
+Para levantarlo:
 
 ```bash
 cd mobile
-npm install
 npx expo start
 ```
 
-Si `npm install` falla por conflicto de versiones nativas, no lo fuerces con
-`--legacy-peer-deps` a ciegas — revisa cuál paquete choca contra el SDK 57 /
-React 19.2 / RN 0.86 y ajusta esa versión puntual en `package.json`.
+### La API real por defecto
 
-## Qué falta por instalar / verificar (no se pudo hacer en esta fase)
+`EXPO_PUBLIC_API_URL` por defecto apunta al preview de Vercel de la rama
+`feat/app-movil` (ver `src/api/config.ts`). **Ese preview está caído ahora
+mismo** por variables de entorno faltantes en el ambiente Preview de Vercel —
+es un pendiente del lado del sitio, no de esta app. Para desarrollar/verificar
+contra el backend real mientras tanto, levanta el sitio en local (`npm run dev`
+en la raíz del repo, puerto 3100) y arranca la app con:
 
-- **`npm install` nunca se corrió.** No hay garantía de que las versiones
-  fijadas en `package.json` resuelvan sin conflicto (React 19.2 + RN 0.86 es
-  una combinación reciente; `lucide-react-native` y las libs de
-  `@tanstack/react-query` se fijaron a versiones que en teoría son
-  compatibles, pero no se probó el `npm install` real).
-- **Los archivos `.ttf` de Manrope no existen** en `assets/fonts/` — ver el
-  README de esa carpeta. El código degrada bien sin ellos, pero nadie ha
-  visto la app corriendo con la tipografía real puesta.
-- **No se corrió `npx expo start` ni `tsc`** — no hay confirmación de que el
-  proyecto compile o arranque. Con SDK 57 recién salido, es posible que algún
-  import de `expo-router` o `expo-font` haya cambiado de forma sutil.
-- **El endpoint `/api/mobile/v1` no existe en el backend.** El cliente HTTP
-  (`src/api/client.ts`) está escrito contra el contrato documentado en
-  `src/api/types.ts`, pero es una copia manual — hay que confirmarlo contra
-  el backend real cuando exista.
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3100 npx expo start
+```
+
+`EXPO_PUBLIC_USE_MOCKS` es **opt-in explícito** (default `false`): sin esa
+variable, la app siempre pide datos reales por HTTP. Los mocks de
+`src/api/mocks/` se conservan para poder desarrollar la UI sin backend a la
+mano (`EXPO_PUBLIC_USE_MOCKS=true`).
+
+### `expo-doctor`: excepción documentada
+
+`@react-native-cookies/cookies` (usado SOLO para purgar cookies del WebView al
+cerrar sesión — ver `src/components/site-web-view.tsx`) aparece como
+"unmaintained" / "unsupported on New Architecture" en React Native Directory.
+Es un módulo nativo clásico (NativeModule, sin componente de UI Fabric), así
+que sigue funcionando vía la capa de interoperabilidad de la Nueva
+Arquitectura; no hay una alternativa mejor mantenida para esta necesidad
+puntual. Se excluyó explícitamente en `package.json` →
+`expo.doctor.reactNativeDirectoryCheck.exclude` para que `expo-doctor` refleje
+21/21 sin ocultar el resto de verificaciones reales.
+
+## Mapa y clave de Google Maps — pendiente crítico
+
+`react-native-maps` en Android necesita una clave de **Google Maps SDK for
+Android**. **Hoy esa clave NO existe** (el dueño del producto todavía no tiene
+cuenta de Google Cloud). Por eso:
+
+- La clave se lee de `EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY` (variable de
+  entorno) → `app.config.ts` la inyecta en `android.config.googleMaps.apiKey`.
+  **Nunca hardcodeada en el código.**
+- Mientras no exista, `src/components/business-map-view.tsx` **no monta**
+  `MapView` en Android: pinta un `EmptyState` explicando que falta configurar
+  el mapa + la lista de negocios como alternativa funcional. Un mapa gris sin
+  explicación parece una app rota — por eso el chequeo es explícito
+  (`Constants.expoConfig?.extra?.hasGoogleMapsAndroidKey`), no "dejar que
+  salga gris".
+- En iOS no aplica: por defecto usa Apple Maps, que no necesita clave.
+
+**Cómo generar la clave cuando exista la cuenta de Google Cloud:**
+
+1. Crear/seleccionar un proyecto en [Google Cloud Console](https://console.cloud.google.com/).
+2. Habilitar **"Maps SDK for Android"** (APIs & Services → Library).
+3. Crear una credencial de tipo **API key** (APIs & Services → Credentials).
+4. **Restringirla** a Android apps → paquete `com.guiazmg.app` + la huella
+   SHA-1 del certificado de firma.
+5. Poner la clave en `mobile/.env` como `EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY=...`
+   y volver a compilar (`expo prebuild` regenera `android/` con la clave).
+
+**Advertencia (error clásico):** la huella SHA-1 de **Play App Signing** es
+**DISTINTA** a la del keystore local con el que compilas en tu máquina. Si solo
+restringes la clave con el SHA-1 de tu keystore de desarrollo, el mapa
+funcionará en tus pruebas y **se pondrá gris en producción** (la build que
+sube a Play Store la firma Google con OTRA llave). Para saber la huella real
+de producción: Play Console → tu app → Configuración → Integridad de la app →
+"Firma de la app" → copiar el SHA-1 de ahí, y agregarlo TAMBIÉN como
+restricción en la clave de Google Cloud (se pueden registrar varias huellas).
+
+## Qué queda pendiente / no verificado
+
+- **La clave de Google Maps Android** (ver arriba) — sin ella, el mapa real
+  nunca se probó visualmente en un dispositivo/emulador, solo el *fallback*
+  de `EmptyState`.
+- **El preview de Vercel de la rama (`EXPO_PUBLIC_API_URL` por defecto) está
+  caído hoy** por variables de entorno faltantes del lado del sitio — no es
+  un bug de esta app. Verificado en cambio contra el servidor local
+  (`npm run dev`, puerto 3100): ver `scripts/smoke-api.mjs`.
+- **`/auth/handoff` todavía no existe en el sitio web.** `SiteWebView`
+  detecta el 404/HEAD fallido y degrada con elegancia (abre la ruta pública
+  sin sesión + avisa), pero el handoff app→web con sesión compartida real
+  para el panel de negocio no se probó punta a punta porque el sitio no tiene
+  esa ruta todavía.
+- **Favoritos del marketplace son solo de sesión** (no hay endpoint móvil de
+  favoritos todavía): el corazón se ve y responde, pero no persiste al cerrar
+  la app — no está simulado como si persistiera, es honesto en el código.
+- **"Guardados" en Perfil todavía no está conectado** (`src/app/(tabs)/perfil.tsx`
+  muestra un aviso de "próximamente" al tocarlo) — no hay endpoint móvil de
+  favoritos persistentes listado en el alcance de esta fase.
+- **No se corrió en un dispositivo/emulador físico** en esta fase — solo se
+  verificó que compila, tipa y empaqueta (`tsc`, `expo-doctor`, `expo export`)
+  y que el flujo de auth real (registro, login, `/auth/me`, refresh
+  concurrente deduplicado, logout, reuso de refresh token rechazado) funciona
+  contra el servidor local. Antes de un release real hace falta correrlo en
+  Android/iOS de verdad.
+- **No hay `eslint` configurado en `mobile/`** (el `eslint.config.mjs` de la
+  raíz del repo ignora `mobile/**` a propósito — ver más abajo). `npm run
+  lint` (`expo lint`) no tiene config propia todavía; no bloquea esta fase
+  porque no era parte de la verificación pedida, pero es deuda pendiente.
 
 ## Flujo de pruebas recomendado
 
@@ -76,21 +155,32 @@ Android Studio), nunca con el pipeline de Vercel.
 
 ```
 mobile/
-├── app.config.ts          # config de Expo (nombre, scheme, permisos comentados)
+├── app.config.ts          # config de Expo: permisos, clave de Google Maps (vía env), splash
 ├── src/
-│   ├── app/                # rutas (expo-router)
-│   │   ├── _layout.tsx     # providers: tema, React Query (con persistencia), fuentes
-│   │   └── (tabs)/         # Inicio · Explorar · Marketplace · Agenda · Cuenta
+│   ├── app/                     # rutas (expo-router)
+│   │   ├── _layout.tsx          # providers: tema, React Query, gestos, bottom sheet, fuentes, telemetría
+│   │   ├── (tabs)/               # Inicio · Explorar (lista+mapa+filtros) · Marketplace · Agenda · Cuenta
+│   │   ├── negocio/[slug].tsx    # ficha de negocio (galería, horarios, acciones fijas, reseñas, similares)
+│   │   ├── marketplace/[id].tsx  # ficha de publicación del marketplace
+│   │   └── mapa.tsx              # mapa a pantalla completa (comparte BusinessMapView con Explorar)
 │   ├── theme/               # tokens.ts (fuente de verdad) + theme-provider.tsx
 │   ├── ui/                  # primitivas: Button, Card, Chip, Skeleton, EmptyState, ErrorState, Text
-│   ├── components/          # componentes de dominio (p.ej. tarjeta de negocio)
+│   ├── location/             # permiso de ubicación (modal propio + hook `useNearMe`)
+│   ├── utils/                 # format (MXN/distancia/tiempo relativo), business-hours, contact-actions, map-region
+│   ├── components/          # componentes de dominio (tarjetas, carruseles, bottom sheet de filtros, mapa)
 │   └── api/
-│       ├── client.ts        # fetch real + modo mock, maneja TOKEN_EXPIRED/SESSION_REVOKED
+│       ├── client.ts        # fetch real + modo mock, maneja TOKEN_EXPIRED/SESSION_REVOKED, refresco con cola
+│       ├── auth-context.tsx  # AuthProvider/useAuth(): sesión real (signIn/signUp/signOut)
+│       ├── auth-tokens.ts    # refreshToken en SecureStore, accessToken en memoria, refresco deduplicado
+│       ├── device-id.ts      # uuid v4 estable del dispositivo (SecureStore)
+│       ├── analytics.ts      # telemetría por lotes (cola en AsyncStorage, vacía al volver a foreground)
+│       ├── app-config.ts     # GET /config (forceUpdate/minAppVersion/maintenanceMode)
 │       ├── types.ts          # copia manual del contrato del backend (léelo antes de tocarlo)
-│       ├── queries.ts        # hooks de React Query que consumen las pantallas
+│       ├── queries.ts        # hooks de React Query (incluye infinite queries para scroll infinito)
 │       ├── query-client.ts   # QueryClient + persistencia en AsyncStorage
-│       ├── auth-tokens.ts    # punto de extensión para auth real (llega en A2)
-│       └── mocks/            # datos de ejemplo (negocios de Guadalajara/Zapopan/...)
+│       └── mocks/            # datos de ejemplo — solo con EXPO_PUBLIC_USE_MOCKS=true, opt-in
+├── scripts/
+│   └── smoke-api.mjs        # humo de integración: usa el MISMO client.ts contra un servidor real
 └── assets/fonts/README.md   # qué .ttf de Manrope hace falta y de dónde bajarlos
 ```
 
@@ -107,7 +197,28 @@ objeto, no reescribir componentes.
 
 ## Mocks de la API
 
-Con `EXPO_PUBLIC_USE_MOCKS=true` (default, ver `.env.example`), el cliente
-HTTP resuelve contra `src/api/mocks/` en vez de hacer red real, con la misma
-envoltura `{ ok, data, meta }` que usará la API real. Apagar el mock el día
-que `/api/mobile/v1` exista es cambiar un solo flag, sin tocar pantallas.
+Con `EXPO_PUBLIC_USE_MOCKS=true` (**opt-in explícito**, default `false`), el
+cliente HTTP resuelve contra `src/api/mocks/` en vez de hacer red real, con la
+misma envoltura `{ ok, data, meta }` que la API real. Útil para iterar la UI
+sin backend a la mano; por defecto la app siempre pide datos reales por HTTP.
+
+## Smoke test de integración (`scripts/smoke-api.mjs`)
+
+Reutiliza el **mismo** `src/api/client.ts` de la app (no una copia de la
+lógica) contra un servidor corriendo de verdad, y valida la forma de la
+respuesta de `/home`, `/catalog`, `/search`, `/search/suggestions`,
+`/businesses/[slug]` (+ reseñas), `/map/businesses`, `/marketplace` (+
+categorías y detalle), `/config` y el código de error de un login inválido.
+Como Node no puede correr módulos nativos de Expo/RN, el script sustituye
+SOLO `expo-constants`/`react-native`/`expo-secure-store`/`expo-crypto` por
+shims mínimos en memoria antes de cargar `client.ts` — ni una línea de la
+lógica real se copia o reescribe.
+
+```bash
+# con el sitio corriendo en local (npm run dev, puerto 3100):
+cd mobile
+node scripts/smoke-api.mjs
+# o contra otra URL:
+API_URL=https://guiazmg-git-feat-app-movil-conversiondigital-5489s-projects.vercel.app \
+  node scripts/smoke-api.mjs
+```

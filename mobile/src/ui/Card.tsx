@@ -1,5 +1,9 @@
 /**
- * Contenedor con la sombra "card" del sistema de diseño y radio `lg`.
+ * Contenedor "tarjeta principal" del sistema de diseño: radio `2xl` (24px).
+ * Con fondo blanco puro sobre un fondo también blanco, la tarjeta SOLO se
+ * distingue por el borde 1px + la sombra ambiental — nunca por tono. Los dos
+ * van siempre juntos (la sombra es apoyo, no sustituto del borde, porque en
+ * Android la `elevation` se ve distinta a la sombra de iOS).
  */
 import { View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
@@ -19,7 +23,7 @@ export function Card({ style, padded = true, children, ...rest }: CardProps) {
       style={[
         {
           backgroundColor: theme.colors.card,
-          borderRadius: theme.radius.lg,
+          borderRadius: theme.radius['2xl'],
           borderWidth: 1,
           borderColor: theme.colors.border,
           padding: padded ? theme.spacing[4] : 0,

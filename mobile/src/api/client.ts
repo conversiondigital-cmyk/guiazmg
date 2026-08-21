@@ -2,10 +2,10 @@
  * Cliente HTTP de la API móvil de Guía ZMG.
  *
  * Entiende el contrato `{ ok:true, data, meta }` / `{ ok:false, error }`
- * (ver `types.ts`). Cuando `EXPO_PUBLIC_USE_MOCKS=true` (default en A0,
- * porque `/api/mobile/v1` todavía no existe en el backend), las llamadas se
- * resuelven contra `mocks/` en vez de hacer red real — mismo shape de
- * respuesta, así que apagar el mock más adelante es un solo flag.
+ * (ver `types.ts`). Por defecto habla con `/api/mobile/v1` REAL por HTTP.
+ * `EXPO_PUBLIC_USE_MOCKS=true` es opt-in explícito para desarrollar la UI sin
+ * backend a la mano — resuelve contra `mocks/` con el mismo shape de
+ * respuesta, nunca es el camino por defecto.
  */
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
@@ -15,7 +15,7 @@ import * as authTokens from './auth-tokens';
 import { apiConfig } from './config';
 import { getDeviceId } from './device-id';
 import { resolveMock } from './mocks';
-import type { ApiErrorCode, ApiResponse } from './types';
+import type { ApiErrorCode, ApiMeta, ApiResponse } from './types';
 
 export class ApiError extends Error {
   code: ApiErrorCode;
@@ -48,7 +48,7 @@ function buildQueryString(query?: RequestOptions['query']): URLSearchParams {
 
 async function buildHeaders(): Promise<Record<string, string>> {
   const deviceId = await getDeviceId();
-  const accessToken = await authTokens.getAccessToken();
+  const accessToken = authTokens.getAccessToken();
 
   return {
     'Content-Type': 'application/json',
@@ -69,6 +69,22 @@ async function buildHeaders(): Promise<Record<string, string>> {
  * `auth-tokens.ts`) y lanza de inmediato, sin reintentar.
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const payload = await requestRaw<T>(path, options);
+  return unwrap(payload);
+}
+
+/**
+ * Igual que `request`, pero devuelve `{ data, meta }` en vez de solo `data`.
+ * Lo usan las listas con scroll infinito (`meta.hasMore`/`meta.page`) — ver
+ * `useInfiniteQuery` en `queries.ts`. `request()` sigue siendo lo que usa
+ * todo lo demás (no rompe consumidores existentes).
+ */
+export async function requestPage<T>(path: string, options: RequestOptions = {}): Promise<{ data: T; meta: ApiMeta }> {
+  const payload = await requestRaw<T>(path, options);
+  return { data: unwrap(payload), meta: payload.ok ? (payload.meta ?? {}) : {} };
+}
+
+async function requestRaw<T>(path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
   const query = buildQueryString(options.query);
 
   if (apiConfig.useMocks) {
@@ -76,7 +92,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (!mockResponse) {
       throw new ApiError('NOT_FOUND', `No hay mock definido para ${path}. Agrégalo en src/api/mocks/.`);
     }
-    return unwrap(mockResponse);
+    return mockResponse;
   }
 
   const url = new URL(path.replace(/^\//, ''), `${apiConfig.apiUrl.replace(/\/$/, '')}/api/mobile/v1/`);
@@ -93,15 +109,28 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     throw new ApiError('NETWORK_ERROR', 'No hay conexión a internet. Revisa tu red e intenta de nuevo.');
   }
 
+  // Algunos endpoints (p.ej. `/auth/logout`) responden 204 sin cuerpo cuando
+  // todo salió bien — `response.json()` lanza sobre un body vacío, así que
+  // eso NO es un error del servidor, es éxito sin datos. Sin este caso, todo
+  // 204 se reportaba como `INTERNAL_ERROR` aunque la operación sí funcionó.
+  if (response.status === 204) {
+    return { ok: true, data: undefined as T };
+  }
+
+  const rawBody = await response.text();
+  if (!rawBody) {
+    return { ok: true, data: undefined as T };
+  }
+
   let payload: ApiResponse<T>;
   try {
-    payload = await response.json();
+    payload = JSON.parse(rawBody);
   } catch {
-    throw new ApiError('SERVER_ERROR', 'El servidor respondió algo inesperado. Intenta de nuevo.');
+    throw new ApiError('INTERNAL_ERROR', 'El servidor respondió algo inesperado. Intenta de nuevo.');
   }
 
   if (payload.ok) {
-    return unwrap(payload);
+    return payload;
   }
 
   const { code, message } = payload.error;
@@ -109,7 +138,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (code === 'TOKEN_EXPIRED' && !options.skipAuthRetry) {
     const newAccessToken = await authTokens.refreshAccessToken();
     if (newAccessToken) {
-      return request<T>(path, { ...options, skipAuthRetry: true });
+      return requestRaw<T>(path, { ...options, skipAuthRetry: true });
     }
     authTokens.notifySessionRevoked();
     throw new ApiError('SESSION_REVOKED', 'Tu sesión expiró. Vuelve a iniciar sesión.');
@@ -134,6 +163,7 @@ export const onSessionRevoked = registerSessionRevokedListener;
 
 export const apiClient = {
   get: <T>(path: string, query?: RequestOptions['query']) => request<T>(path, { method: 'GET', query }),
+  getPage: <T>(path: string, query?: RequestOptions['query']) => requestPage<T>(path, { method: 'GET', query }),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),

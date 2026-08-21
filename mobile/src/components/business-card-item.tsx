@@ -17,7 +17,7 @@ export type BusinessCardItemProps = {
 
 export function BusinessCardItem({ business, onPress }: BusinessCardItemProps) {
   const theme = useTheme();
-  const location = [business.neighborhoodName, business.municipality?.name].filter(Boolean).join(', ');
+  const location = [business.neighborhood?.name, business.municipality?.name].filter(Boolean).join(', ');
 
   return (
     <Pressable
@@ -72,7 +72,7 @@ export function BusinessCardItem({ business, onPress }: BusinessCardItemProps) {
 
           {business.rating !== null ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Star size={14} color={theme.colors.warning} fill={theme.colors.warning} />
+              <Star size={14} color={theme.colors.star} fill={theme.colors.star} />
               <Text variant="caption" color="foreground">
                 {business.rating.toFixed(1)} ({business.reviewCount})
               </Text>

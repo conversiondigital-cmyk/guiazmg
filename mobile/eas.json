@@ -16,9 +16,6 @@
       "channel": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_USE_MOCKS": "1"
       }
     },
     "production": {
