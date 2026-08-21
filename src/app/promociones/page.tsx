@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { MEMBERSHIP_PLANS } from "@/lib/constants"
+import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
+import { PromoCode } from "@/components/promociones/promo-code"
 import { Tag, Clock, Gift, ArrowRight } from "@/lib/icons"
 
 export const metadata: Metadata = {
@@ -17,6 +20,9 @@ export const metadata: Metadata = {
 export const revalidate = 300
 
 const fmt = (d: Date) => new Date(d).toLocaleDateString("es-MX", { day: "numeric", month: "long" })
+
+const emp = MEMBERSHIP_PLANS.EMPRENDIMIENTO
+const neg = MEMBERSHIP_PLANS.NEGOCIO
 
 type PromoCard = {
   id: string
@@ -75,6 +81,15 @@ function PromoCard({ promo, compact = false }: { promo: PromoCard; compact?: boo
 
 export default async function PromocionesPage() {
   const now = new Date()
+
+  // Códigos de lanzamiento del sitio (60 días gratis), el vigente por plan.
+  // Misma fuente que /promociones/registro y el autocompletado del registro.
+  const promo = await getActivePromoCoupons().catch(() => ({ EMPRENDEDOR: null, NEGOCIO: null }))
+  const giftCodes = [
+    promo.EMPRENDEDOR && { ...promo.EMPRENDEDOR, planName: emp.name },
+    promo.NEGOCIO && { ...promo.NEGOCIO, planName: neg.name },
+  ].filter(Boolean) as { code: string; days: number; planName: string }[]
+
   // Promociones REALES: cupones activos, no vencidos, de negocios visibles.
   const promotions = (await prisma.coupon
     .findMany({
@@ -130,29 +145,47 @@ export default async function PromocionesPage() {
           </div>
         </section>
 
-        {/* Banner de la promo de registro (60 días gratis) */}
+        {/* Promo de lanzamiento del sitio: 60 días gratis, con los códigos VISIBLES. */}
         <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <Link
-            href="/promociones/registro"
-            className="group flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-[#006c49] to-[#00583b] p-6 shadow-lg transition-shadow hover:shadow-xl"
-          >
-            <div className="flex items-center gap-4">
+          <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-[#006c49] to-[#00583b] p-6 shadow-lg sm:p-8">
+            <div className="flex items-start gap-4">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white">
                 <Gift className="h-7 w-7" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="text-lg font-bold text-white sm:text-xl">
-                  ¿Tienes un negocio? Pruébalo 60 días gratis
+                  Promoción de lanzamiento: 60 días gratis
                 </p>
-                <p className="mt-0.5 text-sm text-white/80">
-                  Registra tu negocio y activa tu plan Emprendedor o Negocio con tu código de invitación.
+                <p className="mt-0.5 text-sm text-white/85">
+                  ¿Tienes un negocio? Activa tu plan Emprendedor o Negocio sin pagar los primeros
+                  60 días con estos códigos.
                 </p>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-[#006c49] transition-transform group-hover:translate-x-0.5">
-              Ver promoción <ArrowRight className="h-4 w-4" />
-            </span>
-          </Link>
+
+            {giftCodes.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-3">
+                {giftCodes.map((c) => (
+                  <PromoCode key={c.code} code={c.code} planName={c.planName} days={c.days} />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Link
+                href="/registrar-negocio?promo=1"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-[#006c49] transition-transform hover:translate-x-0.5"
+              >
+                Registrar mi negocio <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/promociones/registro"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
+              >
+                Ver cómo funciona
+              </Link>
+            </div>
+          </div>
         </section>
 
         {promotions.length === 0 ? (
