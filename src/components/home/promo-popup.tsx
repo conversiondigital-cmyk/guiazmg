@@ -57,7 +57,7 @@ export function PromoPopup({ codes = [] }: { codes?: GiftCode[] }) {
           <X className="h-5 w-5" />
         </button>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#0a8f61] via-[#006c49] to-[#00432f] px-8 py-10 text-center text-white">
+        <div className="relative overflow-hidden bg-[#006c49] bg-gradient-to-br from-[#0a8f61] via-[#006c49] to-[#00432f] px-8 py-10 text-center text-white">
           {/* Adornos radiales */}
           <div
             className="pointer-events-none absolute inset-0 opacity-20"
