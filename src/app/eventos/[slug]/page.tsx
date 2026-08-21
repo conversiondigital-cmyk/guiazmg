@@ -107,6 +107,28 @@ export default async function EventDetailPage({ params }: EventDetailProps) {
                   </a>
                 )}
               </div>
+
+              {/* Crédito de la fuente: SIEMPRE visible cuando el evento viene de un
+                  origen externo (RSS/curado), aunque ya haya botón de boletos/info. */}
+              {ev.sourceUrl && (
+                <p className="mt-4 text-xs text-gray-400">
+                  Fuente:{" "}
+                  <a
+                    href={ev.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                  >
+                    {(() => {
+                      try {
+                        return new URL(ev.sourceUrl).hostname.replace(/^www\./, "")
+                      } catch {
+                        return "ver origen"
+                      }
+                    })()}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         </div>
