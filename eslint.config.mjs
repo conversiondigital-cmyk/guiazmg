@@ -32,6 +32,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // App movil (Expo/React Native): tiene su propio tooling en mobile/.
+    // Lintearla con las reglas de Next produce falsos positivos en masa.
+    "mobile/**",
   ]),
 ]);
 

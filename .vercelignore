@@ -1,0 +1,12 @@
+# Archivos que NO se suben a Vercel al desplegar el sitio.
+#
+# Mantener esta lista MINIMA y explicita. Una regla con comodin puede excluir
+# algo que el sitio necesita sin que nadie lo note: por ejemplo `*.txt` llegaria
+# a excluir el DIRECTORIO src/app/robots.txt/, que es un route handler, y el
+# sitio se quedaria sin robots.txt en produccion.
+
+# App movil (Expo / React Native). Es un proyecto aparte con su propio
+# package.json y su propio node_modules; se compila con EAS Build en la nube,
+# nunca con el build de Next. Subirla anadiria cientos de megas a cada deploy
+# y Vercel intentaria resolver sus dependencias sin motivo.
+mobile/
