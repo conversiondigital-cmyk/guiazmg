@@ -15,6 +15,8 @@ import { PromoPopup } from "@/components/home/promo-popup"
 import { getCategories, getFeaturedBusinesses } from "@/lib/queries"
 import { getHeroImages } from "@/lib/hero-images"
 import { getHeroConfig, DEFAULT_HERO_CONFIG, type HeroConfig } from "@/lib/hero-config"
+import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
+import { MEMBERSHIP_PLANS } from "@/lib/constants"
 import { organizationSchema, websiteSchema, safeJsonLd } from "@/lib/seo/schema"
 
 export const metadata = {
@@ -38,6 +40,13 @@ export default async function HomePage() {
     // DB no disponible — renderiza con estado vacío
   }
 
+  // Códigos de lanzamiento (60 días) para mostrarlos también en el popup del home.
+  const promo = await getActivePromoCoupons().catch(() => ({ EMPRENDEDOR: null, NEGOCIO: null }))
+  const giftCodes = [
+    promo.EMPRENDEDOR && { ...promo.EMPRENDEDOR, planName: MEMBERSHIP_PLANS.EMPRENDIMIENTO.name },
+    promo.NEGOCIO && { ...promo.NEGOCIO, planName: MEMBERSHIP_PLANS.NEGOCIO.name },
+  ].filter(Boolean) as { code: string; days: number; planName: string }[]
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema()) }} />
@@ -55,7 +64,7 @@ export default async function HomePage() {
         <CTASection />
       </main>
       <Footer />
-      <PromoPopup />
+      <PromoPopup codes={giftCodes} />
     </>
   )
 }

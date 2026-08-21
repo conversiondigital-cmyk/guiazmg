@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Gift, X, ArrowRight } from "@/lib/icons"
+import { PromoCode } from "@/components/promociones/promo-code"
 
 // Popup de la promo de 60 días en el home. Aparece tras un breve retraso y solo si
 // el visitante no lo cerró antes (persistido en localStorage). Es client, así que
 // NO rompe el cacheo ISR de la página: se hidrata en el navegador.
 const DISMISS_KEY = "promo-registro-60-v1"
 
-export function PromoPopup() {
+type GiftCode = { code: string; planName: string; days: number }
+
+export function PromoPopup({ codes = [] }: { codes?: GiftCode[] }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -79,6 +82,19 @@ export function PromoPopup() {
         </div>
 
         <div className="space-y-3 p-6 sm:p-7">
+          {/* Los códigos de regalo, visibles también aquí (no solo en /promociones). */}
+          {codes.length > 0 && (
+            <div className="rounded-xl bg-[#f0faf6] p-3">
+              <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-wide text-[#006c49]">
+                Tu código de regalo
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {codes.map((c) => (
+                  <PromoCode key={c.code} code={c.code} planName={c.planName} days={c.days} />
+                ))}
+              </div>
+            </div>
+          )}
           <Link
             href="/promociones/registro"
             onClick={close}
