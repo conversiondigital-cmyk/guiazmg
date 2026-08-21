@@ -24,14 +24,9 @@ const config: ExpoConfig = {
     apiUrl,
     siteUrl,
   },
-  splash: {
-    // No hay bloque `splash` de primer nivel en SDK moderno (lo maneja el
-    // plugin `expo-splash-screen`, ver abajo); se deja aquí también por
-    // compatibilidad con herramientas que todavía lo leen de la raíz.
-    backgroundColor: '#006c49',
-    image: './assets/images/splash-icon.png',
-    resizeMode: 'contain',
-  },
+  // El splash NO va aquí: en SDK 57 `splash` ya no existe en el tipo
+  // `ExpoConfig` (tsc lo rechaza) y lo configura por completo el plugin
+  // `expo-splash-screen` más abajo, con el mismo verde de marca #006c49.
   ios: {
     bundleIdentifier: 'com.guiazmg.app',
     icon: './assets/expo.icon',

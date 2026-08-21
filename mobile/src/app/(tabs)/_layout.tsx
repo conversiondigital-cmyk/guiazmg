@@ -8,12 +8,20 @@
 import { Tabs } from 'expo-router';
 import type { LucideIcon } from 'lucide-react-native';
 import { Calendar, Compass, Home, ShoppingBag, User } from 'lucide-react-native';
+import type { ColorValue } from 'react-native';
 
 import { useTheme } from '@/theme/theme-provider';
 
+/**
+ * `tabBarIcon` entrega `color: ColorValue`, no `string`: React Native admite
+ * colores opacos de plataforma (`OpaqueColorValue`, p. ej. `PlatformColor`)
+ * además de los hex normales. Lucide solo acepta `string`, así que se
+ * normaliza aquí. Los nuestros salen del tema y siempre son hex, pero declarar
+ * el parámetro como `string` haría que la firma no encaje con la de expo-router.
+ */
 function tabIcon(Icon: LucideIcon) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Icon color={color} size={size} strokeWidth={2} />
+  return ({ color, size }: { color: ColorValue; size: number }) => (
+    <Icon color={String(color)} size={size} strokeWidth={2} />
   );
 }
 
