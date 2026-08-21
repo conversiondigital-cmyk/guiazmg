@@ -20,8 +20,9 @@ export default async function CuentaMarketplacePage() {
     where: { userId, deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: {
-      id: true, title: true, price: true, status: true,
+      id: true, title: true, slug: true, price: true, status: true,
       type: true, createdAt: true, municipalityId: true,
+      category: { select: { slug: true } },
       images: { select: { url: true }, take: 1 },
     },
   })
@@ -68,17 +69,21 @@ export default async function CuentaMarketplacePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {listings.map((item) => (
-            <div key={item.id} className="rounded-2xl bg-white border border-gray-100 p-4 flex gap-4">
-              <div className="relative h-16 w-16 shrink-0 rounded-xl bg-gray-100 overflow-hidden">
+            <Link
+              key={item.id}
+              href={`/marketplace/${item.category.slug}/${item.slug}`}
+              className="group flex gap-4 rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:border-green-200 hover:shadow-md"
+            >
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                 {item.images[0]
                   ? <Image src={item.images[0].url} alt={item.title} fill className="object-cover" unoptimized />
-                  : <div className="h-full w-full flex items-center justify-center"><Tag className="h-6 w-6 text-gray-300" /></div>
+                  : <div className="flex h-full w-full items-center justify-center"><Tag className="h-6 w-6 text-gray-300" /></div>
                 }
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 line-clamp-1">{item.title}</p>
-                {item.price != null && <p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(Number(item.price))}</p>}
-                <div className="flex items-center gap-2 mt-1.5">
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-1 font-bold text-gray-900 group-hover:text-green-800">{item.title}</p>
+                {item.price != null && <p className="mt-0.5 text-sm font-bold text-green-700">{formatCurrency(Number(item.price))}</p>}
+                <div className="mt-1.5 flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_BADGE[item.status] ?? ""}`}>
                     {STATUS_LABEL[item.status] ?? item.status}
                   </span>
@@ -87,7 +92,7 @@ export default async function CuentaMarketplacePage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
