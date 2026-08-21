@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { confirmDialog } from "@/components/ui/system-dialog"
-import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Upload, CalendarDays } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Upload, CalendarDays, Download, Link2 } from "lucide-react"
 
 interface EventRow {
   id: string
@@ -58,12 +58,16 @@ export function EventsClient({ initialEvents, municipalities }: { initialEvents:
   const [form, setForm] = useState<FormState>(empty)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [imageUrl, setImageUrl] = useState("")
+  const [importingImg, setImportingImg] = useState(false)
+  const [importingFeeds, setImportingFeeds] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const muniName = (id: string | null) => municipalities.find((m) => m.id === id)?.name ?? "—"
 
   function openNew() {
     setEditingId(null)
     setForm(empty)
+    setImageUrl("")
     setOpen(true)
   }
   function openEdit(ev: EventRow) {
@@ -75,6 +79,7 @@ export function EventsClient({ initialEvents, municipalities }: { initialEvents:
       isFree: ev.isFree, priceText: ev.priceText ?? "", ticketUrl: ev.ticketUrl ?? "", organizer: ev.organizer ?? "",
       coverImageUrl: ev.coverImageUrl ?? "", isPublished: ev.isPublished, isFeatured: ev.isFeatured,
     })
+    setImageUrl("")
     setOpen(true)
   }
 
@@ -99,6 +104,52 @@ export function EventsClient({ initialEvents, municipalities }: { initialEvents:
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ""
+    }
+  }
+
+  // "Copia" una imagen desde su URL de origen: el server la descarga, la convierte
+  // a WebP y la re-aloja en R2 (no hotlink). Devuelve la URL propia.
+  async function onCoverFromUrl() {
+    const url = imageUrl.trim()
+    if (!url) return
+    setImportingImg(true)
+    try {
+      const res = await fetch("/api/admin/events/image-from-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error ?? "No se pudo copiar la imagen")
+        return
+      }
+      set("coverImageUrl", data.url)
+      setImageUrl("")
+      toast.success("Imagen copiada y convertida a WebP")
+    } finally {
+      setImportingImg(false)
+    }
+  }
+
+  // Dispara la ingesta de los feeds RSS configurados (Admin → Configuración → Eventos).
+  async function importFromSources() {
+    setImportingFeeds(true)
+    try {
+      const res = await fetch("/api/cron/events")
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error ?? "No se pudo importar")
+        return
+      }
+      if (data.message) toast.info(data.message)
+      else toast.success(`Importados: ${data.imported ?? 0} · Ya existían: ${data.skipped ?? 0}`)
+      if (Array.isArray(data.errors) && data.errors.length) {
+        toast.warning(`Algunos feeds fallaron: ${data.errors.length}`)
+      }
+      router.refresh()
+    } finally {
+      setImportingFeeds(false)
     }
   }
 
@@ -152,9 +203,22 @@ export function EventsClient({ initialEvents, municipalities }: { initialEvents:
   return (
     <div className="space-y-5">
       {!open && (
-        <Button onClick={openNew}>
-          <Plus className="h-4 w-4" /> Nuevo evento
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={openNew}>
+            <Plus className="h-4 w-4" /> Nuevo evento
+          </Button>
+          <Button variant="outline" onClick={importFromSources} disabled={importingFeeds}>
+            {importingFeeds ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Importar de fuentes
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Jala la cartelera desde los feeds de{" "}
+            <a href="/admin/configuracion/eventos" className="underline hover:text-foreground">
+              Configuración → Eventos
+            </a>{" "}
+            (entran como borrador para revisar).
+          </span>
+        </div>
       )}
 
       {open && (
@@ -219,13 +283,61 @@ export function EventsClient({ initialEvents, municipalities }: { initialEvents:
                 <Label>Enlace (boletos / info)</Label>
                 <Input value={form.ticketUrl} onChange={(e) => set("ticketUrl", e.target.value)} placeholder="https://…" />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2 sm:col-span-2">
                 <Label>Imagen de portada</Label>
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Subir
-                  </Button>
-                  {form.coverImageUrl && <span className="truncate text-xs text-muted-foreground">{form.coverImageUrl}</span>}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  {/* Vista previa */}
+                  <div className="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 text-[11px] text-muted-foreground">
+                    {form.coverImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.coverImageUrl} alt="Portada" className="h-full w-full object-cover" />
+                    ) : (
+                      "Sin imagen"
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    {/* Copiar desde una URL → WebP propio */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="Pega la URL de una imagen de la fuente del evento"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            onCoverFromUrl()
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onCoverFromUrl}
+                        disabled={importingImg || !imageUrl.trim()}
+                      >
+                        {importingImg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                        Copiar a WebP
+                      </Button>
+                    </div>
+                    {/* O subir un archivo */}
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Subir archivo
+                      </Button>
+                      {form.coverImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => set("coverImageUrl", "")}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Al copiar o subir, la imagen se convierte a <strong>WebP</strong> y se aloja en nuestro servidor.
+                    </p>
+                  </div>
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onCover(e.target.files?.[0] ?? null)} />
               </div>

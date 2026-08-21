@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { importRemoteImageToWebp } from "@/lib/images/import-remote"
 
 // Ingesta de eventos desde un feed RSS/Atom. Como el RSS estándar no trae la
 // fecha del evento (solo pubDate), los eventos se crean como BORRADOR
@@ -92,6 +93,13 @@ export async function ingestEventsFromRss(url: string): Promise<{ imported: numb
       slug = `${slug}-${Math.random().toString(36).slice(2, 7)}`
     }
 
+    // La imagen del feed es un hotlink externo; la re-alojamos como WebP propio.
+    // Si la conversión falla, caemos al hotlink (mejor una imagen que ninguna).
+    let coverImageUrl: string | null = null
+    if (it.image) {
+      coverImageUrl = (await importRemoteImageToWebp(it.image, "events")) || it.image
+    }
+
     await prisma.event.create({
       data: {
         title: it.title.slice(0, 200),
@@ -100,7 +108,7 @@ export async function ingestEventsFromRss(url: string): Promise<{ imported: numb
         startAt,
         sourceUrl,
         ticketUrl: it.link || null,
-        coverImageUrl: it.image || null,
+        coverImageUrl,
         source: "rss",
         isPublished: false,
       },
