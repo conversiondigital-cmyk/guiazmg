@@ -29,7 +29,8 @@
     "backup:monthly": "bash scripts/backup.sh monthly",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:full": "docker compose --profile full up -d"
+    "docker:full": "docker compose --profile full up -d",
+    "seed:marketplace": "npx tsx prisma/seeds/marketplace-demo.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

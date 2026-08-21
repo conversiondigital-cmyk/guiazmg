@@ -206,6 +206,100 @@ interface BusinessDetailSource extends BusinessSourceBase {
   isFavorite?: boolean | null
 }
 
+// --- Marketplace: tarjeta y detalle. Proyección ligera análoga a los
+// negocios: la app no necesita `contactEmail` ni todas las imágenes en una
+// lista, solo la portada. ---
+
+export interface ListingCard {
+  id: string
+  slug: string
+  title: string
+  price: string | null
+  type: string
+  condition: string | null
+  coverImageUrl: string | null
+  category: { name: string; slug: string; icon: string | null } | null
+  municipality: { name: string } | null
+  neighborhood: string | null
+  isBoosted: boolean
+  createdAt: string
+  favoriteCount: number
+}
+
+interface ListingSourceBase {
+  id: string
+  slug: string
+  title: string
+  price?: unknown
+  type: string
+  condition?: string | null
+  category?: { name: string; slug: string; icon?: string | null } | null
+  municipality?: { name: string } | null
+  neighborhood?: string | null
+  isBoosted?: boolean | null
+  createdAt: Date | string
+  favoriteCount?: number | null
+  images?: Array<{ url: string }> | null
+}
+
+// `price` llega como `Prisma.Decimal` (o string/number ya serializado según el
+// caller); se normaliza a string para no perder precisión ni arrastrar el tipo
+// Decimal hasta el JSON (Next.js no lo serializa solo).
+function priceToString(price: unknown): string | null {
+  if (price === null || price === undefined) return null
+  return String(price)
+}
+
+export function toListingCard(source: ListingSourceBase): ListingCard {
+  return {
+    id: source.id,
+    slug: source.slug,
+    title: source.title,
+    price: priceToString(source.price),
+    type: source.type,
+    condition: source.condition ?? null,
+    coverImageUrl: source.images?.[0]?.url ?? null,
+    category: source.category
+      ? { name: source.category.name, slug: source.category.slug, icon: source.category.icon ?? null }
+      : null,
+    municipality: source.municipality ? { name: source.municipality.name } : null,
+    neighborhood: source.neighborhood ?? null,
+    isBoosted: !!source.isBoosted,
+    createdAt: typeof source.createdAt === "string" ? source.createdAt : source.createdAt.toISOString(),
+    favoriteCount: source.favoriteCount ?? 0,
+  }
+}
+
+export interface ListingDetail extends ListingCard {
+  description: string | null
+  phone: string | null
+  whatsapp: string | null
+  images: string[]
+  seller: { id: string; name: string | null; image: string | null } | null
+  views: number
+}
+
+interface ListingDetailSource extends ListingSourceBase {
+  description?: string | null
+  phone?: string | null
+  whatsapp?: string | null
+  views?: number | null
+  user?: { id: string; name?: string | null; image?: string | null } | null
+}
+
+export function toListingDetail(source: ListingDetailSource): ListingDetail {
+  const card = toListingCard(source)
+  return {
+    ...card,
+    description: source.description ?? null,
+    phone: source.phone ?? null,
+    whatsapp: source.whatsapp ?? null,
+    images: (source.images ?? []).map((img) => img.url),
+    seller: source.user ? { id: source.user.id, name: source.user.name ?? null, image: source.user.image ?? null } : null,
+    views: source.views ?? 0,
+  }
+}
+
 export function toBusinessDetail(source: BusinessDetailSource): BusinessDetail {
   const card = toBusinessCard(source)
 
