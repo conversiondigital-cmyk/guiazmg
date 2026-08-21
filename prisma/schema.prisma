@@ -191,6 +191,7 @@ model User {
 
   accounts         Account[]
   sessions         Session[]
+  mobileRefreshTokens MobileRefreshToken[]
    businesses       Profile[]
   reviews          Review[]
   reviewsResponded ReviewResponse[]
@@ -262,6 +263,35 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+/// Refresh token opaco de la API móvil (Fase B1). Se guarda HASHEADO
+/// (sha256 hex) — nunca el valor plano — porque tiene alta entropía y no
+/// necesita un KDF lento como bcrypt. Cada token pertenece a una `familyId`:
+/// si un token ya revocado vuelve a usarse (robo/copia), se revoca la familia
+/// entera (ver `src/app/api/mobile/v1/auth/refresh/route.ts`).
+model MobileRefreshToken {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  familyId     String
+  deviceId     String?
+  platform     String?
+  appVersion   String?
+  userAgent    String?
+  ip           String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  lastUsedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("mobile_refresh_tokens")
 }
 
 /// ── Settings ───────────────────────────────────────────
