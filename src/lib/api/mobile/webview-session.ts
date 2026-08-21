@@ -55,9 +55,20 @@ export async function consumeWebViewCode(code: string): Promise<{ userId: string
 
   if (redis) {
     try {
-      const userId = await redis.get(keyFor(code))
+      // SEGURIDAD (fix un-solo-uso): get+del NO es atómico — dos consumos
+      // concurrentes podían leer ambos el mismo código antes del del y canjear
+      // DOS sesiones web (secuestro de sesión). GETDEL es atómico: solo un
+      // consumidor recibe el userId, el resto obtiene null. Si el servidor Redis
+      // es viejo y no soporta GETDEL, se cae al get+del de respaldo.
+      let userId: string | null
+      const anyRedis = redis as unknown as { getDel?: (k: string) => Promise<string | null> }
+      if (typeof anyRedis.getDel === "function") {
+        userId = await anyRedis.getDel(keyFor(code))
+      } else {
+        userId = await redis.get(keyFor(code))
+        if (userId) await redis.del(keyFor(code))
+      }
       if (!userId) return null
-      await redis.del(keyFor(code))
       return { userId }
     } catch {
       // cae a memoria abajo

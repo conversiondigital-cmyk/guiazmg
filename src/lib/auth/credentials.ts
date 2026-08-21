@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { getSettingBool } from "@/lib/settings"
 
+// Hash bcrypt señuelo (cost 12) para igualar el tiempo de respuesta cuando el
+// usuario no existe. No corresponde a ninguna contraseña real.
+const DUMMY_PASSWORD_HASH = "$2b$12$uRphXMYHux6pAwSgj/kRPeYQW.pIZ7BwiOzs5QsKXN2A3tTgl9ALq"
+
 // Extraído TEXTUALMENTE del `authorize` de Credentials en `src/lib/auth.ts`
 // (Fase B0 de la API móvil: el login por email/password de la app nativa
 // necesita la MISMA validación que el login web, sin duplicarla). Es un
@@ -20,8 +24,15 @@ export async function verifyCredentials(email: string, password: string) {
     where: { email: normalizedEmail },
   })
 
-  if (!user || !user.passwordHash) return null
-  if (!user.isActive) return null
+  // SEGURIDAD (fix enumeración por timing): si el usuario no existe o no tiene
+  // hash, hacer igual un bcrypt.compare contra un hash señuelo de MISMO costo
+  // (cost 12) para que el tiempo de respuesta no delate qué correos existen.
+  // Antes, un correo inexistente respondía en ~10ms (sin bcrypt) vs ~300ms para
+  // uno existente con mala contraseña: un oráculo de enumeración trivial.
+  if (!user || !user.passwordHash || !user.isActive) {
+    await bcrypt.compare(password as string, DUMMY_PASSWORD_HASH)
+    return null
+  }
 
   const isValid = await bcrypt.compare(
     password as string,

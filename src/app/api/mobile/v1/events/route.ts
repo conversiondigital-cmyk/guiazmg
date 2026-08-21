@@ -18,6 +18,30 @@ import { ok, fail } from "@/lib/api/mobile/respond"
 
 const MAX_BATCH = 50
 
+// SEGURIDAD (fix inflado de estadísticas): el dashboard de estadísticas es un
+// producto PAGADO; sin control, cualquiera (auth opcional) podía mandar lotes de
+// 50 WHATSAPP_CLICK/LEAD_GENERATED para un negocio AJENO sin límite y corromper
+// las métricas o generar leads falsos. El endpoint web (src/app/api/analytics)
+// ya deduplica por (ip,evento,entidad) en ventana de 5s; aquí se replica esa
+// defensa por-evento dentro del lote. Eventos duplicados se descartan en
+// silencio (se cuentan como "aceptados" para no filtrar el umbral al cliente).
+const eventThrottleMap = new Map<string, number>()
+const THROTTLE_WINDOW_MS = 5000
+
+function throttled(ip: string, eventType: string, entityId: string): boolean {
+  const key = `${ip}:${eventType}:${entityId}`
+  const now = Date.now()
+  const last = eventThrottleMap.get(key)
+  if (last && now - last < THROTTLE_WINDOW_MS) return true
+  eventThrottleMap.set(key, now)
+  if (eventThrottleMap.size > 20000) {
+    for (const [k, t] of eventThrottleMap) {
+      if (now - t > 30000) eventThrottleMap.delete(k)
+    }
+  }
+  return false
+}
+
 // Mismo catálogo de tipos que acepta `src/app/api/analytics/route.ts` (la
 // fuente de verdad de qué mueve una métrica real en el dashboard del negocio).
 const EVENT_TYPES = [
@@ -70,6 +94,13 @@ export async function POST(request: NextRequest) {
 
   let accepted = 0
   for (const event of body.events) {
+    const entityId = event.businessId ?? event.listingId ?? event.marketplaceListingId ?? ""
+    if (throttled(ip, event.eventType, entityId)) {
+      // Duplicado dentro de la ventana anti-abuso: se ignora para no inflar
+      // métricas, pero cuenta como aceptado (el cliente no debe reintentar).
+      accepted += 1
+      continue
+    }
     try {
       await logAnalyticsEvent({
         eventType: event.eventType as AnalyticsEventType,

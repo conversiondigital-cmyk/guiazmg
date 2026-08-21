@@ -63,6 +63,10 @@ export async function verifyMobileAccessToken(token: string): Promise<VerifyAcce
     const { payload } = await jwtVerify(token, getSecretKey(), {
       issuer: ISSUER,
       audience: AUDIENCE,
+      // Defensa en profundidad: fija HS256 explícitamente. Con clave simétrica
+      // jose ya rechaza `none` y las familias RS/ES, pero pinnear el algoritmo
+      // aceptado cierra por contrato cualquier confusión de algoritmo.
+      algorithms: ["HS256"],
     })
     if (payload.typ !== "access" || typeof payload.sub !== "string") {
       return { ok: false, reason: "invalid" }

@@ -130,7 +130,22 @@ export async function rotateRefreshToken(
 
   const accessToken = await issueAccessToken(user)
 
-  await prisma.$transaction(async (tx) => {
+  // SEGURIDAD (fix carrera TOCTOU): la comprobación de `revokedAt` de arriba se
+  // hizo con un `findUnique` FUERA de la transacción; sin un candado dos requests
+  // concurrentes con el MISMO refresh pasaban ambos y emitían dos pares válidos,
+  // bifurcando la familia en cadenas paralelas que la detección de reuso ya no veía.
+  // Aquí se hace un compare-and-swap ATÓMICO: solo el request que consiga mover
+  // `revokedAt` de null->now sobre ESTA fila (bajo candado de fila de Postgres)
+  // rota; el perdedor de la carrera (o un reuso real) obtiene count=0, se trata
+  // como reuso y mata la familia (fail-closed). El cliente serializa el refresh
+  // (`refreshInFlight`), así que esto no dispara logout en operación normal.
+  const rotated = await prisma.$transaction(async (tx) => {
+    const claim = await tx.mobileRefreshToken.updateMany({
+      where: { id: existing.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    })
+    if (claim.count === 0) return null
+
     const created = await tx.mobileRefreshToken.create({
       data: {
         userId: user.id,
@@ -148,9 +163,15 @@ export async function rotateRefreshToken(
 
     await tx.mobileRefreshToken.update({
       where: { id: existing.id },
-      data: { revokedAt: new Date(), replacedById: created.id },
+      data: { replacedById: created.id },
     })
+    return created
   })
+
+  if (!rotated) {
+    await revokeFamily(existing.familyId)
+    return { ok: false, code: "REFRESH_REUSED" }
+  }
 
   return {
     ok: true,
