@@ -62,3 +62,6 @@ oauth.txt
 
 # Instructivo local de pagos (no versionar)
 GUIA-PAGOS-STRIPE-MP.txt
+
+.vercel
+.env*
