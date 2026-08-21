@@ -18,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, RotateCw, X } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import CookieManager from '@react-native-cookies/cookies';
 import WebView, { type WebViewNavigation } from 'react-native-webview';
 
 import { apiClient } from '@/api/client';
@@ -203,6 +202,20 @@ export function SiteWebView({ path, title, authenticated = false, onClose }: Sit
           key={reloadKey}
           ref={webViewRef}
           source={{ uri: resolvedUri }}
+          // La sesión del WebView NO se persiste, a propósito. Antes se
+          // guardaba y se borraba con @react-native-cookies/cookies al cerrar
+          // sesión, pero esa librería está sin mantenimiento y usa jcenter(),
+          // un repositorio que Gradle 9 eliminó: rompía la compilación del APK.
+          //
+          // `incognito` es además una solución MEJOR que borrar cookies: no hay
+          // nada que purgar porque nunca se escriben en disco. El fallo que se
+          // quería evitar —que el panel del dueño siguiera logueado tras cerrar
+          // sesión en la app— deja de ser posible por construcción, en vez de
+          // depender de que alguien acuerde llamar a la función de limpieza.
+          //
+          // Coste: cada vez que se abre una pantalla web autenticada hay que
+          // rehacer el handoff. Es barato (un código de un solo uso, TTL 60s).
+          incognito
           sharedCookiesEnabled
           thirdPartyCookiesEnabled
           onNavigationStateChange={(nav) => setCanGoBack(nav.canGoBack)}
@@ -225,13 +238,18 @@ export function SiteWebView({ path, title, authenticated = false, onClose }: Sit
   );
 }
 
-/** Purga las cookies del WebView compartido. Llamar SIEMPRE al cerrar sesión — si no, el panel del dueño de negocio sigue "logueado" tras cerrar sesión en la app (fallo de seguridad). */
+/**
+ * Se conserva por compatibilidad con quien ya la llama al cerrar sesión, pero
+ * hoy NO tiene nada que purgar: `SiteWebView` monta el WebView en modo
+ * `incognito`, así que la sesión web vive solo en memoria y muere con la
+ * pantalla. El riesgo que esta función cubría —que el panel del dueño siguiera
+ * accesible tras cerrar sesión en la app— está resuelto por construcción.
+ *
+ * Si algún día se quita `incognito` para que la sesión persista, hay que
+ * volver a implementar el borrado real aquí, con una librería mantenida.
+ */
 export async function purgeWebViewCookies(): Promise<void> {
-  try {
-    await CookieManager.clearAll(true);
-  } catch {
-    // best-effort: si el módulo nativo falla, no bloqueamos el logout de la app.
-  }
+  // No-op deliberado. Ver el comentario de arriba.
 }
 
 function Header({
