@@ -19,7 +19,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
-import { Package, Plus } from "@/lib/icons"
+import { Package, Plus, Heart } from "@/lib/icons"
 import { cn } from "@/lib/utils"
 import { ListingActions } from "@/components/marketplace/listing-actions"
 
@@ -87,10 +87,16 @@ export default async function MisPublicacionesPage({
           <h1 className="text-2xl font-bold text-gray-900">Mis publicaciones</h1>
           <p className="text-gray-500">Publicaciones en el marketplace de Guía ZMG</p>
         </div>
-        <Link href="/marketplace/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
-          <Plus className="h-4 w-4" />
-          Nueva publicación
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/marketplace/guardados" className={cn(buttonVariants({ variant: "outline" }), "gap-1.5")}>
+            <Heart className="h-4 w-4" />
+            Guardados
+          </Link>
+          <Link href="/marketplace/nuevo" className={cn(buttonVariants(), "gap-1.5")}>
+            <Plus className="h-4 w-4" />
+            Nueva publicación
+          </Link>
+        </div>
       </div>
 
       <Card>

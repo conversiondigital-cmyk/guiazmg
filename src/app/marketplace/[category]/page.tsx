@@ -8,9 +8,11 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
 import { Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
+import { ListingFavoriteHeart } from "@/components/marketplace/listing-favorite-heart"
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>
@@ -37,6 +39,9 @@ export default async function MarketplaceCategoryPage({ params }: CategoryPagePr
     include: { children: { where: { isActive: true }, orderBy: { sortOrder: "asc" } } },
   })
   if (!cat) notFound()
+
+  const session = await auth()
+  const isAuthed = !!session?.user
 
   const listings = await prisma.marketplaceListing.findMany({
     // Incluye las publicaciones de la categoría Y de sus subcategorías (una
@@ -104,11 +109,13 @@ export default async function MarketplaceCategoryPage({ params }: CategoryPagePr
               {listings.map((listing) => {
                 const thumb = listing.images[0]
                 return (
-                  <Link key={listing.id} href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
+                  <div key={listing.id} className="relative">
+                    <ListingFavoriteHeart listingId={listing.id} isAuthed={isAuthed} className="absolute right-2 top-2 z-20" />
+                    <Link href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
                     <Card className="group h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                         {listing.condition && (
-                          <span className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
+                          <span className={`absolute left-2 bottom-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
                             {conditionLabel(listing.condition)}
                           </span>
                         )}
@@ -132,7 +139,8 @@ export default async function MarketplaceCategoryPage({ params }: CategoryPagePr
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
+                    </Link>
+                  </div>
                 )
               })}
             </div>

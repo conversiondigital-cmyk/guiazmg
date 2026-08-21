@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/lib/auth"
 import { Search, Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge, LISTING_CONDITIONS } from "@/lib/marketplace-conditions"
+import { ListingFavoriteHeart } from "@/components/marketplace/listing-favorite-heart"
 
 const CATEGORY_ICONS: Record<string, string> = {
   PRODUCTOS: "📦",
@@ -45,6 +47,9 @@ export default async function MarketplacePage({
   const hasFilters = Boolean(q || category || subcategoria || municipio || condicion || tipo || minPrice != null || maxPrice != null)
   const page = Math.max(1, parseInt(typeof params.page === "string" ? params.page : "1"))
   const limit = 20
+
+  const session = await auth()
+  const isAuthed = !!session?.user
 
   const categories = await prisma.marketplaceCategory.findMany({
     where: { isActive: true, parentId: null },
@@ -218,7 +223,9 @@ export default async function MarketplacePage({
               {listings.map((listing) => {
                 const thumb = listing.images[0]
                 return (
-                  <Link key={listing.id} href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
+                  <div key={listing.id} className="relative">
+                    <ListingFavoriteHeart listingId={listing.id} isAuthed={isAuthed} className="absolute right-2 top-2 z-20" />
+                    <Link href={`/marketplace/${listing.category.slug}/${listing.slug}`}>
                     <Card className="group h-full overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5">
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                         {listing.isBoosted && (
@@ -227,7 +234,7 @@ export default async function MarketplacePage({
                           </span>
                         )}
                         {listing.condition && (
-                          <span className={`absolute right-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
+                          <span className={`absolute left-2 bottom-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow ${conditionBadge(listing.condition)}`}>
                             {conditionLabel(listing.condition)}
                           </span>
                         )}
@@ -258,7 +265,8 @@ export default async function MarketplacePage({
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
+                    </Link>
+                  </div>
                 )
               })}
             </div>
