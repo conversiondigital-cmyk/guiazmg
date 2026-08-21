@@ -5,12 +5,12 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Menu, X, MapPin, User, LogOut } from "lucide-react"
 import { getInitials } from "@/lib/utils"
-import { NAV_LINKS, EXPLORE_VIEWS, AGENDA_VIEWS, type NavSubLink } from "@/lib/nav-links"
+import { NAV_LINKS, EXPLORE_VIEWS, type NavSubLink } from "@/lib/nav-links"
 
-// Sub-secciones de los hubs fusionados, indentadas bajo su enlace padre en el menú móvil.
+// Sub-secciones del hub "Explorar", indentadas bajo su enlace padre en el menú móvil.
+// (Promociones y Eventos ya son enlaces directos, no necesitan submenú.)
 const SUBVIEWS: Record<string, NavSubLink[]> = {
   "/search": EXPLORE_VIEWS,
-  "/agenda": AGENDA_VIEWS,
 }
 
 export function MobileNav() {

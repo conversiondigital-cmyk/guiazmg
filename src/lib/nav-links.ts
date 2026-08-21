@@ -15,15 +15,17 @@ export interface NavLink {
   matchPaths?: string[]
 }
 
-// Menú consolidado (9 → 5). Tres fusiones:
+// Menú consolidado (9 → 6). Una fusión y una separación:
 //  · Explorar = Directorio (/search) + Mapa + Zonas → los mismos negocios en 3 vistas.
-//  · Agenda   = Eventos + Promociones → "qué está pasando" en un solo lugar.
+//  · Promociones y Eventos van SEPARADOS: la promo de lanzamiento necesita
+//    visibilidad propia en la barra (antes estaban ocultos bajo "Agenda").
 //  · Contacto → se mueve al footer (utilitario, no compite en la barra principal).
 export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Inicio" },
   { href: "/search", label: "Explorar", hasDropdown: true, matchPaths: ["/search", "/mapa", "/zonas"] },
   { href: "/marketplace", label: "Marketplace" },
-  { href: "/agenda", label: "Agenda", matchPaths: ["/agenda", "/eventos", "/promociones"] },
+  { href: "/promociones", label: "Promociones" },
+  { href: "/eventos", label: "Eventos" },
   { href: "/blog", label: "Blog" },
 ]
 
@@ -32,10 +34,4 @@ export const EXPLORE_VIEWS: NavSubLink[] = [
   { href: "/search", label: "Directorio", description: "Todos los negocios, con filtros" },
   { href: "/mapa", label: "Mapa", description: "Explóralos en el mapa" },
   { href: "/zonas", label: "Por zona", description: "Por municipio y colonia" },
-]
-
-// Sub-secciones del hub "Agenda" (para el menú móvil).
-export const AGENDA_VIEWS: NavSubLink[] = [
-  { href: "/eventos", label: "Eventos", description: "Qué hacer cerca de ti" },
-  { href: "/promociones", label: "Promociones", description: "Ofertas de negocios locales" },
 ]

@@ -75,7 +75,8 @@ const NAV = [
   { label: "Inicio", href: "/" },
   { label: "Explorar", href: "/search" },
   { label: "Marketplace", href: "/marketplace" },
-  { label: "Agenda", href: "/agenda" },
+  { label: "Promociones", href: "/promociones" },
+  { label: "Eventos", href: "/eventos" },
   { label: "Blog", href: "/blog" },
   { label: "Contacto", href: "/contacto" },
 ]

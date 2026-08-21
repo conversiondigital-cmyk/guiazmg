@@ -36,7 +36,8 @@ export function Header() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const [categories, setCategories] = useState<NavCategory[]>(categoriesCache ?? [])
-  const [showCategories, setShowCategories] = useState(false)
+  // Dropdown abierto por href (hoy solo "/search" → Explorar). null = ninguno.
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   // Resalta el enlace de la página actual. Antes se seguía por click (setActiveNav),
   // así que entrar directo a /mapa marcaba "Inicio"; usePathname es la fuente real
@@ -79,14 +80,16 @@ export function Header() {
               <div
                 key={link.label}
                 className="relative"
-                onMouseEnter={() => setShowCategories(true)}
-                onMouseLeave={() => setShowCategories(false)}
+                onMouseEnter={() => setOpenDropdown(link.href)}
+                onMouseLeave={() => setOpenDropdown(null)}
               >
                 <Link href={link.href} className={navLinkClass(isActive(link))}>
                   {link.label}
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCategories ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${openDropdown === link.href ? "rotate-180" : ""}`}
+                  />
                 </Link>
-                {showCategories && (
+                {openDropdown === link.href && (
                   <div className="absolute left-0 top-full z-50 w-80 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
                     {/* Las 3 vistas del mismo directorio: lista, mapa y por zona. */}
                     <div className="grid grid-cols-3 gap-1">

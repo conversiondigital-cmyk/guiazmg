@@ -72,7 +72,7 @@ function emailLayout(c: EmailContent): string {
       <p style="margin:0 0 4px;font:400 14px/1.9 ${FONT};color:${BRAND.text}">
         ${link(APP_URL + "/search", "Explorar")} &nbsp;·&nbsp;
         ${link(APP_URL + "/marketplace", "Marketplace")} &nbsp;·&nbsp;
-        ${link(APP_URL + "/agenda", "Agenda")} &nbsp;·&nbsp;
+        ${link(APP_URL + "/promociones", "Promociones")} &nbsp;·&nbsp;
         ${link(APP_URL + "/blog", "Blog")} &nbsp;·&nbsp;
         ${link(APP_URL + "/contacto", "Contacto")}
       </p>
