@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { getSetting } from "@/lib/settings"
 import { ingestEventsFromRss } from "@/lib/events/rss-ingest"
+import { createNotification } from "@/lib/notifications/create"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -46,6 +48,30 @@ export async function GET(req: NextRequest) {
       skipped += r.skipped
     } catch (e) {
       errors.push(`${url}: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  // Avisar a los administradores cuando entran eventos nuevos (para que los
+  // revisen y publiquen). Fire-and-forget: nunca rompe la respuesta del cron.
+  if (imported > 0) {
+    try {
+      const admins = await prisma.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true },
+      })
+      await Promise.all(
+        admins.map((a) =>
+          createNotification({
+            userId: a.id,
+            title: `${imported} evento${imported === 1 ? "" : "s"} nuevo${imported === 1 ? "" : "s"} por revisar`,
+            message: "Se importaron eventos desde las fuentes RSS. Revísalos, ajusta la fecha y publícalos.",
+            type: "SYSTEM",
+            link: "/admin/eventos",
+          }),
+        ),
+      )
+    } catch (e) {
+      console.error("[cron/events] no se pudo notificar a admins:", e)
     }
   }
 
