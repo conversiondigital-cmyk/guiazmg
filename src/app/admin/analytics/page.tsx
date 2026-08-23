@@ -137,7 +137,7 @@ export default async function AdminAnalyticsPage({
       FROM neighborhoods n
       JOIN municipalities m ON m.id = n."municipalityId"
       LEFT JOIN businesses b ON b."neighborhoodId" = n.id AND b."deletedAt" IS NULL
-      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id
+      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id AND bad.date >= ${fromDate}
       LEFT JOIN (SELECT "businessId", COUNT(*)::int as leads FROM leads GROUP BY "businessId") l ON l."businessId" = b.id
       WHERE n."isActive" = true
       GROUP BY n.id, n.name, m.name, l.leads
@@ -151,7 +151,7 @@ export default async function AdminAnalyticsPage({
       FROM municipalities m
       LEFT JOIN neighborhoods n ON n."municipalityId" = m.id
       LEFT JOIN businesses b ON b."neighborhoodId" = n.id AND b."deletedAt" IS NULL
-      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id
+      LEFT JOIN business_analytics_daily bad ON bad."businessId" = b.id AND bad.date >= ${fromDate}
       LEFT JOIN (SELECT "businessId", COUNT(*)::int as leads FROM leads GROUP BY "businessId") l ON l."businessId" = b.id
       GROUP BY m.id, m.name, l.leads
       ORDER BY views DESC LIMIT 10
