@@ -130,21 +130,27 @@ export default async function AdminUsersPage({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {(["ALL", "USER", "BUSINESS_OWNER", "EDITOR", "SALES_AGENT", "ADMIN"] as const).map((r) => (
-          <Link
-            key={r}
-            href={buildUrl({ rol: r === "ALL" ? "" : r })}
-            className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              currentRol === r
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {ROLE_LABELS[r]}
-          </Link>
-        ))}
+        {(["ALL", "USER", "BUSINESS_OWNER", "EDITOR", "SALES_AGENT", "ADMIN"] as const).map((r) => {
+          // Filtros EXCLUYENTES: al elegir un rol se sale del filtro "Suspendidos"
+          // (status: ""). Y un rol no se resalta mientras estás en Suspendidos, para
+          // que no queden dos pestañas activas a la vez.
+          const active = currentRol === r && currentStatus !== "suspended"
+          return (
+            <Link
+              key={r}
+              href={buildUrl({ rol: r === "ALL" ? "" : r, status: "" })}
+              className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {ROLE_LABELS[r]}
+            </Link>
+          )
+        })}
         <Link
-          href={buildUrl({ status: "suspended" })}
+          href={buildUrl({ status: "suspended", rol: "" })}
           className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             currentStatus === "suspended"
               ? "bg-red-100 text-red-700"
