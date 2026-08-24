@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: lista pública de ventas de cochera cacheada 5 min en vez de consultar la
+// BD en cada visita.
+export const revalidate = 300
 
 import Link from "next/link"
 import Image from "next/image"

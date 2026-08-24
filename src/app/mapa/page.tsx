@@ -5,7 +5,9 @@ import { getMapBusinesses, getCategories } from "@/lib/queries"
 import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import { InteractiveMap, type MapPoint, type MapCategory } from "@/components/map/interactive-map"
 
-export const dynamic = "force-dynamic"
+// ISR: el mapa (todos los negocios) es contenido público que cambia lento → se
+// cachea 10 min en vez de consultar la BD en cada visita.
+export const revalidate = 600
 
 export const metadata: Metadata = {
   title: "Mapa Interactivo",

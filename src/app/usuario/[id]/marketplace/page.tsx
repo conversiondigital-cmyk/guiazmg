@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic"
+// ISR: perfil público de vendedor (sus publicaciones) cacheado 5 min por id.
+export const revalidate = 300
 
 import { notFound } from "next/navigation"
 import Link from "next/link"

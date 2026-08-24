@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: sólo lee el negocio por slug para mostrar el formulario; el gate real del
+// reclamo lo hace la API. Cacheado 10 min por slug.
+export const revalidate = 600
 
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"

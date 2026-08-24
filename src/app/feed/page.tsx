@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+// ISR: feed público (marketplace + solicitudes) cacheado 5 min en vez de
+// consultar la BD en cada visita.
+export const revalidate = 300
 
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"

@@ -1,4 +1,5 @@
-export const dynamic = "force-dynamic"
+// ISR: páginas de FAQ (contenido casi estático) cacheadas 1 h por slug.
+export const revalidate = 3600
 
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
