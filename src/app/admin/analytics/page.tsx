@@ -44,6 +44,31 @@ function fillMonthlyData(rows: { date: Date; amount: number }[], months: number)
   return result
 }
 
+// Fecha corta legible para ejes/tooltips. iso = "YYYY-MM-DD"; se ancla a mediodía
+// para que la zona horaria no la cruce de día.
+function fmtDayShort(iso: string): string {
+  return new Date(iso + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+}
+
+// Eje X con la fecha por día: rotula TODOS los días en rangos cortos y ~8 repartidos
+// en rangos largos (30/90) para no amontonar. Cada celda es flex-1 con el mismo gap
+// que las barras, así queda alineada con cada barra / columna del área.
+function DayAxis({ series }: { series: { date: string }[] }) {
+  const n = series.length
+  if (n === 0) return null
+  const target = n <= 10 ? n : 8
+  const step = Math.max(1, Math.round((n - 1) / (target - 1)))
+  return (
+    <div className="mt-2 flex gap-[3px] text-[10px] text-muted-foreground">
+      {series.map((d, i) => (
+        <span key={d.date} className="min-w-0 flex-1 truncate text-center">
+          {i % step === 0 || i === n - 1 ? fmtDayShort(d.date) : ""}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export default async function AdminAnalyticsPage({
   searchParams,
 }: {
@@ -290,9 +315,6 @@ export default async function AdminAnalyticsPage({
   const maxLead = Math.max(...chartLeads.map((d) => d.count), 1)
   const maxRevenue = Math.max(...revenueBars.map((d) => d.amount), 1)
   const totalRevenue12m = revenueBars.reduce((s, d) => s + d.amount, 0)
-  // Rango de fechas de las series diarias (para rotular el eje X: MM-DD).
-  const visitFrom = chartVisits[0]?.date.slice(5) ?? ""
-  const visitTo = chartVisits[chartVisits.length - 1]?.date.slice(5) ?? ""
 
   const chartUsers = fillDailyData(dailyUserRows as { date: Date; count: number }[], rangeDays)
   const chartMarketplace = fillDailyData(dailyMarketplaceRows as { date: Date; count: number }[], rangeDays)
@@ -370,21 +392,30 @@ export default async function AdminAnalyticsPage({
         </div>
 
         <div className="mt-5">
-          <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none" className="h-32 w-full" role="img" aria-label="Vistas de página por día">
-            <defs>
-              <linearGradient id="pvGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d={pvArea} fill="url(#pvGrad)" />
-            <path d={pvLine} fill="none" stroke="#2563EB" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-          </svg>
-          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-            <span>{pvSeries[0]?.date.slice(5)}</span>
-            <span>Total: {pageViews30.toLocaleString()} vistas</span>
-            <span>{pvSeries[pvSeries.length - 1]?.date.slice(5)}</span>
+          <div className="relative">
+            <svg viewBox={`0 0 ${CW} ${CH}`} preserveAspectRatio="none" className="h-32 w-full" role="img" aria-label="Vistas de página por día">
+              <defs>
+                <linearGradient id="pvGrad" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={pvArea} fill="url(#pvGrad)" />
+              <path d={pvLine} fill="none" stroke="#2563EB" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+            </svg>
+            {/* Una columna por día: al pasar el cursor muestra la fecha exacta y las vistas. */}
+            <div className="absolute inset-0 flex">
+              {pvSeries.map((d) => (
+                <div
+                  key={d.date}
+                  title={`${fmtDayShort(d.date)}: ${d.count} vistas`}
+                  className="flex-1 rounded-sm transition-colors hover:bg-blue-500/10"
+                />
+              ))}
+            </div>
           </div>
+          <DayAxis series={pvSeries} />
+          <p className="mt-1 text-center text-[10px] text-muted-foreground">Total: {pageViews30.toLocaleString()} vistas</p>
         </div>
 
         <div className="mt-5 grid gap-6 lg:grid-cols-2">
@@ -474,7 +505,7 @@ export default async function AdminAnalyticsPage({
             {chartVisits.map((d) => (
               <div
                 key={d.date}
-                title={`${d.date}: ${d.count}`}
+                title={`${fmtDayShort(d.date)}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxVisit) * 100, 2)}%`,
@@ -483,11 +514,10 @@ export default async function AdminAnalyticsPage({
               />
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{visitFrom}</span>
-            <span>Total: {chartVisits.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
-            <span>{visitTo}</span>
-          </div>
+          <DayAxis series={chartVisits} />
+          <p className="mt-1 text-center text-[10px] text-muted-foreground">
+            Total: {chartVisits.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
@@ -498,7 +528,7 @@ export default async function AdminAnalyticsPage({
             {chartLeads.map((d) => (
               <div
                 key={d.date}
-                title={`${d.date}: ${d.count}`}
+                title={`${fmtDayShort(d.date)}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxLead) * 100, 2)}%`,
@@ -507,11 +537,10 @@ export default async function AdminAnalyticsPage({
               />
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{visitFrom}</span>
-            <span>Total: {chartLeads.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
-            <span>{visitTo}</span>
-          </div>
+          <DayAxis series={chartLeads} />
+          <p className="mt-1 text-center text-[10px] text-muted-foreground">
+            Total: {chartLeads.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          </p>
         </div>
       </div>
 
@@ -526,7 +555,7 @@ export default async function AdminAnalyticsPage({
             {chartUsers.map((d) => (
               <div
                 key={d.date}
-                title={`${d.date}: ${d.count}`}
+                title={`${fmtDayShort(d.date)}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxUser) * 100, 2)}%`,
@@ -535,11 +564,10 @@ export default async function AdminAnalyticsPage({
               />
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{visitFrom}</span>
-            <span>Total: {chartUsers.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
-            <span>{visitTo}</span>
-          </div>
+          <DayAxis series={chartUsers} />
+          <p className="mt-1 text-center text-[10px] text-muted-foreground">
+            Total: {chartUsers.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
@@ -550,7 +578,7 @@ export default async function AdminAnalyticsPage({
             {chartMarketplace.map((d) => (
               <div
                 key={d.date}
-                title={`${d.date}: ${d.count}`}
+                title={`${fmtDayShort(d.date)}: ${d.count}`}
                 className="flex-1 rounded-sm transition-all"
                 style={{
                   height: `${Math.max((d.count / maxMkt) * 100, 2)}%`,
@@ -559,11 +587,10 @@ export default async function AdminAnalyticsPage({
               />
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{visitFrom}</span>
-            <span>Total: {chartMarketplace.reduce((s, d) => s + d.count, 0).toLocaleString()}</span>
-            <span>{visitTo}</span>
-          </div>
+          <DayAxis series={chartMarketplace} />
+          <p className="mt-1 text-center text-[10px] text-muted-foreground">
+            Total: {chartMarketplace.reduce((s, d) => s + d.count, 0).toLocaleString()}
+          </p>
         </div>
       </div>
 
