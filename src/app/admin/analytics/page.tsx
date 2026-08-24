@@ -299,6 +299,8 @@ export default async function AdminAnalyticsPage({
   const pvPts = pvSeries.map((d, i) => [CP + i * pvStepX, CH - CP - (d.count / pvMax) * (CH - CP * 2)] as const)
   const pvLine = pvPts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")
   const pvArea = `${pvLine} L${pvPts[pvPts.length - 1][0].toFixed(1)} ${CH - CP} L${pvPts[0][0].toFixed(1)} ${CH - CP} Z`
+  // Índices donde se rotula el eje (mismo criterio que DayAxis) → guías verticales ahí.
+  const pvGridStep = pvSeries.length <= 10 ? 1 : Math.max(1, Math.round((pvSeries.length - 1) / 7))
   const chOrganic = channelCounts.get("ORGANIC") || 0
   const chDirect = channelCounts.get("DIRECT") || 0
   const chSocial = channelCounts.get("SOCIAL") || 0
@@ -400,6 +402,21 @@ export default async function AdminAnalyticsPage({
                   <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
                 </linearGradient>
               </defs>
+              {/* Guías verticales alineadas con las fechas del eje X (detrás del área). */}
+              {pvPts.map(([x], i) =>
+                i % pvGridStep === 0 || i === pvPts.length - 1 ? (
+                  <line
+                    key={i}
+                    x1={x.toFixed(1)}
+                    y1={CP}
+                    x2={x.toFixed(1)}
+                    y2={CH - CP}
+                    stroke="#E5E7EB"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null,
+              )}
               <path d={pvArea} fill="url(#pvGrad)" />
               <path d={pvLine} fill="none" stroke="#2563EB" strokeWidth="2" vectorEffect="non-scaling-stroke" />
             </svg>
