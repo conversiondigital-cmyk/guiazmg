@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Plus, Calendar, Gift } from "@/lib/icons"
 import Link from "next/link"
+import Image from "next/image"
 
 export default async function PromocionesPage() {
   const session = await auth()
@@ -87,7 +88,12 @@ export default async function PromocionesPage() {
           ) : (
             <div className="space-y-4">
               {active.map((c) => (
-                <div key={c.id} className="flex items-center justify-between rounded-lg border p-4">
+                <div key={c.id} className="flex items-center gap-4 rounded-lg border p-4">
+                  {c.imageUrl && (
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border bg-gray-50">
+                      <Image src={c.imageUrl} alt={c.title} fill className="object-cover" sizes="56px" unoptimized />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{c.title}</h3>
                     <p className="text-sm text-gray-500">{bizMap[c.businessId]?.name ?? ""}</p>

@@ -815,6 +815,7 @@ model Coupon {
   businessId  String
   title       String
   description String?
+  imageUrl    String?  // Imagen promocional opcional que sube el dueño del negocio
   code        String?
   startDate   DateTime?
   endDate     DateTime?

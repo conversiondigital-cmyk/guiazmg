@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tag, Clock } from "@/lib/icons"
 import type { Coupon } from "@/types"
@@ -14,7 +15,19 @@ export function BusinessPromotions({ promotions }: BusinessPromotionsProps) {
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Promociones</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         {promotions.map((promo) => (
-          <Card key={promo.id} className="border-amber-200 bg-amber-50/50">
+          <Card key={promo.id} className="overflow-hidden border-amber-200 bg-amber-50/50">
+            {promo.imageUrl && (
+              <div className="relative aspect-[16/9] w-full bg-amber-100">
+                <Image
+                  src={promo.imageUrl}
+                  alt={promo.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 320px"
+                  unoptimized
+                />
+              </div>
+            )}
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 shrink-0">
