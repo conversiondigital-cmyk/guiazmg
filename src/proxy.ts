@@ -171,8 +171,12 @@ export async function proxy(req: NextRequest) {
   ])
   const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
+  // Beacons de conteo de vistas: deben aceptar POST ANÓNIMO para contar visitantes
+  // reales (la mayoría navega sin sesión), no solo usuarios logueados. Solo
+  // incrementan un contador (debounce por IP vía Redis); no exponen ni piden datos.
+  const publicViewBeacon = /^\/api\/(marketplace|blog\/posts)\/[^/]+\/view$/.test(pathname)
 
-  if (publicExactPaths.has(pathname) || publicPrefixPaths.some((p) => pathname === p || pathname.startsWith(p + "/")) || publicMarketplacePaths) {
+  if (publicExactPaths.has(pathname) || publicPrefixPaths.some((p) => pathname === p || pathname.startsWith(p + "/")) || publicMarketplacePaths || publicViewBeacon) {
     return NextResponse.next({ headers: securityHeaders })
   }
 
