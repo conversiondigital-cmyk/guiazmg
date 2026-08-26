@@ -16,6 +16,7 @@ import { formatCurrency } from "@/lib/utils"
 import { conditionLabel, conditionBadge } from "@/lib/marketplace-conditions"
 import { ListingGallery } from "@/components/marketplace/listing-gallery"
 import { ListingFavoriteButton } from "@/components/marketplace/listing-favorite-button"
+import { ListingViewTracker } from "@/components/marketplace/listing-view-tracker"
 
 const TYPE_LABELS: Record<string, string> = {
   SALE: "Venta", PURCHASE: "Compra", TRADE: "Intercambio", SERVICE: "Servicio",
@@ -93,6 +94,10 @@ export default async function MarketplaceListingDetail({ params }: ListingDetail
 
   return (
     <>
+      {/* Registra la vista (solo visitantes reales, no el dueño ni admin). */}
+      {listing.status === "ACTIVE" && !canEdit && (
+        <ListingViewTracker listingId={listing.id} />
+      )}
       <Header />
       <main className="flex-1 bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
