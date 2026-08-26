@@ -524,6 +524,11 @@ model Profile {
   // a domicilio, desde casa, en línea, por cita, sobre pedido… Se auto-sugiere por
   // el giro y las respuestas del alta; editable por el dueño.
   operationModel    String?
+  // Visibilidad de la ubicación: PUBLIC = dirección exacta + mapa + coordenadas;
+  // APPROX = solo municipio/colonia; PRIVATE = no se muestra ubicación. Default
+  // PUBLIC para no cambiar a los negocios existentes; el alta de un Emprendedor
+  // sin local se crea PRIVATE. Nunca se envían lat/lng al cliente si no es PUBLIC.
+  locationVisibility String            @default("PUBLIC")
   status            ProfileStatus      @default(PENDING_REVIEW)
   verificationStatus VerificationStatus @default(UNVERIFIED)
   visibilityScore   Int                 @default(0)

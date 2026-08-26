@@ -67,6 +67,10 @@ export function profileSchema(
 ) {
   const businessType = detectBusinessType(profile.category?.name)
 
+  // Privacidad de ubicación: la dirección exacta y las coordenadas solo se
+  // publican (también en datos estructurados) cuando la visibilidad es PUBLIC.
+  const showExact = ((profile as any).locationVisibility ?? "PUBLIC") === "PUBLIC"
+
   const schema: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": businessType,
@@ -81,10 +85,10 @@ export function profileSchema(
       addressLocality: profile.municipality?.name || undefined,
       addressRegion: "Jalisco",
       addressCountry: "MX",
-      streetAddress: profile.addressText || undefined,
-      postalCode: profile.postalCode || undefined,
+      streetAddress: showExact ? (profile.addressText || undefined) : undefined,
+      postalCode: showExact ? (profile.postalCode || undefined) : undefined,
     },
-    geo: profile.latitude && profile.longitude ? {
+    geo: showExact && profile.latitude && profile.longitude ? {
       "@type": "GeoCoordinates",
       latitude: profile.latitude,
       longitude: profile.longitude,

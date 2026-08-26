@@ -19,6 +19,7 @@ import { GoogleMapPicker } from "@/components/business/google-map-picker"
 import { AddressAutocomplete } from "@/components/business/address-autocomplete"
 import { SuggestGiro } from "@/components/business/suggest-giro"
 import { parseAddressComponents, type ResolvedPlace } from "@/lib/geo/parse-address"
+import { SERVICE_MODES, LOCATION_VISIBILITY } from "@/lib/profile-modality"
 
 // Look tenue de los campos del formulario (fondo suave, blanco al enfocar).
 const INPUT_TENUE =
@@ -95,6 +96,10 @@ type BusinessData = {
   postalCode: string | null
   latitude: number | null
   longitude: number | null
+  serviceModes: string[] | null
+  coverageArea: string | null
+  hasPhysicalLocation: boolean | null
+  locationVisibility: string | null
   logoUrl: string | null
   coverImageUrl: string | null
   status: string
@@ -175,6 +180,7 @@ const EDITABLE_KEYS = [
   "name", "shortDescription", "description", "phone", "whatsapp", "email",
   "websiteUrl", "facebookUrl", "instagramUrl", "tiktokUrl", "youtubeUrl",
   "linkedinUrl", "addressText", "postalCode", "googleMapsUrl", "wazeUrl",
+  "coverageArea", "locationVisibility",
 ] as const
 
 type EditableKey = (typeof EDITABLE_KEYS)[number]
@@ -272,6 +278,15 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
   const [coverImageUrl, setCoverImageUrl] = useState<string>(business.coverImageUrl ?? "")
   const [gallery, setGallery] = useState<string[]>(() => business.images.map((im) => im.imageUrl))
   const [uploading, setUploading] = useState(false)
+
+  // Operativa: modalidades de atención y si tiene local físico (el resto —zona de
+  // cobertura y visibilidad de la ubicación— viaja como texto en `form`).
+  const [serviceModes, setServiceModes] = useState<string[]>(
+    Array.isArray(business.serviceModes) ? business.serviceModes : []
+  )
+  const [hasPhysicalLocation, setHasPhysicalLocation] = useState<boolean>(
+    business.hasPhysicalLocation ?? true
+  )
   const MAX_GALLERY = 12
 
   // Ubicación en el mapa (pin arrastrable). null = sin ubicar aún.
@@ -397,6 +412,8 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          serviceModes,
+          hasPhysicalLocation,
           categoryId,
           subcategoryId: subcategoryId || null,
           logoUrl: logoUrl || null,
@@ -613,6 +630,77 @@ export function BusinessEditForm({ business, categories, mapsApiKey }: BusinessE
         </TabsContent>
 
         <TabsContent value="location" className="space-y-6">
+          <SectionCard title="Cómo atiendes y tu ubicación" icon={Store}>
+            <div className="space-y-5">
+              <Field label="Visibilidad de tu ubicación">
+                <Select
+                  value={form.locationVisibility || "PUBLIC"}
+                  onValueChange={(v) => set("locationVisibility", v || "PUBLIC")}
+                >
+                  <SelectTrigger className="bg-slate-50/70">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATION_VISIBILITY.map((v) => (
+                      <SelectItem key={v.code} value={v.code}>{v.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {LOCATION_VISIBILITY.find((v) => v.code === (form.locationVisibility || "PUBLIC"))?.hint}
+                </p>
+              </Field>
+
+              <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+                <div>
+                  <Label>¿Tienes un local abierto al público?</Label>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Si trabajas desde casa o solo atiendes a domicilio, déjalo apagado.
+                  </p>
+                </div>
+                <Switch checked={hasPhysicalLocation} onCheckedChange={setHasPhysicalLocation} />
+              </div>
+
+              <div>
+                <Label>¿Cómo atiendes a tus clientes?</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SERVICE_MODES.map((m) => {
+                    const checked = serviceModes.includes(m.code)
+                    return (
+                      <button
+                        type="button"
+                        key={m.code}
+                        onClick={() =>
+                          setServiceModes((prev) =>
+                            checked ? prev.filter((c) => c !== m.code) : [...prev, m.code]
+                          )
+                        }
+                        className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                          checked
+                            ? "border-[#006c49] bg-[#006c49] text-white"
+                            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <Field label="¿En qué zonas atiendes o entregas? (opcional)">
+                <Input
+                  value={form.coverageArea}
+                  onChange={(e) => set("coverageArea", e.target.value)}
+                  placeholder="Ej: Zona Real, Solares, Valle Real y alrededores"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Colonias o zonas donde trabajas o haces entregas. Se muestra en tu perfil.
+                </p>
+              </Field>
+            </div>
+          </SectionCard>
+
           <SectionCard title="Ubicación" icon={MapPin}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Municipio">

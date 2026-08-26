@@ -13,6 +13,12 @@ export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDet
   const totalReviews = reviewCount ?? business.reviews?.length ?? 0
   const activeMembership = business.memberships?.find((m) => m.status === "ACTIVE")
 
+  // Privacidad de ubicación: la dirección EXACTA solo con visibilidad PUBLIC;
+  // la zona (municipio/colonia) se muestra en PUBLIC y APPROX; en PRIVATE nada.
+  const locVis = (business.locationVisibility as string) ?? "PUBLIC"
+  const showExactAddress = locVis === "PUBLIC"
+  const showZone = locVis !== "PRIVATE" && !!business.municipality
+
   return (
     <div>
       {business.coverImageUrl && (
@@ -85,16 +91,16 @@ export function BusinessDetail({ business, avgRating, reviewCount }: BusinessDet
           </div>
         )}
 
-        {business.addressText && (
+        {((showExactAddress && business.addressText) || showZone) && (
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Ubicación</h2>
             <div className="flex items-start gap-2 text-gray-600">
               <MapPin className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
               <div>
-                <p>{business.addressText}</p>
-                {business.municipality && (
+                {showExactAddress && business.addressText && <p>{business.addressText}</p>}
+                {showZone && (
                   <p className="text-sm">
-                    {business.municipality.name}
+                    {business.municipality?.name}
                     {business.neighborhood && `, Col. ${business.neighborhood.name}`}
                   </p>
                 )}

@@ -58,6 +58,12 @@ const businessUpdateSchema = z.object({
   images: z.array(imageUrl).max(12).optional(),
   latitude: z.preprocess(blankToNull, z.coerce.number().min(-90).max(90).nullable().optional()),
   longitude: z.preprocess(blankToNull, z.coerce.number().min(-180).max(180).nullable().optional()),
+  // Operativa: cómo atiende, su zona de cobertura y la visibilidad de su ubicación.
+  hasPhysicalLocation: z.boolean().nullable().optional(),
+  serviceModes: z.array(z.string().max(40)).max(12).optional(),
+  coverageArea: optText(300),
+  operationModel: optText(60),
+  locationVisibility: z.enum(["PUBLIC", "APPROX", "PRIVATE"]).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -128,6 +134,10 @@ export async function POST(request: NextRequest) {
         serviceModes: data.serviceModes ?? [],
         coverageArea: data.coverageArea || null,
         operationModel: data.operationModel || null,
+        // Default de privacidad: quien NO tiene local (emprendedor desde casa)
+        // se crea PRIVATE; un negocio con local, PUBLIC. Editable en su panel.
+        locationVisibility:
+          (data.hasPhysicalLocation ?? data.profileType !== "EMPRENDEDOR") ? "PUBLIC" : "PRIVATE",
         name: data.name,
         shortDescription: data.shortDescription,
         description: data.description,

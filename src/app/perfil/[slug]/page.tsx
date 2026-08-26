@@ -91,6 +91,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
     { name: business.name, url },
   ]
 
+  // Privacidad de ubicación: dirección exacta, mapa y coordenadas SOLO si el
+  // perfil es PUBLIC. El JSON-LD ya se sanea dentro de profileSchema; aquí
+  // gateamos el render para no pasar lat/lng a los componentes de cliente.
+  // El municipio/colonia (aproximado) se mantiene siempre.
+  const showExactLocation = ((business as any).locationVisibility ?? "PUBLIC") === "PUBLIC"
+
   const jsonLd = profileSchema(business, { value: avgRating, count: reviewCount })
   const breadcrumbLd = breadcrumbSchema(breadcrumbItems)
 
@@ -199,7 +205,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             <span className="text-gray-900">{business.name}</span>
           </nav>
 
-          {business.latitude != null && business.longitude != null && (
+          {showExactLocation && business.latitude != null && business.longitude != null && (
             <div className="mb-4">
               <DistanceBadge lat={business.latitude} lng={business.longitude} interactive className="text-sm" />
             </div>
@@ -208,7 +214,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <BusinessDetail business={business} avgRating={avgRating} reviewCount={reviewCount} />
-              {business.latitude != null && business.longitude != null && (
+              {showExactLocation && business.latitude != null && business.longitude != null && (
                 <BusinessMap
                   lat={business.latitude}
                   lng={business.longitude}

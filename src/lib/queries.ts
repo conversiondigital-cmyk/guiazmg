@@ -134,7 +134,9 @@ export const getFeaturedProfiles = unstable_cache(
 export const getMapBusinesses = unstable_cache(
   async () =>
     prisma.profile.findMany({
-      where: { status: "ACTIVE", latitude: { not: null }, longitude: { not: null } },
+      // Solo se ponen pines de perfiles con ubicación PÚBLICA: un Emprendedor que
+      // trabaja desde casa (APPROX/PRIVATE) no debe aparecer geolocalizado en el mapa.
+      where: { status: "ACTIVE", latitude: { not: null }, longitude: { not: null }, locationVisibility: "PUBLIC" },
       select: {
         id: true,
         name: true,
