@@ -45,7 +45,17 @@ export function BusinessGallery({ images }: BusinessGalleryProps) {
               onClick={() => openLightbox(i)}
               className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity"
             >
-              <Image src={img.url} alt={img.alt || `Imagen ${i + 1}`} fill className="object-cover" />
+              {/* `sizes` es CLAVE: sin ella, con `fill` el navegador descarga la
+                  imagen al ancho de TODO el viewport (~1200px) para cada miniatura,
+                  y en conexiones móviles lentas esas descargas grandes fallaban
+                  (se veían rotas en el celular aunque en desktop cargaran). */}
+              <Image
+                src={img.url}
+                alt={img.alt || `Imagen ${i + 1}`}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 220px"
+                className="object-cover"
+              />
             </button>
           ))}
         </div>
