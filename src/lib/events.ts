@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { unstable_cache } from "next/cache"
 
 export function slugifyEvent(title: string): string {
   return title
@@ -29,26 +30,34 @@ interface EventFilter {
 }
 
 // Eventos publicados que aún no terminan (próximos / en curso).
-export async function getUpcomingEvents(opts: EventFilter = {}) {
-  const now = new Date()
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  try {
-    return await prisma.event.findMany({
-      where: {
-        isPublished: true,
-        deletedAt: null,
-        ...(opts.municipalityId ? { municipalityId: opts.municipalityId } : {}),
-        ...(opts.freeOnly ? { isFree: true } : {}),
-        OR: [{ endAt: { gte: now } }, { AND: [{ endAt: null }, { startAt: { gte: startOfToday } }] }],
-      },
-      orderBy: [{ isFeatured: "desc" }, { startAt: "asc" }],
-      take: opts.take ?? 60,
-    })
-  } catch {
-    return []
-  }
-}
+// Cacheado (ISR/data cache): la lista cambia lento (alta por admin + cron diario),
+// así que se sirve de caché 5 min en vez de golpear la BD en cada visita. La llave
+// incluye los filtros (municipio/gratis/take). Se invalida por tiempo; para refresco
+// inmediato al publicar/editar un evento, llamar revalidateTag("events").
+export const getUpcomingEvents = unstable_cache(
+  async (opts: EventFilter = {}) => {
+    const now = new Date()
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    try {
+      return await prisma.event.findMany({
+        where: {
+          isPublished: true,
+          deletedAt: null,
+          ...(opts.municipalityId ? { municipalityId: opts.municipalityId } : {}),
+          ...(opts.freeOnly ? { isFree: true } : {}),
+          OR: [{ endAt: { gte: now } }, { AND: [{ endAt: null }, { startAt: { gte: startOfToday } }] }],
+        },
+        orderBy: [{ isFeatured: "desc" }, { startAt: "asc" }],
+        take: opts.take ?? 60,
+      })
+    } catch {
+      return []
+    }
+  },
+  ["upcoming-events"],
+  { revalidate: 300, tags: ["events"] }
+)
 
 export async function getEventBySlug(slug: string) {
   try {

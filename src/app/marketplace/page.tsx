@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import { unstable_cache } from "next/cache"
 import { auth } from "@/lib/auth"
 import { Search, Plus, MapPin } from "@/lib/icons"
 import { formatCurrency } from "@/lib/utils"
@@ -26,6 +27,79 @@ const CATEGORY_ICONS: Record<string, string> = {
   CLASES: "📚",
   COMUNIDAD: "👥",
 }
+
+// Categorías + conteos: estables (cambian lento) y se consultan en CADA carga del
+// marketplace → cacheadas 5 min para no golpear la BD por visita.
+const getMarketplaceCategoriesAndCounts = unstable_cache(
+  async () => {
+    const categories = await prisma.marketplaceCategory.findMany({
+      where: { isActive: true, parentId: null },
+      include: { children: { select: { id: true } } },
+      orderBy: { sortOrder: "asc" },
+    })
+    const listingCounts = await prisma.marketplaceListing.groupBy({
+      by: ["categoryId"],
+      where: { status: "ACTIVE", deletedAt: null },
+      _count: true,
+    })
+    return { categories, listingCounts }
+  },
+  ["marketplace-cats-counts"],
+  { revalidate: 300, tags: ["marketplace"] }
+)
+
+interface MarketplaceListFilters {
+  q: string; category: string; subcategoria: string; municipio: string
+  sort: string; condicion: string; tipo: string
+  minPrice?: number; maxPrice?: number; page: number; limit: number
+}
+
+// Listado filtrado: la llave de caché incluye TODOS los filtros (los args), así que
+// cada combinación devuelve su resultado correcto. TTL corto (2 min); se invalida al
+// crear/editar una publicación con revalidateTag("marketplace").
+const getMarketplaceListings = unstable_cache(
+  async (f: MarketplaceListFilters) => {
+    const where: any = { status: "ACTIVE", deletedAt: null }
+    if (f.q) where.title = { contains: f.q, mode: "insensitive" }
+    if (f.subcategoria) {
+      where.category = { slug: f.subcategoria }
+    } else if (f.category) {
+      where.category = { OR: [{ slug: f.category }, { parent: { slug: f.category } }] }
+    }
+    if (f.municipio) where.municipalityId = f.municipio
+    if (f.condicion) where.condition = f.condicion
+    if (f.tipo) where.type = f.tipo
+    if (f.minPrice != null) where.price = { ...(where.price || {}), gte: f.minPrice }
+    if (f.maxPrice != null) where.price = { ...(where.price || {}), lte: f.maxPrice }
+
+    const orderBy: any =
+      f.sort === "precio_asc"
+        ? { price: "asc" }
+        : f.sort === "precio_desc"
+          ? { price: "desc" }
+          : [{ isBoosted: "desc" }, { createdAt: "desc" }]
+
+    const [listings, total] = await Promise.all([
+      prisma.marketplaceListing.findMany({
+        where,
+        include: {
+          category: { select: { name: true, slug: true, icon: true } },
+          user: { select: { name: true, image: true } },
+          municipality: { select: { name: true, slug: true } },
+          images: { orderBy: { sortOrder: "asc" }, take: 1 },
+          _count: { select: { favorites: true } },
+        },
+        orderBy,
+        skip: (f.page - 1) * f.limit,
+        take: f.limit,
+      }),
+      prisma.marketplaceListing.count({ where }),
+    ])
+    return { listings, total }
+  },
+  ["marketplace-listings"],
+  { revalidate: 120, tags: ["marketplace"] }
+)
 
 export default async function MarketplacePage({
   searchParams,
@@ -51,63 +125,14 @@ export default async function MarketplacePage({
   const session = await auth()
   const isAuthed = !!session?.user
 
-  const categories = await prisma.marketplaceCategory.findMany({
-    where: { isActive: true, parentId: null },
-    include: { children: { select: { id: true } } },
-    orderBy: { sortOrder: "asc" },
-  })
-
-  // Conteo por categoría INCLUYENDO sus subcategorías (una publicación se guarda
-  // bajo la subcategoría, así que el conteo del padre debe sumar a sus hijos).
-  const listingCounts = await prisma.marketplaceListing.groupBy({
-    by: ["categoryId"],
-    where: { status: "ACTIVE", deletedAt: null },
-    _count: true,
-  })
+  const { categories, listingCounts } = await getMarketplaceCategoriesAndCounts()
   const countByCat = new Map(listingCounts.map((c) => [c.categoryId, c._count]))
   const catTotal = (c: (typeof categories)[number]) =>
     (countByCat.get(c.id) ?? 0) + c.children.reduce((s, ch) => s + (countByCat.get(ch.id) ?? 0), 0)
 
-  const where: any = { status: "ACTIVE", deletedAt: null }
-  if (q) where.title = { contains: q, mode: "insensitive" }
-  // Si se pide una subcategoría, se filtra exacto por ella. Si se pide una
-  // categoría, se incluyen también sus subcategorías (roll-up), porque una
-  // publicación se guarda bajo la subcategoría elegida.
-  if (subcategoria) {
-    where.category = { slug: subcategoria }
-  } else if (category) {
-    where.category = { OR: [{ slug: category }, { parent: { slug: category } }] }
-  }
-  if (municipio) where.municipalityId = municipio
-  if (condicion) where.condition = condicion
-  if (tipo) where.type = tipo
-  if (minPrice != null) where.price = { ...(where.price || {}), gte: minPrice }
-  if (maxPrice != null) where.price = { ...(where.price || {}), lte: maxPrice }
-
-  // Orden: por precio si se pide; si no, destacados primero y luego lo más reciente.
-  const orderBy: any =
-    sort === "precio_asc"
-      ? { price: "asc" }
-      : sort === "precio_desc"
-        ? { price: "desc" }
-        : [{ isBoosted: "desc" }, { createdAt: "desc" }]
-
-  const [listings, total] = await Promise.all([
-    prisma.marketplaceListing.findMany({
-      where,
-      include: {
-        category: { select: { name: true, slug: true, icon: true } },
-        user: { select: { name: true, image: true } },
-        municipality: { select: { name: true, slug: true } },
-        images: { orderBy: { sortOrder: "asc" }, take: 1 },
-        _count: { select: { favorites: true } },
-      },
-      orderBy,
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.marketplaceListing.count({ where }),
-  ])
+  const { listings, total } = await getMarketplaceListings({
+    q, category, subcategoria, municipio, sort, condicion, tipo, minPrice, maxPrice, page, limit,
+  })
 
   const totalPages = Math.ceil(total / limit)
 
