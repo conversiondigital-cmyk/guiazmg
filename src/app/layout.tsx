@@ -6,6 +6,7 @@ import { UserLocationProvider } from "@/components/location/user-location"
 import { Toaster } from "@/components/ui/sonner"
 import { SystemDialogHost } from "@/components/ui/system-dialog"
 import { CookieConsent } from "@/components/legal/cookie-consent"
+import { ZoneSuggestionBanner } from "@/components/location/zone-suggestion-banner"
 import { Analytics } from "@vercel/analytics/next"
 import { TrafficBeacon } from "@/components/analytics/traffic-beacon"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
@@ -87,6 +88,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col">
         <SessionProvider>
           <UserLocationProvider>
+            <ZoneSuggestionBanner />
             {children}
             <Toaster />
             <SystemDialogHost />
