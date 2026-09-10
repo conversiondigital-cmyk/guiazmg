@@ -74,6 +74,9 @@ export async function proxy(req: NextRequest) {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    // Equivalente moderno de X-Frame-Options: DENY (anti-clickjacking en
+    // navegadores actuales). Ningún origen puede embeber el sitio en un frame.
+    "frame-ancestors 'none'",
   ].join("; ")
 
   const securityHeaders = new Headers({
