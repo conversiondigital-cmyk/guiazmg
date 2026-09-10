@@ -8,5 +8,16 @@
     { "path": "/api/cron/google-ratings", "schedule": "0 5 * * 1" },
     { "path": "/api/cron/marketplace-expire", "schedule": "0 6 * * *" },
     { "path": "/api/cron/membership-expire", "schedule": "30 5 * * *" }
+  ],
+  "headers": [
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" }
+      ]
+    }
   ]
 }
