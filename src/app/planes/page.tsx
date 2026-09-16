@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, X, TrendingUp, Briefcase, Zap, Gift } from "@/lib/icons"
 import Link from "next/link"
 import { MEMBERSHIP_PLANS, BOOSTS } from "@/lib/constants"
+import { isFreeSignupEnabled } from "@/lib/membership/free-signup"
 
 type CellVal = boolean | string
 const comparisonRows: { label: string; emprendimiento: CellVal; negocio: CellVal }[] = [
@@ -42,7 +43,10 @@ function Cell({ value }: { value: CellVal }) {
   return <span className="text-sm text-gray-700">{value}</span>
 }
 
-export default function PlansPage() {
+export default async function PlansPage() {
+  // Promo "gratis hasta nuevo aviso": muestra los planes como gratuitos y manda al
+  // registro en vez del checkout. Se apaga con el ajuste free_signup.
+  const free = await isFreeSignupEnabled()
   const plans = Object.entries(MEMBERSHIP_PLANS) as [
     keyof typeof MEMBERSHIP_PLANS,
     (typeof MEMBERSHIP_PLANS)[keyof typeof MEMBERSHIP_PLANS],
@@ -60,6 +64,11 @@ export default function PlansPage() {
               Desde quien vende por su cuenta hasta negocios establecidos. Dos planes, sin
               complicaciones.
             </p>
+            {free && (
+              <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#6ffbbe] px-4 py-1.5 text-sm font-bold text-[#003527]">
+                <Gift className="h-4 w-4" /> Gratis por tiempo limitado
+              </span>
+            )}
           </div>
         </section>
 
@@ -90,13 +99,25 @@ export default function PlansPage() {
                     </div>
                     <p className="mt-1 text-sm text-gray-500">{plan.tagline}</p>
 
-                    <div className="mt-4 flex items-baseline gap-1">
-                      <span className="text-3xl font-extrabold tracking-tight text-gray-900">
-                        ${plan.price}
-                      </span>
-                      <span className="text-sm font-medium text-gray-400">/mes</span>
-                    </div>
-                    <p className="text-xs text-gray-400">MXN · facturación mensual</p>
+                    {free ? (
+                      <>
+                        <div className="mt-4 flex items-baseline gap-2">
+                          <span className="text-3xl font-extrabold tracking-tight text-[#006c49]">Gratis</span>
+                          <span className="text-sm font-medium text-gray-400 line-through">${plan.price}/mes</span>
+                        </div>
+                        <p className="text-xs font-semibold text-[#006c49]">Por tiempo limitado</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mt-4 flex items-baseline gap-1">
+                          <span className="text-3xl font-extrabold tracking-tight text-gray-900">
+                            ${plan.price}
+                          </span>
+                          <span className="text-sm font-medium text-gray-400">/mes</span>
+                        </div>
+                        <p className="text-xs text-gray-400">MXN · facturación mensual</p>
+                      </>
+                    )}
 
                     <ul className="mt-5 flex-1 space-y-2.5">
                       {plan.features.map((f) => (
@@ -107,13 +128,13 @@ export default function PlansPage() {
                       ))}
                     </ul>
 
-                    <Link href={`/checkout?plan=${plan.slug}`} className="mt-6 block">
+                    <Link href={free ? `/registrar-negocio?tipo=${plan.slug}` : `/checkout?plan=${plan.slug}`} className="mt-6 block">
                       <Button
                         variant={isRecommended ? "default" : "outline"}
                         size="lg"
                         className={`w-full rounded-lg ${isRecommended ? "bg-[#006c49] text-white hover:bg-[#00583b]" : ""}`}
                       >
-                        Elegir {plan.name}
+                        {free ? "Registrarme gratis" : `Elegir ${plan.name}`}
                       </Button>
                     </Link>
                   </div>
@@ -121,14 +142,17 @@ export default function PlansPage() {
               })}
             </div>
 
-            {/* Cupón de prueba (se canjea al registrar el negocio) */}
-            <div className="mx-auto mt-6 flex max-w-xl items-center justify-center gap-2 rounded-xl border border-[#006c49]/20 bg-white px-4 py-3 text-center text-sm text-[#003527]">
-              <Gift className="h-4 w-4 shrink-0 text-[#006c49]" />
-              <span>
-                ¿Tienes un <strong>cupón de prueba</strong>? Aplícalo al registrar tu negocio para
-                activar un plan gratis por tiempo limitado.
-              </span>
-            </div>
+            {/* Cupón de prueba (se canjea al registrar el negocio). Oculto durante la
+                promo gratis (todo es gratis, no hace falta cupón). */}
+            {!free && (
+              <div className="mx-auto mt-6 flex max-w-xl items-center justify-center gap-2 rounded-xl border border-[#006c49]/20 bg-white px-4 py-3 text-center text-sm text-[#003527]">
+                <Gift className="h-4 w-4 shrink-0 text-[#006c49]" />
+                <span>
+                  ¿Tienes un <strong>cupón de prueba</strong>? Aplícalo al registrar tu negocio para
+                  activar un plan gratis por tiempo limitado.
+                </span>
+              </div>
+            )}
           </div>
         </section>
 
@@ -170,7 +194,7 @@ export default function PlansPage() {
                     {plans.map(([key, plan]) => (
                       <th key={key} className="px-3 py-4 text-center text-sm font-semibold text-gray-900">
                         {plan.name}
-                        <div className="text-xs font-normal text-gray-400">${plan.price}/mes</div>
+                        <div className="text-xs font-normal text-gray-400">{free ? "Gratis" : `$${plan.price}/mes`}</div>
                       </th>
                     ))}
                   </tr>

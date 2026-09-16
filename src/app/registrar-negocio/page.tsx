@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/footer"
 import { BusinessRegistrationWizard } from "@/components/business/business-registration-wizard"
 import { getGoogleMapsApiKey } from "@/lib/maps-config"
 import { getActivePromoCoupons } from "@/lib/coupons/promo-coupons"
+import { isFreeSignupEnabled } from "@/lib/membership/free-signup"
 
 export const dynamic = "force-dynamic"
 
@@ -16,9 +17,10 @@ export default async function RegistrarNegocioPage({
   // (/promociones/registro → /registrar-negocio?promo=1). En un registro normal no
   // se aplica ningún cupón automáticamente.
   const wantsPromo = promo === "1" || promo === "true"
-  const [mapsApiKey, promoCoupons] = await Promise.all([
+  const [mapsApiKey, promoCoupons, freeSignup] = await Promise.all([
     getGoogleMapsApiKey(),
     wantsPromo ? getActivePromoCoupons() : Promise.resolve(null),
+    isFreeSignupEnabled(),
   ])
   // El tipo real lo decide la pantalla de 3 preguntas dentro del wizard; el ?tipo
   // solo sesga el valor inicial (compatibilidad con enlaces existentes).
@@ -42,6 +44,7 @@ export default async function RegistrarNegocioPage({
             mapsApiKey={mapsApiKey}
             profileType={profileType}
             promoCoupons={promoCoupons ?? undefined}
+            freeSignup={freeSignup}
           />
         </div>
       </main>

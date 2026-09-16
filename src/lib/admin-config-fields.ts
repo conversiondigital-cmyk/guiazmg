@@ -131,6 +131,7 @@ export const ADMIN_CONFIG_SECTIONS: Record<string, { title: string; description:
     title: "Membresías",
     description: "Planes, límites y precios.",
     fields: [
+      { key: "free_signup", label: "Registro GRATIS (promo, sin cobro)", type: "toggle", default: "true", description: "Mientras esté activo, negocios y emprendedores se registran GRATIS: el alta queda activa al instante, sin pasar por pago, con la membresía de su tipo (Emprendedor/Negocio, cada uno con sus topes). Apágalo para volver a cobrar por Stripe — quienes ya se registraron gratis NO se ven afectados. Los boosts siguen siendo de pago aparte." },
       { key: "free_plan_max_listings", label: "Plan Gratuito - Máx anuncios", type: "number" },
       { key: "free_plan_enabled", label: "Plan Gratuito habilitado", type: "toggle" },
       { key: "monthly_billing_enabled", label: "Facturación mensual", type: "toggle" },

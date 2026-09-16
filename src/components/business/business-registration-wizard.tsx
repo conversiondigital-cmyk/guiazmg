@@ -109,6 +109,7 @@ export function BusinessRegistrationWizard({
   mapsApiKey = "",
   profileType: initialProfileType = "NEGOCIO",
   promoCoupons,
+  freeSignup = false,
 }: {
   mapsApiKey?: string
   profileType?: "EMPRENDEDOR" | "NEGOCIO"
@@ -118,6 +119,9 @@ export function BusinessRegistrationWizard({
     EMPRENDEDOR: { code: string; days: number } | null
     NEGOCIO: { code: string; days: number } | null
   }
+  // Promo "gratis hasta nuevo aviso" (ajuste free_signup). Si está activa, el alta
+  // NO pasa por pago: se crea el negocio ACTIVE con su membresía gratis.
+  freeSignup?: boolean
 }) {
   const router = useRouter()
   // El tipo de perfil ahora es ESTADO: lo auto-clasifica la pantalla de 3 preguntas
@@ -307,7 +311,23 @@ export function BusinessRegistrationWizard({
 
       const planSlug = profileType === "EMPRENDEDOR" ? "emprendedor" : "negocio"
 
-      if (invitationCode.trim()) {
+      if (freeSignup) {
+        // Promo GRATIS: se crea el negocio ya ACTIVO con su membresía gratis, sin
+        // pasar por el checkout. El backend otorga la membresía del tipo elegido.
+        const res = await fetch("/api/business", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast.error(data.error || "Error al crear negocio")
+          return
+        }
+        toast.success("¡Listo! Tu negocio quedó registrado y activo, gratis.")
+        router.push("/dashboard/negocio")
+        router.refresh()
+      } else if (invitationCode.trim()) {
         // CON cupón: se crea el negocio y se intenta canjear (activación inmediata,
         // sin pago). Camino de siempre.
         const res = await fetch("/api/business", {

@@ -7,6 +7,7 @@ import { slugify, generateUniqueSlug } from "@/lib/utils"
 import { createNotification } from "@/lib/notifications/create"
 import { sendBusinessActivatedEmail } from "@/lib/email"
 import { redeemMembershipCoupon } from "@/lib/coupons/redeem-membership"
+import { isFreeSignupEnabled, grantFreeMembership } from "@/lib/membership/free-signup"
 import { z } from "zod"
 
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v)
@@ -198,8 +199,30 @@ export async function POST(request: NextRequest) {
     // Código de invitación (cupón de días gratis): si vino uno, se canjea aquí
     // para activar la membresía de prueba SIN pago. Si el código es inválido no se
     // rompe el registro; se informa para que lo canjee después en el panel.
-    let coupon: { applied: boolean; days?: number; planName?: string; error?: string } = { applied: false }
-    if (data.invitationCode && data.invitationCode.trim()) {
+    let coupon: { applied: boolean; days?: number; planName?: string; error?: string; free?: boolean } = { applied: false }
+
+    // Promo "gratis hasta nuevo aviso" (ajuste free_signup): activa la membresía
+    // del tipo (Emprendedor/Negocio) SIN pago y deja el negocio visible. Tiene
+    // prioridad sobre el cupón (con la promo todo es gratis de por vida).
+    if (await isFreeSignupEnabled()) {
+      const granted = await grantFreeMembership(business.id, data.profileType)
+      if (granted) {
+        coupon = { applied: true, planName: granted.planName, free: true }
+        await createNotification({
+          userId: session.user.id,
+          type: "PAYMENT",
+          title: "Negocio activo",
+          message: `Tu negocio "${data.name}" quedó activo gratis en Guía ZMG.`,
+        }).catch(() => {})
+        if (session.user.email) {
+          await sendBusinessActivatedEmail(
+            session.user.email,
+            { businessName: data.name, ownerName: session.user.name, planName: granted.planName },
+            session.user.id,
+          ).catch(() => {})
+        }
+      }
+    } else if (data.invitationCode && data.invitationCode.trim()) {
       const res = await redeemMembershipCoupon({
         code: data.invitationCode,
         businessId: business.id,
