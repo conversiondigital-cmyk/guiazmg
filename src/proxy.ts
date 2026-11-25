@@ -171,6 +171,12 @@ export async function proxy(req: NextRequest) {
     // firma (HMAC / Stripe signature). Sin esto, el proxy los mandaría a login.
     "/api/payments/webhook",
     "/api/payments/stripe/webhook",
+    // APIs publicas de solo lectura para visitantes sin login: el header y el
+    // autocompletado las llaman en cada pagina. Sin esto, el proxy las manda
+    // a /auth/login con 307 y el autocompletado/top de busquedas no funciona
+    // para anonimos. Solo GET de datos publicos, sin datos privados ni escritura.
+    "/api/categories",
+    "/api/search/popular",
   ])
   const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
