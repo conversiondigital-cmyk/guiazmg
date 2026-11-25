@@ -43,7 +43,7 @@ export function SearchAutocomplete({
   }, [])
 
   const fetchSuggestions = useCallback(async (query: string) => {
-    if (!query.trim()) {
+    if (query.trim().length < 2) {
       setSuggestions([])
       setIsOpen(false)
       return
@@ -66,7 +66,7 @@ export function SearchAutocomplete({
     const val = e.target.value
     onChange(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => fetchSuggestions(val), 150)
+    debounceRef.current = setTimeout(() => fetchSuggestions(val), 350)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

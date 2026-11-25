@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         orderBy: { _count: { query: "desc" } },
         take: limit,
       })
-      return NextResponse.json(popular.map((p) => p.query))
+      return NextResponse.json(popular.map((p) => p.query), { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } })
     }
 
     // Autocompletado insensible a acentos (unaccent). Las categorías matchean
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     tagRows.forEach((t) => suggestions.add(t.name))
     nameRows.forEach((b) => suggestions.add(b.name))
 
-    return NextResponse.json(Array.from(suggestions).slice(0, limit))
+    return NextResponse.json(Array.from(suggestions).slice(0, limit), { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } })
   } catch {
     return NextResponse.json([])
   }

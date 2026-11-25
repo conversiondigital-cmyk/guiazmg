@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse, after } from "next/server"
 import { search } from "@/lib/search/search-engine"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
@@ -40,20 +40,23 @@ export async function GET(request: NextRequest) {
     })
 
     if (typeof q === "string" && q.trim()) {
-      try {
-        const session = await auth()
-        await prisma.searchLog.create({
-          data: {
-            query: q.trim(),
-            municipality: municipality,
-            neighborhood: neighborhood,
-            userId: session?.user?.id,
-            resultsCount: results.total,
-          },
-        })
-      } catch (error) {
-        console.error("[SEARCH_LOG_ERROR]", error instanceof Error ? error.message : String(error))
-      }
+      const session = await auth()
+      // La escritura del log no bloquea la respuesta: se hace despues de responder.
+      after(async () => {
+        try {
+          await prisma.searchLog.create({
+            data: {
+              query: q.trim(),
+              municipality: municipality,
+              neighborhood: neighborhood,
+              userId: session?.user?.id,
+              resultsCount: results.total,
+            },
+          })
+        } catch (error) {
+          console.error("[SEARCH_LOG_ERROR]", error instanceof Error ? error.message : String(error))
+        }
+      })
     }
 
     return NextResponse.json(results)

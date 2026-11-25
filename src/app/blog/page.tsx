@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { Calendar, User, Clock, ArrowRight, ChevronLeft, ChevronRight, Search } from "lucide-react"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300
 
 const PAGE_SIZE = 12
 
