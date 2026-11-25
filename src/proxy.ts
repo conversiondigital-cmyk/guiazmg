@@ -177,6 +177,7 @@ export async function proxy(req: NextRequest) {
     // para anonimos. Solo GET de datos publicos, sin datos privados ni escritura.
     "/api/categories",
     "/api/search/popular",
+    "/api/search/suggestions",
   ])
   const publicPrefixPaths = ["/perfil", "/categoria", "/preguntas", "/reclamar", "/usuario", "/eventos", "/blog", "/promociones", "/contacto", "/uploads", "/demo", "/api/auth", "/api/public", "/api/health", "/api/analytics", "/api/cron"]
   const publicMarketplacePaths = pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/nuevo"))
